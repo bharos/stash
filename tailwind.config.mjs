@@ -7,10 +7,7 @@ export default {
   ],
   theme: {
     extend: {
-      colors: {
-        background: "var(--background)",
-        foreground: "var(--foreground)",
-      },
+      // You can still extend the theme with static values like custom colors, fonts, etc.
     },
   },
   plugins: [],

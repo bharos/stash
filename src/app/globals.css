@@ -1,21 +1,132 @@
+/* globals.css */
+
+/* Import fonts at the very top */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+/* Tailwind CSS directives */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom theme variables for background and foreground colors */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f9fafb; /* Light background color */
+  --foreground: #333333; /* Dark text for contrast */
+  --accent: #0070f3; /* Subtle blue for accent buttons or links */
+  --border: #e0e0e0; /* Light gray border for inputs and dividers */
+  --card-background: #ffffff; /* Card background */
+  --error: #f87171; /* Soft red for errors */
 }
 
+/* Dark mode adjustments */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #121212;
+    --foreground: #f9fafb;
+    --accent: #4A90E2;
+    --border: #555555;
+    --card-background: #1f1f1f;
+    --error: #fca5a5;
   }
 }
 
+/* Reset margins, padding, and ensure full height */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Global font and background setup */
 body {
+  font-family: 'Inter', sans-serif;
   color: var(--foreground);
   background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.6;
+  background-color: var(--background);
+  color: var(--foreground);
+  padding: 0;
+}
+
+/* Main app container */
+.app-container {
+  background: var(--background);
+  color: var(--foreground);
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+
+/* Form styling */
+form {
+  display: grid;
+  gap: 1.5rem;
+}
+
+label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--foreground);
+}
+
+input,
+textarea,
+button {
+  padding: 1rem;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+input,
+textarea {
+  background-color: #f9fafb;
+  color: var(--foreground);
+}
+
+button {
+  background-color: var(--accent);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  border: none;
+  border-radius: 8px;
+}
+
+button:hover {
+  background-color: #005bb5;
+}
+
+/* Error message styling */
+.error {
+  color: var(--error);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+}
+
+h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--foreground);
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--foreground);
+}
+
+/* Input focus styling for better accessibility */
+input:focus, textarea:focus, button:focus {
+  outline: none;
+  border-color: var(--accent);
 }
