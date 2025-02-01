@@ -1,89 +1,79 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
-import { Drawer, List, ListItem, ListItemText, IconButton } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu'; // Hamburger icon for opening/closing the sidebar
-import supabase from '../utils/supabaseClient'; // Ensure this is set up correctly
+import { Drawer, List, ListItem, ListItemText, IconButton, ListItemButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
+import supabase from '../utils/supabaseClient';
 import dynamic from 'next/dynamic';
+import LandingPage from './LandingPage'; // Import Landing Page
 
 // Dynamically import ExperienceForm and Dashboard
 const ExperienceForm = dynamic(() => import('./ExperienceForm'), { ssr: false });
 const Dashboard = dynamic(() => import('./Dashboard'), { ssr: false });
 
 const ClientHome = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Sidebar initially closed
-  const [activeMenu, setActiveMenu] = useState('dashboard');
-  const [session, setSession] = useState(null); // To track the current session
-  const [isClient, setIsClient] = useState(false); // Track if we are on the client-side
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeMenu, setActiveMenu] = useState('landingPage');
+  const [session, setSession] = useState(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // Handle sidebar toggle
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
   const handleMenuChange = (menu) => {
-    setActiveMenu(menu); // Set the active menu
-    console.log('Menu changed to:', menu);
-    toggleSidebar(); // Close the sidebar after selecting a menu
+    setActiveMenu(menu);
+    toggleSidebar(); // Close sidebar on selection
   };
 
   useEffect(() => {
-    // Set isClient to true when on the client-side
     setIsClient(true);
 
-    // Fetch session from Supabase
     const fetchSession = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
-      setSession(sessionData?.session); // Set session once fetched
+      setSession(sessionData?.session);
     };
 
-    fetchSession(); // Fetch session on page load
+    fetchSession();
 
-    // Listen for auth state changes (e.g., sign-in, sign-out)
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session); // Update session state on authentication change
+      setSession(session);
     });
 
     return () => {
-      listener?.unsubscribe(); // Clean up the listener when the component unmounts
+      listener?.unsubscribe();
     };
   }, []);
 
-  // Show loading state if session is not set yet or client-side rendering is pending
   if (!isClient) {
-    return <div>Loading...</div>; // Show loading if session is not yet available
+    return <div>Loading...</div>;
   }
 
   return (
     <div className="flex h-screen relative">
-      {/* Hamburger Icon to toggle Sidebar */}
       <IconButton
-  onClick={toggleSidebar}
-  sx={{
-    position: 'absolute',
-    top: 20,
-    left: sidebarOpen? 270 : 20, // Move the hamburger when sidebar is open
-    width: 50,
-    height: 50,
-    backgroundColor: 'rgba(66, 64, 64, 0.7)', // Semi-transparent dark background
-    borderRadius: '50%',
-    zIndex: 1300, // Ensure it's above other content
-    boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-    '&:hover': {
-      backgroundColor: 'rgba(243, 237, 237, 0.9)', // Darken on hover
-    },
-    display: sidebarOpen ? 'none' : 'block', // Hide hamburger when sidebar is open
-  }}
->
-  <MenuIcon sx={{ fontSize: 30, color: 'white' }} />
-</IconButton>
+        onClick={toggleSidebar}
+        sx={{
+          position: 'absolute',
+          top: 20,
+          left: sidebarOpen ? 270 : 20,
+          width: 50,
+          height: 50,
+          backgroundColor: 'rgba(66, 64, 64, 0.7)',
+          borderRadius: '50%',
+          zIndex: 1300,
+          boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
+          '&:hover': { backgroundColor: 'rgba(243, 237, 237, 0.9)' },
+          display: sidebarOpen ? 'none' : 'block',
+        }}
+      >
+        <MenuIcon sx={{ fontSize: 30, color: 'white' }} />
+      </IconButton>
 
-
-      {/* Sidebar */}
       <Drawer
         open={sidebarOpen}
-        onClose={toggleSidebar} // Close on clicking outside or using the hamburger
-        variant="temporary" // Use 'temporary' for closable sidebar
+        onClose={toggleSidebar}
+        variant="temporary"
         anchor="left"
         sx={{
           width: 270,
@@ -91,34 +81,53 @@ const ClientHome = () => {
           '& .MuiDrawer-paper': {
             width: 270,
             boxSizing: 'border-box',
+            display: 'flex',
+            flexDirection: 'column', // Arrange items vertically
+            paddingTop: '20px', // Add space between the top of the sidebar and app name
           },
         }}
       >
+        {/* App Name at the Top */}
         <List>
-          {/* Use button="true" to make ListItem clickable */}
+          <ListItemButton onClick={() => handleMenuChange('landingPage')} sx={{ padding: '10px 20px' }}>
+            <span className="material-icons">rocket_launch</span>
+            <ListItemText primary="Stash" />
+          </ListItemButton>
+        </List>
+
+        {/* Menu Items with some spacing between them */}
+        <List sx={{ marginTop: '20px' }}> {/* Space between app name and menu items */}
           <ListItem button onClick={() => handleMenuChange('dashboard')}>
+            <span className="material-icons">dashboard</span>
             <ListItemText primary="Dashboard" />
           </ListItem>
           <ListItem button onClick={() => handleMenuChange('postExperience')}>
+            <span className="material-icons">post_add</span>
             <ListItemText primary="Post Experience" />
           </ListItem>
         </List>
       </Drawer>
 
-      {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
-        {session ? (
-            <>
-            {activeMenu === 'dashboard' ? <Dashboard /> : <ExperienceForm />}
-            </>
+        {/* Show the LandingPage by default (no need to check login status for landing page) */}
+        {activeMenu === 'landingPage' ? (
+          <LandingPage setActiveMenu={setActiveMenu} />
+        ) : !session ? (
+          // If user is not logged in, show the login message
+          <div className="text-center mt-24">
+            <h2 className="text-2xl font-bold">Login to view the dashboard and share your experiences</h2>
+          </div>
         ) : (
-            <div className="text-center mt-16 flex flex-col justify-center items-center min-h-[80vh]">
-            <p className="text-lg">
-                Please sign in to view your dashboard and post experiences.
-            </p>
-            </div>
+          // If user is logged in, show the menu or active content
+          activeMenu === 'dashboard' ? (
+            <Dashboard />
+          ) : activeMenu === 'postExperience' ? (
+            <ExperienceForm />
+          ) : (
+            <LandingPage setActiveMenu={setActiveMenu} />
+          )
         )}
-        </div>
+      </div>
     </div>
   );
 };
