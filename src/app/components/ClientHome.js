@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Drawer, List, ListItem, ListItemText, IconButton, ListItemButton } from '@mui/material';
+import { Drawer, List, ListItem, ListItemText, IconButton, ListItemButton, Button } from '@mui/material';
+import { useRouter } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
 import supabase from '../utils/supabaseClient';
 import dynamic from 'next/dynamic';
@@ -12,6 +13,7 @@ const ExperienceForm = dynamic(() => import('./ExperienceForm'), { ssr: false })
 const Dashboard = dynamic(() => import('./Dashboard'), { ssr: false });
 
 const ClientHome = () => {
+  const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeMenu, setActiveMenu] = useState('landingPage');
   const [session, setSession] = useState(null);
@@ -24,6 +26,17 @@ const ClientHome = () => {
   const handleMenuChange = (menu) => {
     setActiveMenu(menu);
     toggleSidebar(); // Close sidebar on selection
+  };
+
+  const handleSignOut = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Sign out error:', error.message);
+    } else {
+      setSession(null); // Clear session state after successful sign-out
+      router.push('/') // Redirect to home page if already logged in
+    }
+    toggleSidebar(); // Close sidebar on sign-out
   };
 
   useEffect(() => {
@@ -90,22 +103,32 @@ const ClientHome = () => {
         {/* App Name at the Top */}
         <List>
           <ListItemButton onClick={() => handleMenuChange('landingPage')} sx={{ padding: '10px 20px' }}>
-            <span className="material-icons">rocket_launch</span>
+            <span className="material-icons ml-2 mr-2">home</span>
             <ListItemText primary="Stash" />
           </ListItemButton>
         </List>
 
         {/* Menu Items with some spacing between them */}
-        <List sx={{ marginTop: '20px' }}> {/* Space between app name and menu items */}
+        <List sx={{ marginTop: '20px' }}>
           <ListItem button onClick={() => handleMenuChange('dashboard')}>
-            <span className="material-icons">dashboard</span>
+            <span className="material-icons ml-2 mr-2">dashboard</span>
             <ListItemText primary="Dashboard" />
           </ListItem>
           <ListItem button onClick={() => handleMenuChange('postExperience')}>
-            <span className="material-icons">post_add</span>
+            <span className="material-icons ml-2 mr-2">post_add</span>
             <ListItemText primary="Post Experience" />
           </ListItem>
         </List>
+
+        {/* SignOut Button */}
+        {session && (
+          <List sx={{ marginTop: '20px' }}>
+            <ListItem button onClick={handleSignOut}>
+              <span className="material-icons ml-2 mr-2">logout</span>
+              <ListItemText primary="Sign Out" />
+            </ListItem>
+          </List>
+        )}
       </Drawer>
 
       <div className="flex-1 p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
