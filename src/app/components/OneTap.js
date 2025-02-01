@@ -70,12 +70,6 @@ const OneTap = () => {
     google.accounts.id.prompt() // Display the One Tap UI
   }
 
-  // Logout function to sign out and clear session
-  const handleLogout = async () => {
-    await supabase.auth.signOut() // Sign out from Supabase
-    setSession(null) // Clear session state
-  }
-
   useEffect(() => {
     // Fetch session on page load
     const fetchSession = async () => {
@@ -87,6 +81,15 @@ const OneTap = () => {
       }
     }
     fetchSession() // Initialize session state
+
+    // Listen for changes to authentication state
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session) // Update session state when it changes
+    })
+
+    return () => {
+      listener?.unsubscribe() // Clean up listener on unmount
+    }
   }, [])
 
   return (
@@ -137,16 +140,6 @@ const OneTap = () => {
             <span className="gsi-material-button-contents">Sign in with Google</span>
           </div>
         </button>
-      )}
-
-      {/* Sign-out Button (Only shows if signed in) */}
-      {session && (
-        <div
-          className="fixed top-4 right-4 z-[100] px-6 py-2 bg-red-600 text-white rounded-full cursor-pointer shadow-lg transition-all hover:bg-red-700 active:bg-red-800"
-          onClick={handleLogout}
-        >
-          Logout
-        </div>
       )}
     </>
   )
