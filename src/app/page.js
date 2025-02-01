@@ -1,9 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import ExperienceForm from '../app/components/ExperienceForm';
-import Dashboard from '../app/components/Dashboard';
+import dynamic from 'next/dynamic'; // Import dynamic from next/dynamic
 import supabase from '../app/utils/supabaseClient';
+
+// Dynamically import ExperienceForm and Dashboard
+const ExperienceForm = dynamic(() => import('../app/components/ExperienceForm'), { ssr: false });
+const Dashboard = dynamic(() => import('../app/components/Dashboard'), { ssr: false });
 
 const Home = () => {
   const [activeMenu, setActiveMenu] = useState('dashboard');
