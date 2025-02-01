@@ -14,6 +14,7 @@ const ExperienceForm = () => {
   const [companyNames, setCompanyNames] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState(null); // New state for success message
   const [confirmIndex, setConfirmIndex] = useState(null);
   const [isClient, setIsClient] = useState(false);
 
@@ -62,15 +63,23 @@ const ExperienceForm = () => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMessage(null); // Reset success message before submitting
+
     try {
       const response = await fetch('/api/experiences', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ company_name, level, rounds }),
       });
-      if (!response.ok) throw new Error('Submission failed');
-    } catch {
-      setError('Failed to submit experience');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Submission failed');
+      }
+      
+      // If submission is successful, set the success message
+      setSuccessMessage('Experience submitted successfully!');
+    } catch (error) {
+      setError(error.message || 'Failed to submit experience');
     } finally {
       setLoading(false);
     }
@@ -173,6 +182,7 @@ const ExperienceForm = () => {
           {loading ? 'Submitting...' : 'Submit'}
         </button>
         {error && <p className="text-red-500 text-center">{error}</p>}
+        {successMessage && <p className="text-green-500 text-center">{successMessage}</p>} {/* Display success message */}
       </form>
     </div>
   );

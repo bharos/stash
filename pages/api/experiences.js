@@ -9,6 +9,16 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: 'Company name, level, and at least one round is required.' });
     }
 
+    // Validate each round to ensure it has a round_type
+    for (const round of rounds) {
+      if (!round.round_type) {
+        return res.status(400).json({ error: 'Each round must have a round_type.' });
+      }
+      if (!round.details) {
+        return res.status(400).json({ error: 'Each round must have details.' });
+      }
+    }
+
     try {
       // Insert the experience data into the experiences table
       const { data: experience, error: experienceError } = await supabase
@@ -27,10 +37,6 @@ export default async function handler(req, res) {
       // Insert the round data for each round
       for (const round of rounds) {
         const { round_type, details } = round;
-
-        if (!round_type || !details) {
-          return res.status(400).json({ error: 'Each round must have a round_type and details.' });
-        }
 
         const { error: roundError } = await supabase
           .from('rounds')

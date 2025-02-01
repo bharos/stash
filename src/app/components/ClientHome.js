@@ -24,6 +24,7 @@ const ClientHome = () => {
   const handleMenuChange = (menu) => {
     setActiveMenu(menu); // Set the active menu
     console.log('Menu changed to:', menu);
+    toggleSidebar(); // Close the sidebar after selecting a menu
   };
 
   useEffect(() => {
