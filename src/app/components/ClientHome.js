@@ -107,15 +107,17 @@ const ClientHome = () => {
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
         {session ? (
-          <>
+            <>
             {activeMenu === 'dashboard' ? <Dashboard /> : <ExperienceForm />}
-          </>
+            </>
         ) : (
-          <div className="text-center">
-            <p>Please sign in to view your dashboard and post experiences.</p>
-          </div>
+            <div className="text-center mt-16 flex flex-col justify-center items-center min-h-[80vh]">
+            <p className="text-lg">
+                Please sign in to view your dashboard and post experiences.
+            </p>
+            </div>
         )}
-      </div>
+        </div>
     </div>
   );
 };
