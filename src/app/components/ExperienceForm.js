@@ -96,7 +96,7 @@ const ExperienceForm = () => {
     ['blockquote'],
     [{ 'script': 'sub' }, { 'script': 'super' }],
     ['code-block']
-  ];
+    ];
 
   return (
     <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-xl">
