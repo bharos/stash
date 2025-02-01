@@ -22,7 +22,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #121212;
-    --foreground: #f9fafb;
+    --foreground: #333333; /* Dark text color for readability in dark mode */
     --accent: #4A90E2;
     --border: #555555;
     --card-background: #1f1f1f;

@@ -1,0 +1,3 @@
+.ql-container {
+  min-height: 200px;  /* Forces the content area to be at least 200px tall */
+}
