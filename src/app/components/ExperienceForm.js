@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import 'react-quill-new/dist/quill.snow.css';
 import './experience-form.css';
 import dynamic from 'next/dynamic';
+import supabase from '../utils/supabaseClient';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -66,11 +67,21 @@ const ExperienceForm = () => {
     setSuccessMessage(null); // Reset success message before submitting
 
     try {
+      const { data, error } = await supabase.auth.getSession();
+      if (error || !data?.session || !data.session.access_token) {
+        throw new Error('User is not authenticated or token is missing');
+      }
+      const token = data.session.access_token; // Access token from the session object
+  
       const response = await fetch('/api/experiences', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`, // Attach token in the Authorization header
+        },
         body: JSON.stringify({ company_name, level, rounds }),
       });
+  
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || 'Submission failed');
