@@ -128,6 +128,7 @@ const Dashboard = () => {
             key={experience.id}
             experience={experience}
             updateExperience={updateExperience}
+            showOpenInNewTabButton={true}
           />
           
         ))) : (

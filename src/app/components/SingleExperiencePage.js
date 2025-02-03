@@ -69,7 +69,7 @@ const SingleExperiencePage = ({ experienceId }) => {
   return (
     <div>
       {experience ? (
-        <Experience experience={experience} updateExperience={updateExperience} />
+        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton= {false} />
       ) : (
         <div>No experience found</div>
       )}
