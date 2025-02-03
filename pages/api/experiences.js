@@ -66,8 +66,8 @@ export default async function handler(req, res) {
       res.status(500).json({ error: error.message });
     }
   }
-   else if (req.method === 'GET') {
-    const { company_name, level } = req.query;
+  else if (req.method === 'GET') {
+    const { company_name, level, experienceId } = req.query; // Get experienceId if present
   
     try {
       let query = supabase
@@ -80,11 +80,19 @@ export default async function handler(req, res) {
           rounds(id, round_type, details)
         `);
   
-      if (company_name) {
-        query = query.ilike('company_name', `%${company_name}%`);
-      }
-      if (level) {
-        query = query.ilike('level', `%${level}%`);
+      if (experienceId) {
+        // Fetch experience by ID if experienceId is passed in the query
+        query = query.eq('id', experienceId);
+      } else {
+        // If no experienceId is passed, use the company_name and level filters
+        if (company_name) {
+          query = query.ilike('company_name', `%${company_name}%`);
+        } else {
+          return res.status(400).json({ error: 'experience_id or company_name is required' });
+        }
+        if (level) {
+          query = query.ilike('level', `%${level}%`);
+        }
       }
   
       const { data: experiences, error } = await query;
@@ -93,8 +101,13 @@ export default async function handler(req, res) {
         return res.status(500).json({ error: error.message });
       }
   
-      res.status(200).json({ experiences });
+      if (experiences && experiences.length === 0) {
+        return res.status(404).json({ error: 'Experience not found' });
+      }
   
+      // Respond with the single experience if experienceId is provided, or a list of experiences if not
+      res.status(200).json({ experiences });
+    
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
