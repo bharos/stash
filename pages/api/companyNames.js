@@ -2,8 +2,6 @@ import supabase from '../../src/app/utils/supabaseClient';
 
 export default async function handler(req, res) {
   try {
-    console.log('Fetching company names...');  // Log to see when the query starts
-
     let allData = [];
     let from = 0;
     let to = 999;  // Fetch 1000 records per request
@@ -17,8 +15,6 @@ export default async function handler(req, res) {
     if (countError) {
       console.error('Error fetching count:', countError);  // Log any error from count query
       return res.status(500).json({ error: countError.message });
-    } else {
-        console.log('Total count:', count);  // Log the total count of rows
     }
 
     // Loop to fetch all data in chunks of 1000

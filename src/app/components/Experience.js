@@ -134,55 +134,62 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
 
   return (
     <div
-      key={experience.id}
-      className={`experience-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-6 mt-4 relative overflow-hidden ${
-        experience.isExpanded ? 'h-auto' : 'h-[200px]'
-      }`}
-    >
-      {/* Card Header */}
-<div className="flex items-center gap-4 relative">
-  <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
-    <span className="text-lg font-bold">{experience.company_name[0]}</span>
-  </div>
-  <div className="flex-grow">
-    <h3 className="text-2xl font-semibold text-gray-900">{experience.company_name}</h3>
-    <p className="text-gray-500">
-      Level: <span className="font-medium text-gray-700">{experience.level}</span>
-    </p>
-    {/* Display Username */}
-    <p className="text-gray-400 text-sm">
-      Submitted by: {experience.username ? experience.username.username : 'Anonymous'}
-    </p>
-  </div>
-
-  {/* Open in New Tab Button (conditionally rendered) */}
-        {showOpenInNewTabButton && (
-          <button
-            onClick={() => window.open(`${window.location.origin}/experience/${experience.id}`, '_blank')}
-            className="absolute top-2 right-24 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
-          >
-            <span className="material-icons">open_in_new</span>
-          </button>
-        )}
-
-  {/* Share button */}
-  <button
-    onClick={() => handleShareExperience(experience.id)}
-    className="absolute top-2 right-12 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
+    key={experience.id}
+    className={`experience-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-6 mt-4 relative overflow-hidden ${
+      experience.isExpanded ? 'h-auto' : 'h-[200px]'
+    }`}
   >
-    <span className="material-icons ml-2 mr-2">share</span>
-  </button>
-
-  {/* Toggle details button */}
-  <button
-    onClick={() => toggleExperienceDetails(experience)}
-    className="absolute top-2 right-2 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
-  >
-    {experience.isExpanded ? '–' : '+'}
-  </button>
-</div>
-
-
+    {/* Buttons Section (separate row above the company name) */}
+    <div className="flex justify-end w-full absolute top-2 right-2">
+      {/* Open in New Tab Button (conditionally rendered) */}
+      {showOpenInNewTabButton && (
+        <button
+          onClick={() =>
+            window.open(`${window.location.origin}/experience/${experience.id}`, '_blank')
+          }
+          className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+        >
+          <span className="material-icons">open_in_new</span>
+        </button>
+      )}
+  
+      {/* Share button */}
+      <button
+        onClick={() => handleShareExperience(experience.id)}
+        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+      >
+        <span className="material-icons ml-2 mr-2">share</span>
+      </button>
+  
+      {/* Toggle details button */}
+      <button
+        onClick={() => toggleExperienceDetails(experience)}
+        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+      >
+        {experience.isExpanded ? '–' : '+'}
+      </button>
+    </div>
+  
+    {/* Card Content */}
+    <div className="flex items-center gap-4 mt-3 relative">
+      {/* Profile Image */}
+      <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
+        <span className="text-lg font-bold">{experience.company_name[0]}</span>
+      </div>
+  
+      {/* Company Details Section */}
+      <div className="flex-grow min-w-0">
+        <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.company_name}</h3>
+        <p className="text-gray-500">
+          Level: <span className="font-medium text-gray-700">{experience.level}</span>
+        </p>
+        {/* Display Username */}
+        <p className="text-gray-400 text-sm">
+          Submitted by: {experience.username ? experience.username.username : 'Anonymous'}
+        </p>
+      </div>
+    </div>
+  
 {/* Share Modal */}
 {showShareModal && (
   <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
@@ -223,7 +230,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
                 value={round.details}
                 readOnly
                 theme="snow"
-                className="w-full bg-transparent p-0 text-gray-900 min-h-[100px]"
+                className="w-full bg-transparent p-0 text-gray-900 min-h-[50px]"
                 modules={{
                   toolbar: false, // No toolbar
                 }}

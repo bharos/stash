@@ -15,6 +15,8 @@ const Dashboard = () => {
   const [experiencesLoading, setExperiencesLoading] = useState(false);
 
   const fetchData = useCallback(async () => {
+    if (companyOptions.length > 0) return; // Only fetch if companyOptions is empty
+    
     setLoading(true);
     try {
       const companyResponse = await fetch('/api/companyNames');
@@ -64,9 +66,13 @@ const Dashboard = () => {
             }
           }
         } else {
+          // Clear experiences on failure
+          setExperiences([]);
           console.error('Failed to fetch experiences:', experiencesData.error);
         }
       } catch (error) {
+        // Clear experiences on failure
+        setExperiences([]);
         console.error('Error fetching experiences:', error);
       } finally {
         setExperiencesLoading(false);
