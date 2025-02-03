@@ -94,23 +94,23 @@ const Dashboard = () => {
   return (
     <div className="dashboard-container p-6 space-y-6">
       {/* Filters Section */}
-      <div className="filters mb-6 flex gap-4">
-        <Select
+      <div className="filters mb-6 flex flex-col sm:flex-row sm:gap-4 sm:justify-start sm:space-x-4">
+      <Select
           value={companyName ? { label: companyName, value: companyName } : null}
           onChange={(selectedOption) => setCompanyName(selectedOption?.value || '')}
           options={companyOptions}
-          placeholder="Select a Company"
-          className="w-1/3"
+          placeholder="Company Name"
+          className="w-full sm:w-1/2 mb-3 sm:mb-0" // Full width on mobile, half width on small screens
           isClearable
           isSearchable
         />
         <input
           type="text"
-          placeholder="Search by level"
+          placeholder="Level search"
           value={level}
           onChange={(e) => setLevel(e.target.value)}
-          className="p-2 border border-gray-300 rounded-lg w-1/3"
-        />
+          className="w-full sm:w-1/2 p-2 border border-gray-300 rounded-lg"
+          />
       </div>
 
       {/* Experiences List */}
