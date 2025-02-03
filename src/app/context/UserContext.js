@@ -30,14 +30,12 @@ export const UserProvider = ({ children }) => {
         fetchUsername(session.user.id).then((username) => {
           setUser((prevUser) => {
             const newUser = { user_id: session.user.id, username };
-            console.log("Updating user context prev user", prevUser, "new user", newUser);
             return newUser;
           });
         });
       } else {
         setUser((prevUser) => {
           const newUser = { user_id: null, username: null };
-          console.log("Unset user prev user", prevUser, " new user", newUser);
           return newUser;
         });
       }
