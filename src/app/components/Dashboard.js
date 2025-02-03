@@ -121,7 +121,7 @@ const Dashboard = () => {
         ) : experiencesLoading ? (
           <p className="text-center text-gray-500">Loading experiences...</p>
         ) : !companyName ? (
-          <p className="text-center text-gray-500">Choose a company to view interview experiences</p> // Show this when no company is selected
+          <p className="text-center text-gray-500">Choose a company to view interview experiences 👀</p> // Show this when no company is selected
         ) : experiences.length > 0 ? (
           experiences.map((experience) => (
             <Experience

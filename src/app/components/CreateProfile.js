@@ -71,7 +71,7 @@ const CreateProfile = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-              Choose a cool & unique Username!😃
+              Choose A Cool & Anonymous Username!🥳
             </label>
             <input
               type="text"

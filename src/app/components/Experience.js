@@ -22,6 +22,12 @@ const Experience = ({ experience, updateExperience }) => {
     }
   }, [experience.user_liked]); // Update hasLiked when experience.user_liked changes
 
+  useEffect(() => {
+    if (experience.likes !== likes) {
+      setLikes(experience.likes); // Only update if likes is different
+    }
+  }, [experience.likes]); // Update likes when experience.likes changes
+
   const toggleExperienceDetails = (experience) => {
     const updatedExperience = {
       ...experience, // Spread the original experience object
