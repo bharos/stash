@@ -158,9 +158,15 @@ const ClientHome = () => {
         ) : activeMenu === 'landingPage' ? (
           <LandingPage setActiveMenu={setActiveMenu} />
         ) : !user.user_id ? (
+          activeMenu === 'dashboard' ? (
+            <Dashboard />
+          ):  activeMenu === 'singleExperiencePage' ? (
+            <SingleExperiencePage experienceId={experienceId} />
+          ): (
           <div className="text-center mt-24">
-            <h2 className="text-2xl font-bold">Login to view the dashboard and share your experiences</h2>
+            <h2 className="text-2xl font-bold">Login to share your experiences!</h2>
           </div>
+          )
         ) : user.username ? (
           activeMenu === 'dashboard' ? (
             <Dashboard />
