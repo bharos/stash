@@ -88,7 +88,7 @@ const ExperienceForm = () => {
       }
       
       // If submission is successful, set the success message
-      setSuccessMessage('Experience submitted successfully!');
+      setSuccessMessage('Experience submitted successfully! 🎉 🎊');
     } catch (error) {
       setError(error.message || 'Failed to submit experience');
     } finally {

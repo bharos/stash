@@ -7,7 +7,7 @@ import { useUser } from '../context/UserContext';
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
-const Experience = ({ experience, updateExperience }) => {
+const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) => {
   const { user } = useUser(); // Access the user from the context
   const [newComments, setNewComments] = useState({}); // State for comments per experience
   const [isLinkCopied, setIsLinkCopied] = useState(false); // State to track if the link is copied
@@ -21,6 +21,12 @@ const Experience = ({ experience, updateExperience }) => {
       setHasLiked(experience.user_liked);  // Only update if hasLiked is different
     }
   }, [experience.user_liked]); // Update hasLiked when experience.user_liked changes
+
+  useEffect(() => {
+    if (experience.likes !== likes) {
+      setLikes(experience.likes); // Only update if likes is different
+    }
+  }, [experience.likes]); // Update likes when experience.likes changes
 
   const toggleExperienceDetails = (experience) => {
     const updatedExperience = {
@@ -149,6 +155,16 @@ const Experience = ({ experience, updateExperience }) => {
     </p>
   </div>
 
+  {/* Open in New Tab Button (conditionally rendered) */}
+        {showOpenInNewTabButton && (
+          <button
+            onClick={() => window.open(`${window.location.origin}/experience/${experience.id}`, '_blank')}
+            className="absolute top-2 right-24 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
+          >
+            <span className="material-icons">open_in_new</span>
+          </button>
+        )}
+
   {/* Share button */}
   <button
     onClick={() => handleShareExperience(experience.id)}
@@ -181,14 +197,14 @@ const Experience = ({ experience, updateExperience }) => {
         />
         <button
           onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
-          className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           {isLinkCopied ? 'Copied!' : 'Copy Link'}
         </button>
       </div>
       <button
         onClick={() => setShowShareModal(false)}
-        className="w-full py-2 mt-4 text-center text-blue-600 font-medium hover:text-blue-800 transition-all duration-200"
+        className="w-full py-2 mt-4 text-center text-white-600 font-medium hover:text-gray-800 transition-all duration-200"
       >
         Close
       </button>
