@@ -152,8 +152,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           <span className="material-icons">open_in_new</span>
         </button>
       )}
-  
-      {/* Share button */}
+  {/* Share button */}
       <button
         onClick={() => handleShareExperience(experience.id)}
         className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
