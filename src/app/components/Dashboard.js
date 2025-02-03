@@ -142,6 +142,23 @@ const Dashboard = () => {
     }
   };
 
+  const handleShareExperience = (experienceId) => {
+    const experience = experiences.find((exp) => exp.id === experienceId);
+  
+    if (experience) {
+      // Generate a shareable link, ensuring that the URL structure is correct
+      const shareableLink = `${window.location.origin}/experience/${experience.id}`;
+  
+      // Display the link, or show a modal for better UX
+      alert(`Share this experience: ${shareableLink}`);
+  
+      // Optionally, you can trigger a backend API to send the experience data via email or social media
+      // Example: sendShareNotification(experience);
+    } else {
+      console.error('Experience not found!');
+    }
+  };
+
   return (
     <div className="dashboard-container p-6 space-y-6">
       {/* Filters Section */}
@@ -195,6 +212,12 @@ const Dashboard = () => {
                   Submitted by: {experience.username ? experience.username.username : 'Anonymous'}
                 </p>
                 </div>
+                <button
+                onClick={() => handleShareExperience(experience.id)}
+                className="absolute top-2 right-12 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
+              >
+                 <span className="material-icons ml-2 mr-2">share</span>
+              </button>
                 <button
                   onClick={() => toggleExperienceDetails(experience.id)}
                   className="absolute top-2 right-2 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
