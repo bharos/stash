@@ -12,6 +12,7 @@ const Experience = ({ experience, updateExperience }) => {
   const [newComments, setNewComments] = useState({}); // State for comments per experience
   const [isLinkCopied, setIsLinkCopied] = useState(false); // State to track if the link is copied
   const [showShareModal, setShowShareModal] = useState(false); // State to show/hide the share modal
+  const [commentError, setCommentError] = useState(''); // State to store the error message
 
   const toggleExperienceDetails = (experience) => {
     const updatedExperience = {
@@ -34,7 +35,8 @@ const Experience = ({ experience, updateExperience }) => {
       try {
         const { data: sessionData, error } = await supabase.auth.getSession();
         if (error || !sessionData?.session || !sessionData.session.access_token) {
-          throw new Error('User is not authenticated or token is missing');
+          setCommentError('You need to be signed in to post a comment.');
+          return; // Stop the process if user is not authenticated
         }
         const token = sessionData.session.access_token; // Access token from the session object
 
@@ -61,6 +63,7 @@ const Experience = ({ experience, updateExperience }) => {
           };
           updateExperience(updatedExperience);
           setNewComments((prevState) => ({ ...prevState, [experienceId]: '' }));
+          setCommentError(''); // Clear the comment error
         } else {
           console.error('Failed to add comment:', data.error);
         }
@@ -202,6 +205,12 @@ const Experience = ({ experience, updateExperience }) => {
             placeholder="Add a comment"
             className="w-full p-2 border border-gray-300 rounded-lg"
           />
+          {/* Display Comment Error */}
+          {commentError && (
+            <div className="mt-4 p-3 bg-red-100 text-red-700 border border-red-500 rounded-lg">
+              {commentError}
+            </div>
+          )}
           <button
             onClick={() => handleCommentSubmit(experience.id)}
             className={`mt-2 p-2 rounded-lg text-white ${
