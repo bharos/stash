@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
@@ -8,63 +7,59 @@ import { useUser } from '../context/UserContext';
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
-
 const Experience = ({ experience, updateExperience }) => {
   const { user } = useUser(); // Access the user from the context
   const [newComments, setNewComments] = useState({}); // State for comments per experience
+  const [isLinkCopied, setIsLinkCopied] = useState(false); // State to track if the link is copied
+  const [showShareModal, setShowShareModal] = useState(false); // State to show/hide the share modal
 
   const toggleExperienceDetails = (experience) => {
     const updatedExperience = {
       ...experience, // Spread the original experience object
       isExpanded: !experience.isExpanded, // Toggle the isExpanded property
     };
-    
     updateExperience(updatedExperience); // Pass the updated experience to updateExperience
   };
   
   const handleShareExperience = (experienceId) => {
-          // Generate a shareable link, ensuring that the URL structure is correct
-          const shareableLink = `${window.location.origin}/experience/${experience.id}`;
-          // Display the link, or show a modal for better UX
-          alert(`Share this experience: ${shareableLink}`);
-      };
+    // Generate a shareable link, ensuring that the URL structure is correct
+    const shareableLink = `${window.location.origin}/experience/${experience.id}`;
+    setShowShareModal(true); // Show the modal when the share button is clicked
+  };
 
-       // Handle comment submission
+  // Handle comment submission
   const handleCommentSubmit = async (experienceId) => {
     const comment = newComments[experienceId];
-  
     if (comment && comment.trim()) {
       try {
-      const { data: sessionData, error } = await supabase.auth.getSession();
-      if (error || !sessionData?.session || !sessionData.session.access_token) {
-        throw new Error('User is not authenticated or token is missing');
-      }
-      const token = sessionData.session.access_token; // Access token from the session object
-  
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error || !sessionData?.session || !sessionData.session.access_token) {
+          throw new Error('User is not authenticated or token is missing');
+        }
+        const token = sessionData.session.access_token; // Access token from the session object
+
         const response = await fetch('/api/comments', {
           method: 'POST',
           body: JSON.stringify({ experience_id: experienceId, comment }),
-          headers: { 
+          headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`, // Attach token in the Authorization header
           },
         });
         const data = await response.json();
-  
+
         if (response.ok) {
           console.log('Comment added:', data.comment);
           // Create a new comment object with the username field added
-          const updatedComment = { 
+          const updatedComment = {
             ...data.comment, // Spread the original comment object
-            username: { username: user.username } // Add the username
+            username: { username: user.username }, // Add the username
           };
           const updatedExperience = {
             ...experience, // Spread the original experience object
-            comments: [...experience.comments, updatedComment] // Add the new comment to the comments array
-          };            
-          // Pass the updated experience to updateExperience
+            comments: [...experience.comments, updatedComment], // Add the new comment to the comments array
+          };
           updateExperience(updatedExperience);
-          // Clear the input for the specific experience
           setNewComments((prevState) => ({ ...prevState, [experienceId]: '' }));
         } else {
           console.error('Failed to add comment:', data.error);
@@ -75,7 +70,15 @@ const Experience = ({ experience, updateExperience }) => {
     }
   };
 
-      return (
+  // Handle copy to clipboard
+  const handleCopyLink = (link) => {
+    navigator.clipboard.writeText(link).then(() => {
+      setIsLinkCopied(true); // Show confirmation message
+      setTimeout(() => setIsLinkCopied(false), 2000); // Reset after 2 seconds
+    });
+  };
+
+  return (
     <div
       key={experience.id}
       className={`experience-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-6 mt-4 relative overflow-hidden ${
@@ -94,15 +97,15 @@ const Experience = ({ experience, updateExperience }) => {
           </p>
           {/* Display Username */}
           <p className="text-gray-400 text-sm">
-          Submitted by: {experience.username ? experience.username.username : 'Anonymous'}
-        </p>
+            Submitted by: {experience.username ? experience.username.username : 'Anonymous'}
+          </p>
         </div>
         <button
-        onClick={() => handleShareExperience(experience.id)}
-        className="absolute top-2 right-12 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
-      >
-         <span className="material-icons ml-2 mr-2">share</span>
-      </button>
+          onClick={() => handleShareExperience(experience.id)}
+          className="absolute top-2 right-12 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
+        >
+          <span className="material-icons ml-2 mr-2">share</span>
+        </button>
         <button
           onClick={() => toggleExperienceDetails(experience)}
           className="absolute top-2 right-2 text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600"
@@ -110,6 +113,36 @@ const Experience = ({ experience, updateExperience }) => {
           {experience.isExpanded ? '–' : '+'}
         </button>
       </div>
+
+{/* Share Modal */}
+{showShareModal && (
+  <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+    <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+      <h4 className="text-2xl font-semibold mb-6 text-center text-gray-800">Share this Experience</h4>
+      <div className="flex items-center space-x-2 mb-6">
+        <input
+          type="text"
+          readOnly
+          value={`${window.location.origin}/experience/${experience.id}`}
+          className="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+        />
+        <button
+          onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
+          className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          {isLinkCopied ? 'Copied!' : 'Copy Link'}
+        </button>
+      </div>
+      <button
+        onClick={() => setShowShareModal(false)}
+        className="w-full py-2 mt-4 text-center text-blue-600 font-medium hover:text-blue-800 transition-all duration-200"
+      >
+        Close
+      </button>
+    </div>
+  </div>
+)}
+
 
       {/* Experience Details */}
       <div className="experience-details mt-4">
@@ -183,7 +216,7 @@ const Experience = ({ experience, updateExperience }) => {
         </div>
       </div>
     </div>
-  )
+  );
 };
 
 export default Experience;
