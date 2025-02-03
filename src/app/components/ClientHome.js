@@ -43,7 +43,7 @@ const ClientHome = () => {
       console.error('Sign out error:', error.message);
     } else {
       setUser({ user_id: null, username: null });
-      router.push('/');
+      // router.push('/');
     }
     toggleSidebar();
   };

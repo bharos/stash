@@ -87,6 +87,8 @@ export default async function handler(req, res) {
         // If no experienceId is passed, use the company_name and level filters
         if (company_name) {
           query = query.ilike('company_name', `%${company_name}%`);
+        } else {
+          return res.status(400).json({ error: 'experience_id or company_name is required' });
         }
         if (level) {
           query = query.ilike('level', `%${level}%`);

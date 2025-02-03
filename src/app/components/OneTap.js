@@ -58,7 +58,7 @@ const OneTap = () => {
           // Update session state
           setSession(data.session)
           // Redirect to protected page
-          router.push('/')
+          // router.push('/')
         } catch (error) {
           console.error('Error logging in with Google One Tap', error)
         }
