@@ -44,8 +44,9 @@ const Dashboard = () => {
       try {
         const companyQuery = companyName ? `&company_name=${companyName}` : '';
         const levelQuery = level ? `&level=${level}` : '';
+        const userQuery = user.user_id ? `&userId=${user.user_id}` : '';
         const experiencesResponse = await fetch(
-          `/api/experiences?${companyQuery}${levelQuery}`
+          `/api/experiences?${companyQuery}${levelQuery}${userQuery}`
         );
         const experiencesData = await experiencesResponse.json();
         if (experiencesResponse.ok) {
@@ -70,8 +71,8 @@ const Dashboard = () => {
       } finally {
         setExperiencesLoading(false);
       }
-    }, 500),
-    [companyName, level]
+    }, 1000),
+    [companyName, level, user]
   );
 
   useEffect(() => {
@@ -80,7 +81,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchExperiences();
-  }, [companyName, level, fetchExperiences]);
+  }, [companyName, level, user, fetchExperiences]);
 
   const updateExperience = (updatedExperience) => {
     setExperiences((prevExperiences) =>

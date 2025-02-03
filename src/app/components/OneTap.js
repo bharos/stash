@@ -43,7 +43,6 @@ const OneTap = () => {
       client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
       callback: async (response) => {
         try {
-          console.log('One Tap response: ', response)
           // Send id token returned in response.credential to supabase
           const { data, error } = await supabase.auth.signInWithIdToken({
             provider: 'google',
@@ -52,7 +51,6 @@ const OneTap = () => {
           })
 
           if (error) throw error
-          console.log('Session data: ', data)
           console.log('Successfully logged in with Google One Tap')
 
           // Update session state
