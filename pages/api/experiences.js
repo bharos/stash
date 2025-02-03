@@ -67,9 +67,13 @@ export default async function handler(req, res) {
     }
   }
   else if (req.method === 'GET') {
-    const { company_name, level, experienceId } = req.query; // Get experienceId if present
-  
+    const { company_name, level, experienceId, userId } = req.query; // Get experienceId and userId if present
+    
+    if (!experienceId && !company_name) {
+      return res.status(400).json({ error: 'Company name or experience ID is required' });
+    }
     try {
+      // Start with fetching the experience data
       let query = supabase
         .from('experiences')
         .select(`
@@ -77,40 +81,66 @@ export default async function handler(req, res) {
           company_name, 
           level, 
           username:profiles(username),
-          rounds(id, round_type, details)
+          rounds(id, round_type, details),
+          likes
         `);
-  
-      if (experienceId) {
-        // Fetch experience by ID if experienceId is passed in the query
-        query = query.eq('id', experienceId);
-      } else {
-        // If no experienceId is passed, use the company_name and level filters
-        if (company_name) {
-          query = query.ilike('company_name', `%${company_name}%`);
-        } else {
-          return res.status(400).json({ error: 'experience_id or company_name is required' });
-        }
-        if (level) {
-          query = query.ilike('level', `%${level}%`);
-        }
+
+      if (company_name) {
+        query = query.ilike('company_name', `%${company_name}%`);
       }
-  
+
+      if (level) {
+        query = query.ilike('level', `%${level}%`);
+      }
+      if (experienceId) {
+        query = query.eq('id', experienceId);
+      }
+
+      // Execute the first part of the query
       const { data: experiences, error } = await query;
-  
+
       if (error) {
         return res.status(500).json({ error: error.message });
       }
-  
-      if (experiences && experiences.length === 0) {
+
+      if (!experiences || experiences.length === 0) {
         return res.status(404).json({ error: 'Experience not found' });
       }
-  
-      // Respond with the single experience if experienceId is provided, or a list of experiences if not
+
+      // If userId is provided, check if the user has liked any of these experiences
+      if (userId) {
+        const experienceIds = experiences.map(exp => exp.id);
+
+        // Fetch likes for all experiences in one query
+        const { data: userLikes, error: userLikeError } = await supabase
+          .from('user_likes')
+          .select('experience_id')
+          .in('experience_id', experienceIds)
+          .eq('user_id', userId);
+
+        if (userLikeError) {
+          return res.status(500).json({ error: userLikeError.message });
+        }
+
+        // Convert userLikes array to a Set for faster lookup
+        const likedExperienceIds = new Set(userLikes.map(like => like.experience_id));
+
+        // Update each experience with the user_liked flag
+        experiences.forEach(exp => {
+          exp.user_liked = likedExperienceIds.has(exp.id);
+        });
+      } else {
+        // If no userId is provided, set user_liked to false for all
+        experiences.forEach(exp => {
+          exp.user_liked = false;
+        });
+      }
+
+      console.log('Experiences:', experiences);
       res.status(200).json({ experiences });
-    
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
-  }
+}
 }
   

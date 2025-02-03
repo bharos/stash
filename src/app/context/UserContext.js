@@ -16,7 +16,6 @@ export const UserProvider = ({ children }) => {
       const { data: sessionData } = await supabase.auth.getSession();
       console.log("Fetch session data", sessionData);
       if (sessionData?.user) {
-        console.log("Fetch username");
         const username = await fetchUsername(sessionData.user.id);
         console.log("Fetched username", username);
         setUser({ user_id: sessionData.user.id, username: username });  // Store both user_id and username
@@ -28,13 +27,17 @@ export const UserProvider = ({ children }) => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       console.log("State changed. Fetch user info");
       if (session?.user) {
-        console.log("Fetch username");
         fetchUsername(session.user.id).then((username) => {
-            console.log("Fetched username", username);
-            setUser({ user_id: session.user.id, username: username });  // Store both user_id and username
+          setUser((prevUser) => {
+            const newUser = { user_id: session.user.id, username };
+            return newUser;
+          });
         });
       } else {
-        setUser({ user_id: null, username: null });  // Clear user_id and username if no user is logged in
+        setUser((prevUser) => {
+          const newUser = { user_id: null, username: null };
+          return newUser;
+        });
       }
     });
 
@@ -46,7 +49,6 @@ export const UserProvider = ({ children }) => {
   const fetchUsername = async (userId) => {
     const response = await fetch(`/api/profiles?user_id=${userId}`);
     const data = await response.json();
-    console.log("Fetch username data", data);
     return data.username || null;
   };
 

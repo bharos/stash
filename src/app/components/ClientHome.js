@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useContext, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Drawer, List, ListItem, ListItemText, IconButton, ListItemButton } from '@mui/material';
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -51,7 +51,6 @@ const ClientHome = () => {
   // Extract experienceId from URL (/experience/123)
   const experienceMatch = pathname.match(/^\/experience\/(\d+)$/);
   const experienceId = experienceMatch ? experienceMatch[1] : null;
-  console.log('Experience ID:', experienceId);
   useEffect(() => {
     if (experienceId) {
       setActiveMenu('singleExperiencePage');
