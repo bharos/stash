@@ -33,7 +33,7 @@ const ClientHome = () => {
 
   const handleMenuChange = (menu) => {
     setActiveMenu(menu);
-    router.push('/'); // Push to the home page when changing menu
+    // router.push('/'); // Push to the home page when changing menu
     toggleSidebar();
   };
 
@@ -163,7 +163,13 @@ const ClientHome = () => {
             <SingleExperiencePage experienceId={experienceId} />
           ): (
           <div className="text-center mt-24">
-            <h2 className="text-2xl font-bold">Login to share your experiences!</h2>
+            <h2 className="text-2xl font-bold">Login to share your experiences! 🫵</h2>
+          <button
+          className="px-5 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-48 mt-4"
+          onClick={() => setActiveMenu('dashboard')}
+          >
+          Go to Dashboard
+          </button>
           </div>
           )
         ) : user.username ? (

@@ -65,6 +65,10 @@ const Dashboard = () => {
               console.error('Failed to fetch comments:', commentsData.error);
             }
           }
+            // Keep the isExpanded flag true for the first experience
+            if (experiencesData.experiences.length > 0) {
+              experiencesData.experiences[0].isExpanded = true;
+            }
         } else {
           // Clear experiences on failure
           setExperiences([]);
