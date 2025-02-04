@@ -53,8 +53,6 @@ export default async function handler(req, res) {
           .eq('user_id', postUserId)
           .single();
 
-        console.log('User ID:', postUserId);
-
         // If profile does not exist, insert a new one
         if (!existingProfile) {
           const { error: createError } = await supabase
@@ -75,7 +73,10 @@ export default async function handler(req, res) {
             .eq('user_id', postUserId);
 
           if (updateError) {
-            console.error('Error updating username:', updateError.message);  // Log error
+            console.log('Update error:', updateError);
+            if (updateError.code === '23505') {  // Unique constraint violation
+              return res.status(409).json({ error: 'Username already taken' });
+          }
             return res.status(500).json({ error: 'Error updating username' });
           }
 

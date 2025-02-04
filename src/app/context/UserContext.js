@@ -14,10 +14,8 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const fetchSession = async () => {
       const { data: sessionData } = await supabase.auth.getSession();
-      console.log("Fetch session data", sessionData);
       if (sessionData?.user) {
         const username = await fetchUsername(sessionData.user.id);
-        console.log("Fetched username", username);
         setUser({ user_id: sessionData.user.id, username: username });  // Store both user_id and username
       }
     };
@@ -25,7 +23,6 @@ export const UserProvider = ({ children }) => {
     fetchSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      console.log("State changed. Fetch user info");
       if (session?.user) {
         fetchUsername(session.user.id).then((username) => {
           setUser((prevUser) => {

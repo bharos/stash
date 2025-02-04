@@ -3,8 +3,6 @@ import supabase from '../../src/app/utils/supabaseClient';
 
 export default async function handler(req, res) {
   try {
-    console.log('Fetching round types...');  // Log to see when the query starts
-    
     // Query the round_types table
     const { data, error } = await supabase
       .from('round_types')
@@ -14,9 +12,6 @@ export default async function handler(req, res) {
       console.error('Error fetching data:', error);  // Log any error from Supabase
       return res.status(500).json({ error: error.message });
     }
-
-    // Log the data that is returned from the query
-    console.log('Fetched round types:', data);
 
     if (!data || data.length === 0) {
       return res.status(404).json({ error: 'No round types found' });
