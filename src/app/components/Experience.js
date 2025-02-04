@@ -65,7 +65,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
         const data = await response.json();
 
         if (response.ok) {
-          console.log('Comment added:', data.comment);
           // Create a new comment object with the username field added
           const updatedComment = {
             ...data.comment, // Spread the original comment object
@@ -96,7 +95,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   };
 
   const handleLike = async () => {
-    console.log('Like button clicked');
     if (!user) {
       alert('Sign in to like an experience.');
       return;
@@ -121,7 +119,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       });
       if (response.ok) {
         const responseData = await response.json();
-        console.log('Like response:', responseData);
         setLikes(responseData.liked ? likes + 1 : likes - 1);
         setHasLiked(responseData.liked); // Update like status
       } else {

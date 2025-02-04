@@ -8,7 +8,7 @@ import { useUser } from '../context/UserContext'; // Use the custom hook to acce
 import supabase from '../utils/supabaseClient';
 import dynamic from 'next/dynamic';
 import LandingPage from './LandingPage';
-import CreateProfile from './CreateProfile';
+import UserProfile from './UserProfile';
 import SingleExperiencePage from './SingleExperiencePage';
 
 // Dynamically import ExperienceForm and Dashboard
@@ -123,7 +123,7 @@ const ClientHome = () => {
 
         {user.user_id && (
           <List sx={{ marginTop: '20px' }}>
-            <ListItem button onClick={() => handleMenuChange('createProfile')}>
+            <ListItem button onClick={() => handleMenuChange('UserProfile')}>
               <span className="material-icons ml-2 mr-2">account_circle</span>
               <ListItemText primary="View Profile" />
             </ListItem>
@@ -152,8 +152,8 @@ const ClientHome = () => {
       {/* Main Content Area */}
       <div className="flex-1 p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
         {/* Show Experience Page if the user navigated to `/experience/[id]` */}
-        {activeMenu === 'createProfile' ? (
-          <CreateProfile />
+        {activeMenu === 'UserProfile' ? (
+          <UserProfile />
         ) : activeMenu === 'landingPage' ? (
           <LandingPage setActiveMenu={setActiveMenu} />
         ) : !user.user_id ? (
@@ -181,7 +181,7 @@ const ClientHome = () => {
             <SingleExperiencePage experienceId={experienceId} />
           ) : null
         ) : (
-          <CreateProfile />
+          <UserProfile />
         )}
       </div>
     </div>

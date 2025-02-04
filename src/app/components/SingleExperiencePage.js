@@ -40,7 +40,6 @@ const SingleExperiencePage = ({ experienceId }) => {
             console.error('Failed to fetch comments:', commentsData.error);
           }
   
-          console.log('Fetched experience:', fetchedExperience);
           setExperience(fetchedExperience); // Update the experience with comments
         } else {
           setError(data.error || 'Failed to fetch experience');
