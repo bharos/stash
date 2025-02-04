@@ -80,6 +80,7 @@ export default async function handler(req, res) {
           id, 
           company_name, 
           level, 
+          user_id,
           username:profiles(username),
           rounds(id, round_type, details),
           likes
@@ -108,6 +109,7 @@ export default async function handler(req, res) {
       }
 
       // If userId is provided, check if the user has liked any of these experiences
+      // and also if user is the owner of the experience
       if (userId) {
         const experienceIds = experiences.map(exp => exp.id);
 
@@ -129,16 +131,75 @@ export default async function handler(req, res) {
         experiences.forEach(exp => {
           exp.user_liked = likedExperienceIds.has(exp.id);
         });
+        // Set posted_by_user to true if the experience belongs to the user
+        experiences.forEach(exp => {
+          exp.posted_by_user = exp.user_id === userId;
+        });
       } else {
-        // If no userId is provided, set user_liked to false for all
+        // If no userId is provided, set user_liked and posted_by_user to false for all
         experiences.forEach(exp => {
           exp.user_liked = false;
         });
+        experiences.forEach(exp => {
+          exp.posted_by_user = false;
+        });
       }
+      console.log(experiences)
       res.status(200).json({ experiences });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
+}  else if (req.method === 'DELETE') {
+  const { experienceId } = req.body;
+
+  if (!experienceId) {
+    return res.status(400).json({ error: 'Experience ID is required.' });
+  }
+
+  // Extract token from the Authorization header
+  const token = req.headers['authorization']?.split('Bearer ')[1];
+
+  if (!token) {
+    return res.status(401).json({ error: 'Authorization token is missing.' });
+  }
+
+  try {
+    // Authenticate the user
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !user?.id) {
+      return res.status(401).json({ error: 'User not authenticated.' });
+    }
+
+    // Fetch the experience to ensure it exists and belongs to the user
+    const { data: experience, error: fetchError } = await supabase
+      .from('experiences')
+      .select('id, user_id')
+      .eq('id', experienceId)
+      .single();
+
+    if (fetchError || !experience) {
+      return res.status(404).json({ error: 'Experience not found.' });
+    }
+
+    if (experience.user_id !== user.id) {
+      return res.status(403).json({ error: 'Unauthorized. You can only delete your own experiences.' });
+    }
+
+    // Delete the experience
+    const { error: deleteError } = await supabase
+      .from('experiences')
+      .delete()
+      .eq('id', experienceId);
+
+    if (deleteError) {
+      return res.status(500).json({ error: 'Failed to delete experience.' });
+    }
+
+    res.status(200).json({ message: 'Experience deleted successfully.' });
+
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 }
 }
   
