@@ -129,6 +129,37 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     }
   };
 
+  const handleDelete = async (experienceId) => {
+    if (!experienceId) return;
+  
+    const confirmDelete = window.confirm("Are you sure you want to delete this experience?");
+    if (!confirmDelete) return;
+    try {
+    const { data: sessionData, error } = await supabase.auth.getSession();
+    if (error || !sessionData?.session || !sessionData.session.access_token) {
+      setCommentError('You need to be signed in to post a comment.');
+      return; // Stop the process if user is not authenticated
+    }
+    const token = sessionData.session.access_token; // Access token from the session object
+    const response = await fetch("/api/experiences", {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ experienceId }),
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "Failed to delete experience.");
+    }
+      alert("Experience deleted successfully!");
+    } catch (error) {
+      console.error('Error deleting experience:', error);
+      alert('Failed to delete experience.');
+    }
+  }
+
   return (
     <div
     key={experience.id}
@@ -138,6 +169,16 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   >
     {/* Buttons Section (separate row above the company name) */}
     <div className="flex justify-end w-full absolute top-2 right-2">
+      {/* If posted_by_user is set, add a delete button */}
+      {experience.posted_by_user && (
+        <button
+        onClick={() => handleDelete(experience.id)}
+        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+      >
+        <span className="material-icons">delete</span>
+      </button>
+      )}
+      
       {/* Open in New Tab Button (conditionally rendered) */}
       {showOpenInNewTabButton && (
         <button
