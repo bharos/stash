@@ -137,7 +137,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     try {
     const { data: sessionData, error } = await supabase.auth.getSession();
     if (error || !sessionData?.session || !sessionData.session.access_token) {
-      setCommentError('You need to be signed in to post a comment.');
+      setCommentError('You need to be signed in to delete experience.');
       return; // Stop the process if user is not authenticated
     }
     const token = sessionData.session.access_token; // Access token from the session object
