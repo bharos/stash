@@ -7,6 +7,31 @@ import { useUser } from '../context/UserContext';
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
+/**
+ * Experience Component
+ * 
+ * This component displays an individual experience card and handles various actions such as:
+ * - Expanding/collapsing the experience details
+ * - Posting comments
+ * - Liking/unliking the experience
+ * - Deleting the experience
+ * 
+ * The `updateExperience` function passed by the caller is expected to handle updating the state
+ * of the experience with the latest changes. It should expect an updated `experience` object 
+ * with properties as needed based on the action being performed (e.g., isExpanded, comments, deleted, etc.).
+ * 
+ * The updated experience object should contain at least the following properties:
+ * - id (string): Unique identifier for the experience
+ * - [other properties that might change, such as comments, isExpanded, likes, etc.]
+ * 
+ * Example of how the component might call updateExperience with an updated experience:
+ * {
+ *   ...experience, // Spread the original experience properties
+ *   isExpanded: !experience.isExpanded, // Toggle the isExpanded flag
+ *   comments: updatedComments, // Updated list of comments
+ *   deleted: true, // Flag for deleted experience (if applicable)
+ * }
+ */
 const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) => {
   const { user } = useUser(); // Access the user from the context
   const [newComments, setNewComments] = useState({}); // State for comments per experience
@@ -153,6 +178,11 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     if (!response.ok) {
       throw new Error(data.error || "Failed to delete experience.");
     }
+    const updatedExperience = {
+      ...experience, // Spread the original experience object
+      deleted: true, // Set the deleted flag to true
+    };
+    updateExperience(updatedExperience); 
       alert("Experience deleted successfully!");
     } catch (error) {
       console.error('Error deleting experience:', error);
