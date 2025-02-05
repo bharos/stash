@@ -93,13 +93,26 @@ const Dashboard = () => {
     fetchExperiences();
   }, [companyName, level, user, fetchExperiences]);
 
-  const updateExperience = (updatedExperience) => {
-    setExperiences((prevExperiences) =>
-      prevExperiences.map((experience) =>
-        experience.id === updatedExperience.id ? updatedExperience : experience
-      )
-    );
-  };
+  /**
+ * Updates the list of experiences in the state.
+ * 
+ * This function checks if the experience has been marked for deletion (i.e., `deleted: true`).
+ * - If `deleted` is `true`, it removes the experience with the matching `id` from the list.
+ * - If `deleted` is `false` or not present, it updates the experience in the list by replacing the one with the matching `id` with the updated data.
+ * @param {Object} updatedExperience - The experience object containing updated data, including an `id` to identify the experience.
+ * @param {boolean} updatedExperience.deleted - A flag indicating whether the experience should be deleted. If `true`, the experience will be removed from the list.
+ * @param {string} updatedExperience.id - The unique identifier of the experience to update or delete.
+ */
+const updateExperience = (updatedExperience) => {
+  setExperiences((prevExperiences) =>
+    updatedExperience.deleted
+      ? prevExperiences.filter((experience) => experience.id !== updatedExperience.id)
+      : prevExperiences.map((experience) =>
+          experience.id === updatedExperience.id ? updatedExperience : experience
+        )
+  );
+};
+
 
 
   return (

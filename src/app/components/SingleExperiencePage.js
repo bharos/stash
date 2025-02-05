@@ -10,11 +10,21 @@ const SingleExperiencePage = ({ experienceId }) => {
 
   // Define the updateExperience function to update the experience state
   const updateExperience = (updatedData) => {
-    setExperience((prevExperience) => ({
-      ...prevExperience,
-      ...updatedData,
-    }));
+    setExperience((prevExperience) => {
+      // Check if the updatedData contains a "deleted" flag
+      if (updatedData.deleted) {
+        // If deleted flag is true, set experience to null (deleted state)
+        return null;
+      }
+
+      // Otherwise, update the experience with new data
+      return {
+        ...prevExperience,
+        ...updatedData,
+      };
+    });
   };
+  
 
   useEffect(() => {
     const fetchExperience = async () => {
@@ -61,19 +71,21 @@ const SingleExperiencePage = ({ experienceId }) => {
     return <div>Loading...</div>;
   }
 
-  if (error) {
-    return <div>Error: {error}</div>;
-  }
-
   return (
     <div>
-      {experience ? (
-        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton= {false} />
+      {error ? (
+        <div className="flex justify-center items-center h-screen text-lg text-red-500">
+          {error} 🙅‍♀️
+        </div>
+      ) : experience === null ? (
+        <div className="flex justify-center items-center h-screen text-lg text-gray-500">
+          Experience not found ! 🤦‍♂️
+        </div>
       ) : (
-        <div>No experience found</div>
+        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
       )}
     </div>
-  );
+  );  
 };
 
 export default SingleExperiencePage;
