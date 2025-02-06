@@ -70,6 +70,12 @@ const UserProfile = () => {
     setSuccessMessage('');
 
     try {
+      // if new username is same as current, don't call API
+      if (newUsername === user.username) {
+        setError('Same as current.');
+        return;
+      }
+
       const response = await fetch('/api/profiles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -95,7 +101,7 @@ const UserProfile = () => {
       {/* Username Section */}
       <div className="w-full max-w-sm bg-white p-8 rounded-lg shadow-lg mb-6">
         <h2 className="text-2xl font-semibold text-center text-gray-800">
-          {user.username ? 'Change Your Username' : 'Set Username'}
+          {user.username ? 'Change Your Username 🎭' : 'Set Username 🥷'}
         </h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
@@ -120,7 +126,7 @@ const UserProfile = () => {
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Your Experiences Section */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-3">Your Experiences</h2>
+          <h2 className="text-xl font-semibold mb-3">Your Experiences 📩</h2>
           {loading ? (
             <p>Loading...</p>
           ) : experiences.length > 0 ? (
@@ -142,7 +148,7 @@ const UserProfile = () => {
 
         {/* Your Activity Section */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-3">Your Activity</h2>
+          <h2 className="text-xl font-semibold mb-3">Your Activity 🎊</h2>
           {loading ? (
             <p>Loading...</p>
           ) : activity.length > 0 ? (
