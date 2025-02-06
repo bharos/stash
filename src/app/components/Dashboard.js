@@ -155,7 +155,7 @@ const updateExperience = (updatedExperience) => {
           />
           
         ))) : (
-          <p className="text-center text-gray-500">No experiences available.</p> // Show this when no experiences are available for the selected company
+          <p className="text-center text-gray-500">No experiences available 🤐</p> // Show this when no experiences are available for the selected company
         )}
       </div>
     </div>

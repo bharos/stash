@@ -8,7 +8,7 @@ const LandingPage = ({ setActiveMenu }) => {
       {/* Adjusted for more space at the top */}
       <h1 className="text-4xl font-bold mb-4 mt-24">Welcome to Stash – The Ultimate Interview Database! 🚀</h1>
       <p className="text-lg mb-8">
-        Post your interview stories, learn from the community, and prepare smarter!
+        Post your interview stories, learn from the community, and prepare smarter!🤓
       </p>
       <div className="flex gap-4 mb-12">
         <button
