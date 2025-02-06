@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import 'react-quill-new/dist/quill.snow.css';
 import Select from 'react-select';
 import debounce from 'lodash.debounce';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import Experience from './Experience';
 
-const Dashboard = () => {
+const Dashboard = ({clientHomeEditExperience}) => {
   const [companyName, setCompanyName] = useState('');
   const { user, setUser } = useUser(); // Use user from context here
   const [level, setLevel] = useState('');
@@ -38,60 +38,82 @@ const Dashboard = () => {
     }
   }, []);
 
+// Refs to track the latest state values
+// These refs will store the latest values for these without causing re-renders
+const companyNameRef = useRef(companyName);
+const levelRef = useRef(level);
+const userRef = useRef(user);
+
   const fetchExperiences = useCallback(
     debounce(async () => {
-      if (!companyName) return; // Skip fetching if company filter is not set
+      // Access the latest values using refs
+      const currentCompanyName = companyNameRef.current;
+      const currentLevel = levelRef.current;
+      const currentUser = userRef.current;
       
+      // Skip fetching if companyName is not set
+      if (!currentCompanyName) return;
       setExperiencesLoading(true);
+  
       try {
-        const companyQuery = companyName ? `&company_name=${companyName}` : '';
-        const levelQuery = level ? `&level=${level}` : '';
-        const userQuery = user.user_id ? `&userId=${user.user_id}` : '';
+        // Construct query strings based on the latest values
+        const companyQuery = currentCompanyName ? `&company_name=${currentCompanyName}` : '';
+        const levelQuery = currentLevel ? `&level=${currentLevel}` : '';
+        const userQuery = currentUser?.user_id ? `&userId=${currentUser.user_id}` : '';
+  
+        // Make the API call to fetch experiences
         const experiencesResponse = await fetch(
           `/api/experiences?${companyQuery}${levelQuery}${userQuery}`
         );
         const experiencesData = await experiencesResponse.json();
+
         if (experiencesResponse.ok) {
           setExperiences(experiencesData.experiences);
-          // Fetch comments for each experience
+  
+          // Loop through the experiences and fetch comments for each
           for (let experience of experiencesData.experiences) {
             const commentsResponse = await fetch(
               `/api/comments?experience_id=${experience.id}`
             );
             const commentsData = await commentsResponse.json();
+            
             if (commentsResponse.ok) {
               experience.comments = commentsData.comments;
             } else {
               console.error('Failed to fetch comments:', commentsData.error);
             }
           }
-            // Keep the isExpanded flag true for the first experience
-            if (experiencesData.experiences.length > 0) {
-              experiencesData.experiences[0].isExpanded = true;
-            }
+  
+          // Keep the 'isExpanded' flag true for the first experience (UI state)
+          if (experiencesData.experiences.length > 0) {
+            experiencesData.experiences[0].isExpanded = true;
+          }
         } else {
-          // Clear experiences on failure
+          // If the fetch fails, clear the experiences state
           setExperiences([]);
           console.error('Failed to fetch experiences:', experiencesData.error);
         }
       } catch (error) {
-        // Clear experiences on failure
         setExperiences([]);
         console.error('Error fetching experiences:', error);
       } finally {
         setExperiencesLoading(false);
       }
-    }, 1000),
-    [companyName, level, user]
+    }, 500), // 500ms debounce delay
+    [] // Empty dependency array ensures that 'fetchExperiences' doesn't get recreated on every render
   );
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+// This effect updates the refs whenever the state values change
+useEffect(() => {
+  companyNameRef.current = companyName;
+  levelRef.current = level;
+  userRef.current = user;
+  fetchExperiences(); // Trigger the debounced fetch function
+}, [companyName, level, user]);
 
-  useEffect(() => {
-    fetchExperiences();
-  }, [companyName, level, user, fetchExperiences]);
+useEffect(() => {
+  fetchData();
+}, [fetchData]);
 
   /**
  * Updates the list of experiences in the state.
@@ -113,6 +135,9 @@ const updateExperience = (updatedExperience) => {
   );
 };
 
+const handleEditExperience = (experienceToEdit) => {
+  clientHomeEditExperience(experienceToEdit);
+}
 
 
   return (
@@ -152,6 +177,7 @@ const updateExperience = (updatedExperience) => {
             experience={experience}
             updateExperience={updateExperience}
             showOpenInNewTabButton={true}
+            editExperienceClicked={handleEditExperience}
           />
           
         ))) : (
