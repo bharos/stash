@@ -5,6 +5,7 @@ import { Drawer, List, ListItem, ListItemText, IconButton, ListItemButton } from
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
+import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the custom hook for activeMenu context
 import supabase from '../utils/supabaseClient';
 import dynamic from 'next/dynamic';
 import LandingPage from './LandingPage';
@@ -19,8 +20,8 @@ const ClientHome = () => {
   const router = useRouter();
   const pathname = usePathname(); // Get the current URL path
   const { user, setUser } = useUser();
+  const { activeMenu, setActiveMenu } = useActiveMenu(); // Access activeMenu from context
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeMenu, setActiveMenu] = useState('landingPage');
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -33,7 +34,7 @@ const ClientHome = () => {
 
   const handleMenuChange = (menu) => {
     setActiveMenu(menu);
-    // router.push('/'); // Push to the home page when changing menu
+    router.push('/'); // Push to the home page when changing menu
     toggleSidebar();
   };
 
@@ -111,32 +112,32 @@ const ClientHome = () => {
 
         {/* Menu Items */}
         <List sx={{ marginTop: '20px' }}>
-          <ListItem button onClick={() => handleMenuChange('dashboard')}>
-            <span className="material-icons ml-2 mr-2">dashboard</span>
-            <ListItemText primary="Dashboard" />
-          </ListItem>
-          <ListItem button onClick={() => handleMenuChange('postExperience')}>
-            <span className="material-icons ml-2 mr-2">post_add</span>
-            <ListItemText primary="Post Experience" />
-          </ListItem>
+        <ListItemButton onClick={() => handleMenuChange('dashboard')}>
+          <span className="material-icons ml-2 mr-2">dashboard</span>
+          <ListItemText primary="Dashboard" />
+        </ListItemButton>
+        <ListItemButton onClick={() => handleMenuChange('postExperience')}>
+          <span className="material-icons ml-2 mr-2">post_add</span>
+          <ListItemText primary="Post Experience" />
+        </ListItemButton>
         </List>
 
         {user.user_id && (
           <List sx={{ marginTop: '20px' }}>
-            <ListItem button onClick={() => handleMenuChange('UserProfile')}>
+            <ListItemButton onClick={() => handleMenuChange('UserProfile')}>
               <span className="material-icons ml-2 mr-2">account_circle</span>
               <ListItemText primary="View Profile" />
-            </ListItem>
+            </ListItemButton>
           </List>
         )}
 
         {/* SignOut Button */}
         {user.user_id && (
           <List sx={{ marginTop: '20px' }}>
-            <ListItem button onClick={handleSignOut}>
+            <ListItemButton onClick={handleSignOut}>
               <span className="material-icons ml-2 mr-2">logout</span>
               <ListItemText primary="Sign Out" />
-            </ListItem>
+            </ListItemButton>
           </List>
         )}
 
@@ -158,7 +159,7 @@ const ClientHome = () => {
           <LandingPage setActiveMenu={setActiveMenu} />
         ) : !user.user_id ? (
           activeMenu === 'dashboard' ? (
-            <Dashboard />
+            <Dashboard/>
           ):  activeMenu === 'singleExperiencePage' ? (
             <SingleExperiencePage experienceId={experienceId} />
           ): (
@@ -176,7 +177,7 @@ const ClientHome = () => {
           activeMenu === 'dashboard' ? (
             <Dashboard />
           ) : activeMenu === 'postExperience' ? (
-            <ExperienceForm />
+            <ExperienceForm/>
           ) : activeMenu === 'singleExperiencePage' ? (
             <SingleExperiencePage experienceId={experienceId} />
           ) : null

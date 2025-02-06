@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import Experience from './Experience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 
-const SingleExperiencePage = ({ experienceId }) => {
+const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,6 +67,10 @@ const SingleExperiencePage = ({ experienceId }) => {
     }
   }, [experienceId, user]); // Re-fetch when experienceId or user changes
 
+  const handleEditExperience = (experienceToEdit) => {
+    clientHomeEditExperience(experienceToEdit);
+  }
+
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -82,7 +86,8 @@ const SingleExperiencePage = ({ experienceId }) => {
           Experience not found ! 🤦‍♂️
         </div>
       ) : (
-        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
+        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false}
+        editExperienceClicked={handleEditExperience} />
       )}
     </div>
   );  

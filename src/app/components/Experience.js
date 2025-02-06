@@ -3,6 +3,9 @@ import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import supabase from '../utils/supabaseClient';
 import { useUser } from '../context/UserContext';
+import { useDraftExperience } from '../context/DraftExperience';
+import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the custom hook for activeMenu context
+import { useRouter } from 'next/navigation'
 
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -32,8 +35,11 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
  *   deleted: true, // Flag for deleted experience (if applicable)
  * }
  */
-const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) => {
+const Experience = ({ experience, updateExperience, showOpenInNewTabButton , editExperienceClicked}) => {
   const { user } = useUser(); // Access the user from the context
+  const { setDraftExperience } = useDraftExperience(); // Use context
+  const { setActiveMenu } = useActiveMenu(); // Access activeMenu from context
+  const router = useRouter();
   const [newComments, setNewComments] = useState({}); // State for comments per experience
   const [isLinkCopied, setIsLinkCopied] = useState(false); // State to track if the link is copied
   const [showShareModal, setShowShareModal] = useState(false); // State to show/hide the share modal
@@ -190,6 +196,16 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     }
   }
 
+
+const handleEditExperience = (experience) => {
+  const updatedExperience = {
+    ...experience, // Spread the original experience object
+  };
+  setDraftExperience(updatedExperience); // Set the updated experience in the context
+  setActiveMenu('postExperience');
+  router.push('/');
+};
+
   return (
     <div
     key={experience.id}
@@ -220,7 +236,18 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           <span className="material-icons">open_in_new</span>
         </button>
       )}
-  {/* Share button */}
+
+      {/* Edit button */}
+      {experience.posted_by_user && (
+      <button
+        onClick={() => handleEditExperience(experience)}
+        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+      >
+        <span className="material-icons ml-2 mr-2">edit</span>
+      </button>
+      )}
+
+      {/* Share button */}
       <button
         onClick={() => handleShareExperience(experience.id)}
         className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
@@ -237,7 +264,8 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       </button>
     </div>
   
-    {/* Card Content */}
+    {/* Experience header, toggle when clicked anywhere on this part */}
+    <div className ="experience-header" onClick={() => toggleExperienceDetails(experience)}>
     <div className="flex items-center gap-4 mt-3 relative">
       {/* Profile Image */}
       <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
@@ -257,35 +285,36 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       </div>
     </div>
   
-{/* Share Modal */}
-{showShareModal && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
-    <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-      <h4 className="text-2xl font-semibold mb-6 text-center text-gray-800">Share this Experience</h4>
-      <div className="flex items-center space-x-2 mb-6">
-        <input
-          type="text"
-          readOnly
-          value={`${window.location.origin}/experience/${experience.id}`}
-          className="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
-        />
-        <button
-          onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
-          className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {isLinkCopied ? 'Copied!' : 'Copy Link'}
-        </button>
-      </div>
-      <button
-        onClick={() => setShowShareModal(false)}
-        className="w-full py-2 mt-4 text-center text-white-600 font-medium hover:text-gray-800 transition-all duration-200"
-      >
-        Close
-      </button>
+      {/* Share Modal */}
+      {showShareModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <h4 className="text-2xl font-semibold mb-6 text-center text-gray-800">Share this Experience</h4>
+            <div className="flex items-center space-x-2 mb-6">
+              <input
+                type="text"
+                readOnly
+                value={`${window.location.origin}/experience/${experience.id}`}
+                className="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+              />
+              <button
+                onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
+                className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {isLinkCopied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full py-2 mt-4 text-center text-white-600 font-medium hover:text-gray-800 transition-all duration-200"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
-  </div>
-)}
-      {/* Experience Details */}
+      {/* Card content: Experience Details */}
       <div className="experience-details mt-4">
         {experience.rounds.map((round, index) => (
           <div key={index} className="round-container mb-4">
