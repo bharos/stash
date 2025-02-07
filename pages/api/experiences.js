@@ -123,12 +123,23 @@ export default async function handler(req, res) {
     case 'PUT':
       return handleExperienceUpsert(req, res);
     case 'GET':
-      const { company_name, level, experienceId, userId } = req.query;
+      const { company_name, level, experienceId } = req.query;
 
       if (!experienceId && !company_name) {
         return res.status(400).json({ error: 'Company name or experience ID is required' });
       }
+
       try {
+        const token = req.headers['authorization']?.split('Bearer ')[1];
+        let userId;
+        if (token) {
+          const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+          // Check if authentication failed or the user is not found
+          if (authError || !user?.id) {
+            return res.status(401).json({ error: 'User not authenticated. Are you signed in?' });
+          }
+          userId = user.id;
+        }
         // Start with fetching the experience data
         let query = supabase
           .from('experiences')
@@ -201,8 +212,12 @@ export default async function handler(req, res) {
             exp.posted_by_user = false;
           });
         }
-        console.log(experiences)
-        res.status(200).json({ experiences });
+        const experiencesWithoutUserId = experiences.map(experience => {
+          const { user_id, ...rest } = experience;  // Destructure and exclude `user_id`
+          return rest;
+        });
+        console.log(experiencesWithoutUserId)
+        res.status(200).json({ experiences: experiencesWithoutUserId });
       } catch (error) {
         res.status(500).json({ error: error.message });
       }

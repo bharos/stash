@@ -376,8 +376,8 @@ const handleEditExperience = (experience) => {
                 {/* Display Commenter's Username */}
                 <p className="text-gray-400 text-sm">
                   By: { 
-                    comment?.user_id === experience?.user_id 
-                      ? <span className="font-bold text-red-500" data-tip="Original Poster (OP)">OP</span> 
+                    comment?.is_op 
+                      ? <span className="font-bold text-red-500" title="Original Poster (OP)">OP</span> 
                       : comment?.username || 'Anonymous'
                   }
                 </p>
