@@ -4,6 +4,7 @@ import Select from 'react-select';
 import debounce from 'lodash.debounce';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import Experience from './Experience';
+import supabase from '../utils/supabaseClient';
 
 const Dashboard = ({clientHomeEditExperience}) => {
   const [companyName, setCompanyName] = useState('');
@@ -59,12 +60,20 @@ const userRef = useRef(user);
         // Construct query strings based on the latest values
         const companyQuery = currentCompanyName ? `&company_name=${currentCompanyName}` : '';
         const levelQuery = currentLevel ? `&level=${currentLevel}` : '';
-        const userQuery = currentUser?.user_id ? `&userId=${currentUser.user_id}` : '';
-  
-        // Make the API call to fetch experiences
-        const experiencesResponse = await fetch(
-          `/api/experiences?${companyQuery}${levelQuery}${userQuery}`
-        );
+        // Prepare the fetch headers
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (sessionData?.session?.access_token) {
+          // If token is available, add it to the Authorization header
+          headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+        }
+
+        const experiencesResponse = await fetch(`/api/experiences?${companyQuery}${levelQuery}`, {
+          method: 'GET',
+          headers: headers
+        });
         const experiencesData = await experiencesResponse.json();
 
         if (experiencesResponse.ok) {
@@ -84,10 +93,8 @@ const userRef = useRef(user);
             }
           }
   
-          // Keep the 'isExpanded' flag true for the first experience (UI state)
-          if (experiencesData.experiences.length > 0) {
-            experiencesData.experiences[0].isExpanded = true;
-          }
+          // Keep the 'isExpanded' flag true for the all experiences (UI state)
+            experiencesData.experiences.map(experience => experience.isExpanded = true);
         } else {
           // If the fetch fails, clear the experiences state
           setExperiences([]);

@@ -1,12 +1,16 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
 const handleExperienceUpsert = async (req, res) => {
-  const { company_name, level, rounds, experienceId } = req.body;
+  const { company_name, level, rounds, experienceId, username } = req.body;
   const token = req.headers['authorization']?.split('Bearer ')[1];
 
   console.log("Experience ID ", experienceId);
   if (req.method === 'PUT' && !experienceId) {
     return res.status(400).json({ error: 'Experience ID is required for updates.' });
+  }
+
+  if (req.method === 'POST' && !username) {
+    return res.status(400).json({ error: 'Username is missing.' });
   }
 
   if (!token) {
@@ -36,7 +40,7 @@ const handleExperienceUpsert = async (req, res) => {
       // POST logic
       const { data, error } = await supabase
         .from('experiences')
-        .insert([{ company_name, level, user_id: user.id }])
+        .insert([{ company_name, level, user_id: user.id , username}])
         .select();
 
       if (error) {
@@ -119,12 +123,23 @@ export default async function handler(req, res) {
     case 'PUT':
       return handleExperienceUpsert(req, res);
     case 'GET':
-      const { company_name, level, experienceId, userId } = req.query;
+      const { company_name, level, experienceId } = req.query;
 
       if (!experienceId && !company_name) {
         return res.status(400).json({ error: 'Company name or experience ID is required' });
       }
+
       try {
+        const token = req.headers['authorization']?.split('Bearer ')[1];
+        let userId;
+        if (token) {
+          const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+          // Check if authentication failed or the user is not found
+          if (authError || !user?.id) {
+            return res.status(401).json({ error: 'User not authenticated. Are you signed in?' });
+          }
+          userId = user.id;
+        }
         // Start with fetching the experience data
         let query = supabase
           .from('experiences')
@@ -133,10 +148,11 @@ export default async function handler(req, res) {
             company_name, 
             level, 
             user_id,
-            username:profiles(username),
+            username,
             rounds(id, round_type, details),
             likes
-          `);
+          `)
+          .order('created_at', { ascending: false });
   
         if (company_name) {
           query = query.ilike('company_name', `%${company_name}%`);
@@ -196,8 +212,12 @@ export default async function handler(req, res) {
             exp.posted_by_user = false;
           });
         }
-        console.log(experiences)
-        res.status(200).json({ experiences });
+        const experiencesWithoutUserId = experiences.map(experience => {
+          const { user_id, ...rest } = experience;  // Destructure and exclude `user_id`
+          return rest;
+        });
+        console.log(experiencesWithoutUserId)
+        res.status(200).json({ experiences: experiencesWithoutUserId });
       } catch (error) {
         res.status(500).json({ error: error.message });
       }

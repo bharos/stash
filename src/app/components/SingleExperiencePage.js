@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Experience from './Experience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
+import supabase from '../utils/supabaseClient';
 
 const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
   const [experience, setExperience] = useState(null);
@@ -29,11 +30,20 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
   useEffect(() => {
     const fetchExperience = async () => {
       try {
-        // Prepare the user query parameter, include userId if it's available
-        const userQuery = user?.user_id ? `&userId=${user.user_id}` : '';
-  
-        // Fetch the experience data
-        const response = await fetch(`/api/experiences?experienceId=${experienceId}${userQuery}`);
+        // Prepare the fetch headers
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (sessionData?.session?.access_token) {
+          // If token is available, add it to the Authorization header
+          headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
+        }
+
+        const response = await fetch(`/api/experiences?experienceId=${experienceId}`, {
+          method: 'GET',
+          headers: headers
+        });
         const data = await response.json();
   
         if (response.ok) {

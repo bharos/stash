@@ -84,10 +84,10 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
           return; // Stop the process if user is not authenticated
         }
         const token = sessionData.session.access_token; // Access token from the session object
-
+        const username = user.username;
         const response = await fetch('/api/comments', {
           method: 'POST',
-          body: JSON.stringify({ experience_id: experienceId, comment }),
+          body: JSON.stringify({ experience_id: experienceId, comment, username }),
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}`, // Attach token in the Authorization header
@@ -99,7 +99,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
           // Create a new comment object with the username field added
           const updatedComment = {
             ...data.comment, // Spread the original comment object
-            username: { username: user.username }, // Add the username
+            username: username, // Add the username
           };
           const updatedExperience = {
             ...experience, // Spread the original experience object
@@ -280,7 +280,7 @@ const handleEditExperience = (experience) => {
         </p>
         {/* Display Username */}
         <p className="text-gray-400 text-sm">
-          Submitted by: {experience.username ? experience.username.username : 'Anonymous'}
+        Submitted by: {experience?.username || 'Anonymous'}
         </p>
       </div>
     </div>
@@ -375,7 +375,11 @@ const handleEditExperience = (experience) => {
                 <p>{comment?.comment || 'No content available'}</p>
                 {/* Display Commenter's Username */}
                 <p className="text-gray-400 text-sm">
-                  By: {comment.username ? comment.username.username : 'Anonymous'}
+                  By: { 
+                    comment?.is_op 
+                      ? <span className="font-bold text-red-500" title="Original Poster (OP)">OP</span> 
+                      : comment?.username || 'Anonymous'
+                  }
                 </p>
               </div>
             ))

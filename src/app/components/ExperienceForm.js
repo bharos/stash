@@ -138,8 +138,9 @@ const ExperienceForm = () => {
       console.log('handleSubmit',draftExperience);
       console.log('handleSubmit expId', experienceId);
       const token = data.session.access_token;
+      const username = user.username;
       const method = experienceId ? 'PUT' : 'POST';
-      const requestBody = { company_name: companyName, level, rounds, experienceId  };
+      const requestBody = { company_name: companyName, level, rounds, experienceId, username  };
 
       const response = await fetch('/api/experiences', {
         method: method,
@@ -198,7 +199,7 @@ const ExperienceForm = () => {
           Discard Edit
         </button>
       </div>
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-1">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-gray-700">Company Name</label>
@@ -263,22 +264,26 @@ const ExperienceForm = () => {
             )}
           </div>
         ))}
+
+        <div className="form-button-area">
         <button
           type="button"
           onClick={addRound}
-          className="w-full p-3 bg-blue-500 text-white rounded-md"
+          className="w-full p-3 m-1 bg-blue-500 text-white rounded-md"
         >
           Add Round
         </button>
+        {error && <p className="text-red-500 m-2 text-center">{error}</p>}
+        {successMessage && <p className="text-green-500 m-2 text-center">{successMessage}</p>}
         <button
           type="submit"
           disabled={loading}
-          className="w-full p-3 bg-green-500 text-white rounded-md"
+          className="w-full p-3 m-1 bg-green-500 text-white rounded-md"
         >
           {loading ? 'Submitting...' : 'Submit'}
         </button>
-        {error && <p className="text-red-500 text-center">{error}</p>}
-        {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
+        </div>
+
       </form>
     </div>
   );
