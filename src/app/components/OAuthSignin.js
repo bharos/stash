@@ -1,71 +1,33 @@
 'use client'
 
-import Script from 'next/script'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import supabase from '../utils/supabaseClient'
-import './one-tap.css'
+import './OAuthSignin.css'
 
-const OneTap = () => {
+const OAuthSignin = () => {
   const router = useRouter()
   const [session, setSession] = useState(null) // Track session state
 
-  // Generate nonce to use for Google ID token sign-in
-  const generateNonce = async () => {
-    const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
-    const encoder = new TextEncoder()
-    const encodedNonce = encoder.encode(nonce)
-    const hashBuffer = await crypto.subtle.digest('SHA-256', encodedNonce)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    const hashedNonce = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+  // Initialize Google OAuth (OAuth SignIn using Google)
+  const initializeGoogleOAuth = async () => {
+    try {
+      // Use Supabase's signInWithOAuth method to handle the OAuth flow
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        // No need for manual token passing, Supabase will handle the OAuth flow
+      })
 
-    return [nonce, hashedNonce]
-  }
+      if (error) throw error
+      console.log('Successfully logged in with Google OAuth')
 
-  // Initialize Google One Tap
-  const initializeGoogleOneTap = async () => {
-    const [nonce, hashedNonce] = await generateNonce()
-    console.log('Nonce: ', nonce, hashedNonce)
-
-    // Check if there's already an existing session before initializing the One Tap UI
-    const { data, error } = await supabase.auth.getSession()
-    if (error) {
-      console.error('Error getting session', error)
+      // Update session state
+      setSession(data.session)
+      // Redirect to protected page
+      router.push('/')
+    } catch (error) {
+      console.error('Error logging in with Google OAuth', error)
     }
-    if (data.session) {
-      setSession(data.session) // Set the session state
-      router.push('/') // Redirect to home page if already logged in
-      return
-    }
-
-    /* global google */
-    google.accounts.id.initialize({
-      client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
-      callback: async (response) => {
-        try {
-          // Send id token returned in response.credential to supabase
-          const { data, error } = await supabase.auth.signInWithIdToken({
-            provider: 'google',
-            token: response.credential,
-            nonce,
-          })
-
-          if (error) throw error
-          console.log('Successfully logged in with Google One Tap')
-
-          // Update session state
-          setSession(data.session)
-          // Redirect to protected page
-          // router.push('/')
-        } catch (error) {
-          console.error('Error logging in with Google One Tap', error)
-        }
-      },
-      nonce: hashedNonce,
-      use_fedcm_for_prompt: true, // With Chrome's removal of third-party cookies, we need to use FedCM instead
-    })
-
-    google.accounts.id.prompt() // Display the One Tap UI
   }
 
   useEffect(() => {
@@ -92,19 +54,11 @@ const OneTap = () => {
 
   return (
     <>
-      {/* Load the Google One Tap SDK script */}
-      <Script
-        src="https://accounts.google.com/gsi/client"
-        strategy="afterInteractive"
-        onLoad={() => console.log('Google One Tap SDK loaded')}
-        onError={() => console.error('Failed to load Google One Tap SDK')}
-      />
-
       {/* Sign-in Button (Only shows if not signed in) */}
       {!session && (
         <button
           className="gsi-material-button fixed top-4 right-4 z-[100] flex items-center justify-center px-6 py-2 bg-blue-500 text-white rounded-full cursor-pointer shadow-lg transition-all hover:bg-blue-600 active:bg-blue-700"
-          onClick={() => initializeGoogleOneTap()}
+          onClick={initializeGoogleOAuth}
         >
           <div className="gsi-material-button-state"></div>
           <div className="gsi-material-button-content-wrapper">
@@ -143,4 +97,4 @@ const OneTap = () => {
   )
 }
 
-export default OneTap
+export default OAuthSignin

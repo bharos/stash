@@ -1,5 +1,5 @@
 import './globals.css';
-import OneTap from './components/OneTap';
+import OAuthSignin from './components/OAuthSignin';
 import { UserProvider } from './context/UserContext';  // Import the UserProvider
 import ClientHome from './components/ClientHome';  // Import ClientHome
 import { ActiveMenuProvider } from './context/ActiveMenuContext';  // Import ActiveMenuProvider
@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
         <UserProvider>
           <DraftExperienceProvider>
           <ActiveMenuProvider> {/* Wrap UserProvider with ActiveMenuProvider */}
-            <OneTap />  {/* This triggers One Tap when the page loads */}
+            <OAuthSignin />  {/* This triggers OAuth signin when the page loads */}
             <ClientHome>  {/* Wrap the children with ClientHome */}
               {children}  {/* Content from individual pages */}
             </ClientHome>
