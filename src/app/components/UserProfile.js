@@ -164,7 +164,7 @@ const UserProfile = () => {
                     </h3>
                     <p className="text-gray-700">Level: {act.level}</p>
                   </>
-                ) : (
+                ) : act.type === 'liked_experience' ? (
                   <h3 className="text-lg font-medium">
                     Liked an{' '}
                     <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
@@ -172,6 +172,16 @@ const UserProfile = () => {
                     </Link>{' '}
                     at {act.company_name} (Level: {act.level})
                   </h3>
+                ) : act.type === 'commented_experience' ? (
+                  <h3 className="text-lg font-medium">
+                    Commented on{' '}
+                    <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
+                      experience
+                    </Link>{' '}
+                    at {act.company_name} (Level: {act.level})
+                  </h3>
+                ) : (
+                  <div>Invalid activity</div>
                 )}
                 <p className="text-sm text-gray-500">{new Date(act.created_at).toLocaleString()}</p>
               </div>
