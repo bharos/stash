@@ -26,15 +26,19 @@ const ExperienceForm = () => {
   const [roundTypes, setRoundTypes] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
 
+  const resetFields = () => {
+    setCompanyName('');
+    setLevel('');
+    setRounds([{ round_type: '', details: '' }]);
+    setExperienceId(null);
+  }
+
   useEffect(() => {
     console.log("user id" , user);
     if (experienceId !== null && draftExperience?.user_id !== user?.user_id) {
       
        // Unauthorized user.Reset fields to clear the draft experience
-       setCompanyName('');
-       setLevel('');
-       setRounds([{ round_type: '', details: '' }]);
-       setExperienceId(null);
+       resetFields();
     }
   }, [user?.user_id]); // Trigger this effect on changes to user context
 
@@ -155,11 +159,8 @@ const ExperienceForm = () => {
         ? 'Experience updated successfully! 🥳 🎉'
         : 'Experience submitted successfully! 🎉 🎊');
       
-      // Reset fields
-      setCompanyName('');
-      setLevel('');
-      setRounds([{ round_type: '', details: '' }]);
-      setExperienceId(null);
+      // Clear the fields after submission
+      resetFields();
     } catch (error) {
       setError(error.message || 'Failed to submit experience');
     } finally {
@@ -188,6 +189,14 @@ const ExperienceForm = () => {
         ) : (
           <h2 className="text-xl font-semibold">Posting a New Experience 👨🏻‍💻</h2>
         )}
+        {/* Discard Edit Button */}
+        <button
+          type="button"
+          onClick={resetFields}
+          className="w-auto p-2 px-4 bg-red-500 text-white rounded-md hover:bg-red-700 active:bg-red-800 transition-all"
+        >
+          Discard Edit
+        </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
