@@ -35,9 +35,8 @@ const ExperienceForm = () => {
 
   useEffect(() => {
     console.log("user id" , user);
-    if (experienceId !== null && draftExperience?.user_id !== user?.user_id) {
-      
-       // Unauthorized user.Reset fields to clear the draft experience
+    if (experienceId !== null && !user && !draftExperience?.posted_by_user) {
+       // Unauthorized user. Reset fields to clear the draft experience
        resetFields();
     }
   }, [user?.user_id]); // Trigger this effect on changes to user context

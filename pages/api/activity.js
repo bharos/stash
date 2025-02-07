@@ -40,6 +40,15 @@ export default async function handler(req, res) {
 
         if (likeError) throw likeError;
 
+        // Fetch comments made by the user (joining with experiences)
+        const { data: comments, error: commentError } = await supabase
+        .from('comments')
+        .select('experience_id, created_at, experiences(id, company_name, level)')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+        if (commentError) throw commentError;
+
         // Combine both experiences and likes into activity
         const activity = [
             ...experiences.map(exp => ({
@@ -56,6 +65,13 @@ export default async function handler(req, res) {
                 created_at: like.created_at,
                 company_name: like.experiences?.company_name,
                 level: like.experiences?.level
+            })),
+            ...comments.map(comment => ({
+                type: 'commented_experience',
+                experience_id: comment.experience_id,
+                created_at: comment.created_at,
+                company_name: comment.experiences?.company_name,
+                level: comment.experiences?.level
             }))
         ];
 
