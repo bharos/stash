@@ -1,12 +1,16 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
 const handleExperienceUpsert = async (req, res) => {
-  const { company_name, level, rounds, experienceId } = req.body;
+  const { company_name, level, rounds, experienceId, username } = req.body;
   const token = req.headers['authorization']?.split('Bearer ')[1];
 
   console.log("Experience ID ", experienceId);
   if (req.method === 'PUT' && !experienceId) {
     return res.status(400).json({ error: 'Experience ID is required for updates.' });
+  }
+
+  if (req.method === 'POST' && !username) {
+    return res.status(400).json({ error: 'Username is missing.' });
   }
 
   if (!token) {
@@ -36,7 +40,7 @@ const handleExperienceUpsert = async (req, res) => {
       // POST logic
       const { data, error } = await supabase
         .from('experiences')
-        .insert([{ company_name, level, user_id: user.id }])
+        .insert([{ company_name, level, user_id: user.id , username}])
         .select();
 
       if (error) {
@@ -133,10 +137,11 @@ export default async function handler(req, res) {
             company_name, 
             level, 
             user_id,
-            username:profiles(username),
+            username,
             rounds(id, round_type, details),
             likes
-          `);
+          `)
+          .order('created_at', { ascending: false });
   
         if (company_name) {
           query = query.ilike('company_name', `%${company_name}%`);

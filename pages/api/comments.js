@@ -2,11 +2,11 @@ import supabase from '../../src/app/utils/supabaseClient';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
-    const { experience_id, comment } = req.body;
+    const { experience_id, comment, username } = req.body;
     
     // Basic validation to ensure required data exists
-    if (!experience_id || !comment) {
-      return res.status(400).json({ error: 'Experience ID and comment are required.' });
+    if (!experience_id || !comment || !username) {
+      return res.status(400).json({ error: 'Experience ID, comment, username are required.' });
     }
 
     try {
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
       // Insert the comment into the comments table, including the user_id
       const { data, error } = await supabase
         .from('comments')
-        .insert([{ experience_id, comment, user_id: user.id }])  // Add user_id here
+        .insert([{ experience_id, comment, user_id: user.id, username }])  // Add user_id here
         .select();
 
       if (error) {
@@ -51,10 +51,11 @@ export default async function handler(req, res) {
       const { data: comments, error } = await supabase
         .from('comments')
         .select(`
-          id, 
+          id,
+          user_id,
           comment, 
           created_at, 
-          username:profiles(username)
+          username
         `)
         .eq('experience_id', experience_id)
         .order('created_at', { ascending: false }); // Order by timestamp DESC

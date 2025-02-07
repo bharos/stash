@@ -84,10 +84,8 @@ const userRef = useRef(user);
             }
           }
   
-          // Keep the 'isExpanded' flag true for the first experience (UI state)
-          if (experiencesData.experiences.length > 0) {
-            experiencesData.experiences[0].isExpanded = true;
-          }
+          // Keep the 'isExpanded' flag true for the all experiences (UI state)
+            experiencesData.experiences.map(experience => experience.isExpanded = true);
         } else {
           // If the fetch fails, clear the experiences state
           setExperiences([]);
