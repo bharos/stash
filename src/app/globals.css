@@ -11,7 +11,7 @@
 /* Custom theme variables for background and foreground colors */
 :root {
   --background: #f9fafb; /* Light background color */
-  --foreground: #333333; /* Dark text for contrast */
+  --foreground: #51513d; /* Dark text for contrast */
   --accent: #0070f3; /* Subtle blue for accent buttons or links */
   --border: #e0e0e0; /* Light gray border for inputs and dividers */
   --card-background: #ffffff; /* Card background */
@@ -22,7 +22,7 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #121212;
-    --foreground: #333333; /* Dark text color for readability in dark mode */
+    --foreground: #625a71; /* Dark text color for readability in dark mode */
     --accent: #4A90E2;
     --border: #555555;
     --card-background: #1f1f1f;
