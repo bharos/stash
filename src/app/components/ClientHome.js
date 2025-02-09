@@ -114,7 +114,7 @@ const ClientHome = () => {
         <List sx={{ marginTop: '20px' }}>
         <ListItemButton onClick={() => handleMenuChange('dashboard')}>
           <span className="material-icons ml-2 mr-2">dashboard</span>
-          <ListItemText primary="Dashboard" />
+          <ListItemText primary="Explore" />
         </ListItemButton>
         <ListItemButton onClick={() => handleMenuChange('postExperience')}>
           <span className="material-icons ml-2 mr-2">post_add</span>
@@ -166,10 +166,10 @@ const ClientHome = () => {
           <div className="text-center mt-24">
             <h2 className="text-2xl font-bold">Login to share your experiences! 🫵</h2>
           <button
-          className="px-5 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-48 mt-4"
+          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-48 mt-4"
           onClick={() => setActiveMenu('dashboard')}
           >
-          Go to Dashboard
+          🧭  Explore
           </button>
           </div>
           )

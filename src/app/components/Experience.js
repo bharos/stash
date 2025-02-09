@@ -37,7 +37,7 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
  */
 const Experience = ({ experience, updateExperience, showOpenInNewTabButton , editExperienceClicked}) => {
   const { user } = useUser(); // Access the user from the context
-  const { setDraftExperience } = useDraftExperience(); // Use context
+  const { draftExperience, setDraftExperience } = useDraftExperience(); // Use context
   const { setActiveMenu } = useActiveMenu(); // Access activeMenu from context
   const router = useRouter();
   const [newComments, setNewComments] = useState({}); // State for comments per experience
@@ -197,15 +197,23 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
   }
 
 
-const handleEditExperience = (experience) => {
-  const updatedExperience = {
-    ...experience, // Spread the original experience object
+  const handleEditExperience = (experience) => {
+    // Assuming you are updating only the experience part of draftExperience
+    const updatedDraftExperience = {
+      ...draftExperience, // Spread the existing draftExperience object
+      experience: {
+        ...experience, // Spread the original experience object to preserve its values
+      },
+      draftType: 'experience', // Set the draftType to 'experience'
+    };
+    // Set the updated experience and draftType in the context or state
+    setDraftExperience(updatedDraftExperience);
+    // Set the active menu to 'postExperience'
+    setActiveMenu('postExperience');
+    // Redirect to the root
+    router.push('/');
   };
-  setDraftExperience(updatedExperience); // Set the updated experience in the context
-  setActiveMenu('postExperience');
-  router.push('/');
-};
-
+  
   return (
     <div
     key={experience.id}

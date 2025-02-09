@@ -13,29 +13,35 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 const ExperienceForm = () => {
   const { draftExperience, setDraftExperience } = useDraftExperience(); // Use context
   const { user } = useUser();
-  const [companyName, setCompanyName] = useState(draftExperience.company_name || '');
-  const [level, setLevel] = useState(draftExperience.level || '');
-  const [rounds, setRounds] = useState(draftExperience?.rounds || [{ round_type: '', details: '' }]);
-  const [experienceId, setExperienceId] = useState(draftExperience?.id || null);
+  const [companyName, setCompanyName] = useState(draftExperience?.experience?.company_name || '');
+  const [level, setLevel] = useState(draftExperience?.experience?.level || '');
+  const [rounds, setRounds] = useState(draftExperience?.experience?.rounds || [{ round_type: '', details: '' }]);
+  const [experienceId, setExperienceId] = useState(draftExperience?.experience?.id || null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState(null);
   const [isClient, setIsClient] = useState(false);
-
+  const [generalPostContent, setGeneralPostContent] = useState(draftExperience?.general_post?.details || ''); // State for general post content
+  const [formType, setFormType] = useState(draftExperience?.draftType  || 'experience'); // State to handle form type (experience or general_post)
+  
   const quillRefs = useRef([]);
   const [roundTypes, setRoundTypes] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
 
   const resetFields = () => {
-    setCompanyName('');
-    setLevel('');
-    setRounds([{ round_type: '', details: '' }]);
-    setExperienceId(null);
+    if (formType === 'experience') {
+      setCompanyName('');
+      setLevel('');
+      setRounds([{ round_type: '', details: '' }]);
+      setExperienceId(null);
+    } else if (formType === 'general_post') {
+      setGeneralPostContent('');
+    }
   }
 
   useEffect(() => {
     console.log("user id" , user);
-    if (experienceId !== null && !user && !draftExperience?.posted_by_user) {
+    if (experienceId !== null && !user && !draftExperience?.experience?.posted_by_user) {
        // Unauthorized user. Reset fields to clear the draft experience
        resetFields();
     }
@@ -78,23 +84,35 @@ const ExperienceForm = () => {
   }, [companyOptions.length]);
 
   const updateDraftExperience = useRef(
-    debounce((companyName, level, rounds, experienceId) => {
-      const updatedDraftExperience = {
-        ...(draftExperience || {}), // Spread existing draftExperience if it exists
-        company_name: companyName,
-        level,
-        rounds,
-        id: experienceId
-      };
-      setDraftExperience(updatedDraftExperience);
-      console.log('debounce');
+    debounce((companyName, level, rounds, experienceId, generalPostContent, draftType) => {
+      setDraftExperience((prevState) => {
+        const updatedDraftExperience = { 
+          ...prevState, // Spread previous state to preserve other properties
+        };
+        console.log('post content', generalPostContent);
+        if (draftType === 'experience') {
+          updatedDraftExperience.experience = {
+            company_name: companyName,
+            level,
+            rounds,
+            experienceId: experienceId,
+          };
+        } else if (draftType === 'general_post') {
+          updatedDraftExperience.general_post = {
+            details: generalPostContent,
+          };
+        }
+        updatedDraftExperience.draftType = draftType;
+        setDraftExperience(updatedDraftExperience); // Update the state with the new structure
+        console.log('debounce');
+      });
     }, 1000) // Debounce for 1 second
   ).current;
 
   // Call the debounced function when the companyName, level, or rounds change
   useEffect(() => {
-    updateDraftExperience(companyName, level, rounds, experienceId);
-  }, [companyName, level, rounds, experienceId]);
+    updateDraftExperience(companyName, level, rounds, experienceId, generalPostContent, formType);
+  }, [companyName, level, rounds, experienceId, generalPostContent, formType]);
 
   const handleRoundChange = (index, value, field) => {
     setRounds((prevRounds) => {
@@ -123,6 +141,15 @@ const ExperienceForm = () => {
     setRounds(updatedRounds);
   };
 
+  const handleFormTypeChange = (selectedOption) => {
+    setFormType(selectedOption.value);
+    if (selectedOption === "experience") {
+      console.log("experience");
+    } else if (selectedOption === "general_post") {
+        console.log("general post");
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -136,29 +163,33 @@ const ExperienceForm = () => {
       }
       console.log('handleSubmit',draftExperience);
       console.log('handleSubmit expId', experienceId);
-      const token = data.session.access_token;
-      const username = user.username;
-      const method = experienceId ? 'PUT' : 'POST';
-      const requestBody = { company_name: companyName, level, rounds, experienceId, username  };
+      console.log('formType', formType);
+      if (formType === 'experience') {
+        const token = data.session.access_token;
+        const username = user.username;
+        const method = experienceId ? 'PUT' : 'POST';
+        const requestBody = { company_name: companyName, level, rounds, experienceId, username  };
 
-      const response = await fetch('/api/experiences', {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
+        const response = await fetch('/api/experiences', {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+          body: JSON.stringify(requestBody),
+        });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Submission failed');
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Submission failed');
+        }
+
+        setSuccessMessage(method === 'PUT'
+          ? 'Experience updated successfully! 🥳 🎉'
+          : 'Experience submitted successfully! 🎉 🎊');
+      } else if (formType === 'general_post') {
+        setSuccessMessage('General post dummy submit success');
       }
-
-      setSuccessMessage(method === 'PUT'
-        ? 'Experience updated successfully! 🥳 🎉'
-        : 'Experience submitted successfully! 🎉 🎊');
-      
       // Clear the fields after submission
       resetFields();
     } catch (error) {
@@ -199,6 +230,21 @@ const ExperienceForm = () => {
         </button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-1">
+          {/* Form type selection */}
+          <div className="mb-4">
+            <label className="block text-gray-700">Select Post Type</label>
+            <Select
+              value={{ label: formType === 'experience' ? 'Interview Experience' : 'General Post', value: formType }}
+              onChange={handleFormTypeChange}
+              options={[
+                { label: 'Interview Experience', value: 'experience' },
+                { label: 'General Post', value: 'general_post' },
+              ]}
+              className="w-full"
+            />
+          </div>
+        {formType === 'experience' ? (
+          <>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-gray-700">Company Name</label>
@@ -265,13 +311,25 @@ const ExperienceForm = () => {
         ))}
 
         <div className="form-button-area">
-        <button
-          type="button"
-          onClick={addRound}
-          className="w-full p-3 m-1 bg-blue-500 text-white rounded-md"
-        >
-          Add Round
-        </button>
+          <button
+            type="button"
+            onClick={addRound}
+            className="w-full p-3 m-1 bg-blue-500 text-white rounded-md"
+          >
+            Add Round
+          </button>
+        </div>
+        </>
+      ): (
+        <div className="w-full">
+            <ReactQuill
+              value={generalPostContent}
+              onChange={setGeneralPostContent}
+              modules={{ toolbar: toolbarOptions }}
+              className="bg-white border rounded-md"
+            />
+          </div>
+      )}
         {error && <p className="text-red-500 m-2 text-center">{error}</p>}
         {successMessage && <p className="text-green-500 m-2 text-center">{successMessage}</p>}
         <button
@@ -281,8 +339,6 @@ const ExperienceForm = () => {
         >
           {loading ? 'Submitting...' : 'Submit'}
         </button>
-        </div>
-
       </form>
     </div>
   );
