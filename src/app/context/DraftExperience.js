@@ -15,25 +15,46 @@ export const useDraftExperience = () => {
 
 // Create a provider component
 export const DraftExperienceProvider = ({ children }) => {
-  const [draftExperience, setDraftExperience] = useState({
-    company_name: '',
-    level: '',
-    rounds: [{ round_type: '', details: '' }],
-    experienceId: null,
-  });
+    const [draftExperience, setDraftExperience] = useState({
+      experience: {
+        company_name: '',
+        level: '',
+        rounds: [{ round_type: '', details: '' }],
+        experienceId: null,
+      },
+      general_post: {
+        details: '',
+      },
+      draftType: '', // Can be either 'experience' or 'general_post'
+    });
 
   // Log changes to the draftExperience
   useEffect(() => {
     console.log('Draft experience changed:', draftExperience);
   }, [draftExperience]); // This effect will run whenever draftExperience changes
-  
-  // Reset method to clear the draftExperience and set default values
-  const resetDraftExperience = () => {
-    setDraftExperience({
-      company_name: '',
-      level: '',
-      rounds: [{ round_type: '', details: '' }],
-      experienceId: null,
+
+// Function to reset the draft based on the draftType
+const resetDraftExperience = (draftType) => {
+    setDraftExperience((prevState) => {
+      if (draftType === 'experience') {
+        return {
+          ...prevState,
+          experience: {
+            company_name: '',
+            level: '',
+            rounds: [{ round_type: '', details: '' }],
+            experienceId: null,
+          },
+        };
+      } else if (draftType === 'general_post') {
+        return {
+          ...prevState,
+          general_post: {
+            details: '',
+          },
+        };
+      }
+      return prevState; // If the draftType doesn't match, return the current state as is
     });
   };
 
