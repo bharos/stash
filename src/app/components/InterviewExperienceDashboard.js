@@ -6,9 +6,9 @@ import { useUser } from '../context/UserContext'; // Use the custom hook to acce
 import Experience from './Experience';
 import supabase from '../utils/supabaseClient';
 
-const Dashboard = ({clientHomeEditExperience}) => {
+const InterviewExperienceDashboard = () => {
   const [companyName, setCompanyName] = useState('');
-  const { user, setUser } = useUser(); // Use user from context here
+  const { user } = useUser(); // Use user from context here
   const [level, setLevel] = useState('');
   const [experiences, setExperiences] = useState([]);
   const [companyOptions, setCompanyOptions] = useState([]);
@@ -43,14 +43,12 @@ const Dashboard = ({clientHomeEditExperience}) => {
 // These refs will store the latest values for these without causing re-renders
 const companyNameRef = useRef(companyName);
 const levelRef = useRef(level);
-const userRef = useRef(user);
 
   const fetchExperiences = useCallback(
     debounce(async () => {
       // Access the latest values using refs
       const currentCompanyName = companyNameRef.current;
       const currentLevel = levelRef.current;
-      const currentUser = userRef.current;
       
       // Skip fetching if companyName is not set
       if (!currentCompanyName) return;
@@ -70,7 +68,7 @@ const userRef = useRef(user);
           headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
         }
 
-        const experiencesResponse = await fetch(`/api/experiences?${companyQuery}${levelQuery}`, {
+        const experiencesResponse = await fetch(`/api/interviewExperiences?${companyQuery}${levelQuery}`, {
           method: 'GET',
           headers: headers
         });
@@ -114,7 +112,6 @@ const userRef = useRef(user);
 useEffect(() => {
   companyNameRef.current = companyName;
   levelRef.current = level;
-  userRef.current = user;
   fetchExperiences(); // Trigger the debounced fetch function
 }, [companyName, level, user]);
 
@@ -141,11 +138,6 @@ const updateExperience = (updatedExperience) => {
         )
   );
 };
-
-const handleEditExperience = (experienceToEdit) => {
-  clientHomeEditExperience(experienceToEdit);
-}
-
 
   return (
     <div className="dashboard-container p-6 space-y-6">
@@ -184,7 +176,6 @@ const handleEditExperience = (experienceToEdit) => {
             experience={experience}
             updateExperience={updateExperience}
             showOpenInNewTabButton={true}
-            editExperienceClicked={handleEditExperience}
           />
           
         ))) : (
@@ -195,4 +186,4 @@ const handleEditExperience = (experienceToEdit) => {
   );
 };
 
-export default Dashboard;
+export default InterviewExperienceDashboard;

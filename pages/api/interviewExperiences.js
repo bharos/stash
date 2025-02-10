@@ -1,5 +1,10 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
+function isEmptyHtml(html) {
+  const strippedHtml = html.replace(/<[^>]*>/g, "").trim(); // Strip HTML tags and check if it's empty
+  return strippedHtml === "";
+}
+
 const handleExperienceUpsert = async (req, res) => {
   const { company_name, level, rounds, experienceId, username } = req.body;
   const token = req.headers['authorization']?.split('Bearer ')[1];
@@ -29,7 +34,7 @@ const handleExperienceUpsert = async (req, res) => {
     }
 
     for (const round of rounds) {
-      if (!round.round_type || !round.details) {
+      if (!round.round_type || !round.details || isEmptyHtml(round.details)) {
         return res.status(400).json({ error: 'Each round must have a round_type and details.' });
       }
     }
@@ -219,7 +224,6 @@ export default async function handler(req, res) {
           const { user_id, ...rest } = experience;  // Destructure and exclude `user_id`
           return rest;
         });
-        console.log(experiencesWithoutUserId)
         res.status(200).json({ experiences: experiencesWithoutUserId });
       } catch (error) {
         res.status(500).json({ error: error.message });

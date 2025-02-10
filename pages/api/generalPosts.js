@@ -1,10 +1,15 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
+// Helper function to check if details contain only empty HTML
+function isEmptyHtml(html) {
+    const strippedHtml = html.replace(/<[^>]*>/g, "").trim(); // Strip HTML tags and check if it's empty
+    return strippedHtml === "";
+  }
+
 const handleExperienceUpsert = async (req, res) => {
   const { title, details, experienceId, username } = req.body;
   const token = req.headers['authorization']?.split('Bearer ')[1];
 
-  console.log("General post ID ", experienceId);
   if (req.method === 'PUT' && !experienceId) {
     return res.status(400).json({ error: 'Post ID is required for updates.' });
   }
@@ -23,10 +28,10 @@ const handleExperienceUpsert = async (req, res) => {
       return res.status(401).json({ error: 'User not authenticated. Are you signed in?' });
     }
 
-    // Common validation
-    if (!title && !details) {
-      return res.status(400).json({ error: 'Post title and details are required.' });
-    }
+   // Common validation
+    if (!title || !details || title.trim() === "" || isEmptyHtml(details)) {
+        return res.status(400).json({ error: 'Post title and details are required and cannot be empty.' });
+  }
 
     let experience;
 
@@ -54,10 +59,10 @@ const handleExperienceUpsert = async (req, res) => {
     } else if (req.method === 'PUT') {
         const { data, error: experienceError } = await supabase
         .from('experiences')
+        .select()
         .eq('id', experienceId)
         .eq('user_id', user.id)
-        .eq('type', 'general_post')
-        .select();
+        .eq('type', 'general_post');
 
         // Check if the experience exists and has the correct type
         if (experienceError) {
@@ -127,6 +132,7 @@ export default async function handler(req, res) {
               id, 
               user_id,
               username,
+              general_posts: general_posts(title, details),
               likes,
               type
             `)
@@ -141,8 +147,14 @@ export default async function handler(req, res) {
             query = query.range(start, end); // Apply pagination
           }
       
-          const { data: experiences, error } = await query;
-      
+          const { data, error } = await query;
+          const experiences = data.map(experience => ({
+            ...experience,  // Spread the original experience object
+            title: experience.general_posts?.[0]?.title,  // Flatten the title
+            details: experience.general_posts?.[0]?.details,  // Flatten the details
+            general_posts: undefined,  // Remove general_posts from the object
+          }));
+          
           if (error) {
             return res.status(500).json({ error: error.message });
           }
@@ -178,7 +190,6 @@ export default async function handler(req, res) {
           }
       
           const experiencesWithoutUserId = experiences.map(({ user_id, ...rest }) => rest);
-      
           res.status(200).json({ 
             experiences: experiencesWithoutUserId,
             page: Number(page),

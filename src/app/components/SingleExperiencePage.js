@@ -3,7 +3,7 @@ import Experience from './Experience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import supabase from '../utils/supabaseClient';
 
-const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
+const SingleExperiencePage = ({ experienceId }) => {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -34,7 +34,7 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
         const typeData = await typeResponse.json();
 
         if (!typeResponse.ok) {
-          throw new Error(typeData.error || "Failed to fetch experience type");
+          throw new Error("Failed to fetch the experience");
         }
 
         // Prepare the fetch headers
@@ -94,10 +94,6 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
     }
   }, [experienceId, user]); // Re-fetch when experienceId or user changes
 
-  const handleEditExperience = (experienceToEdit) => {
-    clientHomeEditExperience(experienceToEdit);
-  }
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -113,8 +109,7 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
           Experience not found ! 🤦‍♂️
         </div>
       ) : (
-        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false}
-        editExperienceClicked={handleEditExperience} />
+        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
       )}
     </div>
   );  
