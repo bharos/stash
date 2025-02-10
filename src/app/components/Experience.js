@@ -318,7 +318,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
             </div>
             {/* Company Details Section */}
             <div className="flex-grow min-w-0">
-              <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.company_name}</h3>
+              <h3 className="text-2xl font-semibold text-gray-900 break-words">{experience.company_name}</h3>
               <p className="text-gray-500">
                 Level: <span className="font-medium text-gray-700">{experience.level}</span>
               </p>
@@ -330,7 +330,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           <>
             <div className="flex-grow min-w-0 sm:ml-10">
               {/* Post Title */}
-              <h3 className="text-md sm:text-xl font-semibold text-gray-900 truncate">
+              <h3 className="text-md sm:text-xl font-semibold text-gray-900 break-words">
                 {experience.title}
               </h3>
               {/* Display Username */}

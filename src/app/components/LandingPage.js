@@ -68,7 +68,7 @@ const LandingPage = ({ setActiveMenu }) => {
                   href={`/experience/${post.experience_id}`}
                   className="block p-3 bg-gray-100 rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
                 >
-                  <h3 className="text-sm sm:text-lg ml-1 sm:ml-16 font-semibold text-gray-800 truncate">
+                  <h3 className="text-sm sm:text-lg ml-1 sm:ml-16 font-semibold text-gray-800 break-words">
                     <span className="text-purple-500">{getRandomUserEmoji()}</span>
                     <span className="ml-2 text-purple-400">{post.username || 'Anonymous'}</span>
                     <span className="ml-2">{getRandomPostSmiley()}  </span>

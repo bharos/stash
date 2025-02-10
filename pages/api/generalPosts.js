@@ -31,7 +31,10 @@ const handleExperienceUpsert = async (req, res) => {
    // Common validation
     if (!title || !details || title.trim() === "" || isEmptyHtml(details)) {
         return res.status(400).json({ error: 'Post title and details are required and cannot be empty.' });
-  }
+    }
+    if (title.length > 140) {
+        return res.status(400).json({error : 'Post title can\'t be longer than 140 chars'});
+    }
 
     let experience;
 

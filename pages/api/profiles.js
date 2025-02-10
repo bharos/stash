@@ -45,6 +45,9 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'user_id and username are required' });
       }
 
+      if (username.length > 12) {
+        return res.status(400).json({ error: 'Username can\'t be longer than 12 letters' });
+      }
       try {
         // Try fetching the existing profile
         const { data: existingProfile, error: profileError } = await supabase
