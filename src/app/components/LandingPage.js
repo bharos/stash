@@ -71,9 +71,15 @@ const LandingPage = ({ setActiveMenu }) => {
                   <h3 className="text-lg font-semibold text-gray-800 truncate">
                     <span className="text-purple-500">{getRandomUserEmoji()}</span>
                     <span className="ml-2 text-purple-400">{post.username || 'Anonymous'}</span>
-                    <span className="ml-2">{getRandomPostSmiley()} </span>
-                    <span className="font-bold text-zinc-400"> {post.company_name}</span>
-                    <span className="font-bold text-slate-500"> [ {post.level} ]</span>
+                    <span className="ml-2">{getRandomPostSmiley()}</span>
+                    {post.type === 'interview_experience' ? (
+                      <>
+                        <span className="font-bold text-zinc-400">{post.company_name}</span>
+                        <span className="font-bold text-slate-500"> [ {post.level} ]</span>
+                      </>
+                    ) : post.type === 'general_post' ? (
+                      <span className="font-bold text-zinc-400">{post.title}</span>
+                    ) : null}
                   </h3>
                   <div className="flex items-center mt-2 text-gray-500 dark:text-gray-400">
                     {/* Using Material Icons for thumbs up */}
