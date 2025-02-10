@@ -140,7 +140,7 @@ const updateExperience = (updatedExperience) => {
 };
 
   return (
-    <div className="dashboard-container p-6 space-y-6">
+    <div className="dashboard-container p-2 sm:p-6 space-y-6">
       {/* Filters Section */}
       <div className="filters mb-6 flex flex-col sm:flex-row sm:gap-4 sm:justify-start sm:space-x-4">
       <Select

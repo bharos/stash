@@ -288,7 +288,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   return (
     <div
     key={experience.id}
-    className={`experience-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-6 mt-4 relative overflow-hidden ${
+    className={`experience-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-3 sm:p-6 mt-4 relative overflow-hidden ${
       experience.isExpanded ? 'h-auto' : 'h-[200px]'
     }`}
   >
