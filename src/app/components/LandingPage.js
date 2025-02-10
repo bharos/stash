@@ -50,7 +50,7 @@ const LandingPage = ({ setActiveMenu }) => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen text-center p-6">
+    <div className="flex flex-col items-center justify-start min-h-screen text-center p-1 sm:p-6">
       <h1 className="text-4xl font-bold mb-4 mt-4">Welcome to Stash – The Ultimate Interview Database! 🚀</h1>
       <p className="text-lg mb-8">Post your interview stories, learn from the community, and prepare smarter! 🤓</p>
 
@@ -61,17 +61,17 @@ const LandingPage = ({ setActiveMenu }) => {
         {trendingPosts.length === 0 && !loading ? (
           <p>No trending posts available.</p>
         ) : (
-          <ul className="space-y-4">
+          <ul className="space-y-4 text-left">
             {trendingPosts.map((post) => (
               <li key={post.experience_id} className="p-1">
                 <a
                   href={`/experience/${post.experience_id}`}
                   className="block p-3 bg-gray-100 rounded-lg shadow-md transition-transform transform hover:scale-105 hover:shadow-lg hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
                 >
-                  <h3 className="text-lg font-semibold text-gray-800 truncate">
+                  <h3 className="text-sm sm:text-lg ml-1 sm:ml-16 font-semibold text-gray-800 truncate">
                     <span className="text-purple-500">{getRandomUserEmoji()}</span>
                     <span className="ml-2 text-purple-400">{post.username || 'Anonymous'}</span>
-                    <span className="ml-2">{getRandomPostSmiley()}</span>
+                    <span className="ml-2">{getRandomPostSmiley()}  </span>
                     {post.type === 'interview_experience' ? (
                       <>
                         <span className="font-bold text-zinc-400">{post.company_name}</span>
