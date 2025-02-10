@@ -172,7 +172,7 @@ const ClientHome = () => {
       </Drawer>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
+      <div className="flex-1 p-1 sm:p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
         {/* Show Experience Page if the user navigated to `/experience/[id]` */}
         {activeMenu === 'UserProfile' ? (
           <UserProfile />

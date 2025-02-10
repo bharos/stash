@@ -92,7 +92,7 @@ const updatePost = (updatedPost) => {
 };
 
   return (
-    <div className="dashboard-container p-6 space-y-6">
+    <div className="dashboard-container p-2 sm:p-6 space-y-6">
 
       {/* Posts List */}
       <div className="experience-list space-y-6">
