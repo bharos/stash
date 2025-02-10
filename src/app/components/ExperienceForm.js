@@ -7,10 +7,14 @@ import Select from 'react-select';
 import { debounce } from 'lodash';
 import { useDraftExperience } from '../context/DraftExperience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
+import { useRouter } from 'next/navigation';
+import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the custom hook for activeMenu context
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
 const ExperienceForm = () => {
+  const router = useRouter(); // Next.js router
+  const { setActiveMenu } = useActiveMenu(); // Access activeMenu from context
   const { draftExperience, setDraftExperience } = useDraftExperience(); // Use context
   const { user } = useUser();
   const [companyName, setCompanyName] = useState(draftExperience?.experience?.company_name || '');
@@ -194,6 +198,12 @@ const ExperienceForm = () => {
         setSuccessMessage(method === 'PUT'
           ? 'Experience updated successfully! 🥳 🎉'
           : 'Experience submitted successfully! 🎉 🎊');
+        // Redirect to '/' after a short delay
+        setTimeout(() => {
+          setActiveMenu('landingPage')
+          console.log('routing to /')
+          router.push('/');  // Redirect to the home page
+        }, 2000);
       } else if (formType === 'general_post') {
         const method = generalPostId ? 'PUT' : 'POST';
         const requestBody = { title: generalPostTitle, details: generalPostContent, experienceId: generalPostId, username };
@@ -214,6 +224,12 @@ const ExperienceForm = () => {
         setSuccessMessage(method === 'PUT'
           ? 'Post updated successfully! 🥳 🎉'
           : 'Post submitted successfully! 🎉 🎊');
+          // Redirect to '/' after a short delay
+        setTimeout(() => {
+          setActiveMenu('landingPage')
+          console.log('routing to /')
+          router.push('/');  // Redirect to the home page
+        }, 2000);
       } else {
         throw new Error('Failed. Invalid form type');
 
