@@ -35,7 +35,7 @@ const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
  *   deleted: true, // Flag for deleted experience (if applicable)
  * }
  */
-const Experience = ({ experience, updateExperience, showOpenInNewTabButton , editExperienceClicked}) => {
+const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) => {
   const { user } = useUser(); // Access the user from the context
   const { draftExperience, setDraftExperience } = useDraftExperience(); // Use context
   const { setActiveMenu } = useActiveMenu(); // Access activeMenu from context
@@ -172,7 +172,17 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
       return; // Stop the process if user is not authenticated
     }
     const token = sessionData.session.access_token; // Access token from the session object
-    const response = await fetch("/api/experiences", {
+     // Set the URL based on the experience type
+    // Check for invalid experience type
+    const experienceType = experience.type;
+    if (experienceType !== 'interview_experience' && experienceType !== 'general_post') {
+      throw new Error("Invalid experience type.");
+    }
+    // Set the URL based on the experience type
+    const apiUrl = experienceType === 'interview_experience'
+      ? "/api/interviewExperiences"
+      : "/api/generalPosts";
+    const response = await fetch(apiUrl, {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -198,14 +208,27 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
 
 
   const handleEditExperience = (experience) => {
-    // Assuming you are updating only the experience part of draftExperience
-    const updatedDraftExperience = {
-      ...draftExperience, // Spread the existing draftExperience object
-      experience: {
-        ...experience, // Spread the original experience object to preserve its values
-      },
-      draftType: 'experience', // Set the draftType to 'experience'
-    };
+    console.log(experience)
+    const experienceType = experience.type;
+    let updatedDraftExperience;
+    if (experienceType === 'interview_experience') {
+      updatedDraftExperience = {
+        ...draftExperience, // Spread the existing draftExperience object
+        experience: {
+          ...experience, // Spread the original experience object to preserve its values
+        },
+        draftType: experienceType,
+      };
+    } else if (experienceType === 'general_post') {
+      updatedDraftExperience = {
+        ...draftExperience, // Spread the existing draftExperience object
+        general_post: {
+          ...experience, // Spread the original experience object to preserve its values
+        },
+        draftType: experienceType,
+      };
+    }
+
     // Set the updated experience and draftType in the context or state
     setDraftExperience(updatedDraftExperience);
     // Set the active menu to 'postExperience'
@@ -214,6 +237,18 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
     router.push('/');
   };
   
+  const renderUsername = (username) => (
+    <p className="text-gray-400 text-sm">
+      <div className="flex items-center gap-1">
+        <span className="material-icons text-gray-500">
+          {`face_${Math.floor(Math.random() * 5) + 2}`}
+        </span>
+        <span className="font-semibold">{username || 'Anonymous'}</span>
+      </div>
+    </p>
+  );
+
+
   return (
     <div
     key={experience.id}
@@ -274,24 +309,37 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
   
     {/* Experience header, toggle when clicked anywhere on this part */}
     <div className ="experience-header" onClick={() => toggleExperienceDetails(experience)}>
-    <div className="flex items-center gap-4 mt-3 relative">
-      {/* Profile Image */}
-      <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
-        <span className="text-lg font-bold">{experience.company_name[0]}</span>
+      <div className="flex items-center gap-4 mt-3 relative">
+        {experience.type === 'interview_experience' ? (
+          <>
+            {/* Company Profile Image */}
+            <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
+              <span className="text-lg font-bold">{experience.company_name[0]}</span>
+            </div>
+            {/* Company Details Section */}
+            <div className="flex-grow min-w-0">
+              <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.company_name}</h3>
+              <p className="text-gray-500">
+                Level: <span className="font-medium text-gray-700">{experience.level}</span>
+              </p>
+              {/* Display Username */}
+              {renderUsername(experience.username)}
+            </div>
+          </>
+        ) : experience.type === 'general_post' && experience? (
+          <>
+            <div className="flex-grow min-w-0 sm:ml-10">
+              {/* Post Title */}
+              <h3 className="text-md sm:text-xl font-semibold text-gray-900 truncate">
+                {experience.title}
+              </h3>
+              {/* Display Username */}
+              {renderUsername(experience.username)}
+            </div>
+          </>
+        ) : null}
       </div>
-  
-      {/* Company Details Section */}
-      <div className="flex-grow min-w-0">
-        <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.company_name}</h3>
-        <p className="text-gray-500">
-          Level: <span className="font-medium text-gray-700">{experience.level}</span>
-        </p>
-        {/* Display Username */}
-        <p className="text-gray-400 text-sm">
-        Submitted by: {experience?.username || 'Anonymous'}
-        </p>
-      </div>
-    </div>
+
   
       {/* Share Modal */}
       {showShareModal && (
@@ -322,34 +370,58 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
         </div>
       )}
     </div>
-      {/* Card content: Experience Details */}
-      <div className="experience-details mt-4">
-        {experience.rounds.map((round, index) => (
-          <div key={index} className="round-container mb-4">
-            <h4 className="font-semibold text-xl text-blue-600">
-              Round {index + 1}: {round.round_type}
-            </h4>
-            <div className="w-full p-0 border-none rounded-md">
-              <ReactQuill
-                value={round.details}
-                readOnly
-                theme="snow"
-                className="w-full bg-transparent p-0 text-gray-900 min-h-[50px]"
-                modules={{
-                  toolbar: false, // No toolbar
-                }}
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#333',
-                  margin: 0,
-                  padding: 0,
-                  width: '100%',
-                }}
-              />
-            </div>
-          </div>
-        ))}
+
+     {/* Card content: interview Experience Details */}
+<div className="experience-details mt-4">
+  {experience.type === 'interview_experience' ? (
+    experience.rounds.map((round, index) => (
+      <div key={index} className="round-container mb-4">
+        <h4 className="font-semibold text-xl text-blue-600">
+          Round {index + 1}: {round.round_type}
+        </h4>
+        <div className="w-full p-0 border-none rounded-md">
+          <ReactQuill
+            value={round.details}
+            readOnly
+            theme="snow"
+            className="w-full bg-transparent p-0 text-gray-900 min-h-[50px]"
+            modules={{
+              toolbar: false, // No toolbar
+            }}
+            style={{
+              backgroundColor: 'transparent',
+              color: '#333',
+              margin: 0,
+              padding: 0,
+              width: '100%',
+            }}
+          />
+        </div>
       </div>
+    ))
+  ) : experience.type === 'general_post' && experience ? (
+    <div className="round-container mb-4">
+      <div className="w-full p-0 border-none rounded-md">
+        <ReactQuill
+          value={experience.details}
+          readOnly
+          theme="snow"
+          className="w-full bg-transparent p-0 text-gray-900 min-h-[50px]"
+          modules={{
+            toolbar: false, // No toolbar
+          }}
+          style={{
+            backgroundColor: 'transparent',
+            color: '#333',
+            margin: 0,
+            padding: 0,
+            width: '100%',
+          }}
+        />
+      </div>
+    </div>
+  ) : null}
+</div>
 
 {/* Like and Comment counts Section */}
 <div className="like-comment-section flex items-center gap-14 mt-6 ml-6">

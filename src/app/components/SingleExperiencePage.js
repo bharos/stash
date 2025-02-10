@@ -3,7 +3,7 @@ import Experience from './Experience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import supabase from '../utils/supabaseClient';
 
-const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
+const SingleExperiencePage = ({ experienceId }) => {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -30,6 +30,13 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
   useEffect(() => {
     const fetchExperience = async () => {
       try {
+        const typeResponse = await fetch(`/api/experienceType?experienceId=${experienceId}`);
+        const typeData = await typeResponse.json();
+
+        if (!typeResponse.ok) {
+          throw new Error("Failed to fetch the experience");
+        }
+
         // Prepare the fetch headers
         const headers = {
           'Content-Type': 'application/json',
@@ -40,7 +47,17 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
           headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
         }
 
-        const response = await fetch(`/api/experiences?experienceId=${experienceId}`, {
+        // Call the appropriate API based on the experience type
+        let apiUrl;
+        if (typeData.type === "general_post") {
+          apiUrl = `/api/generalPosts?experienceId=${experienceId}`;
+        } else if (typeData.type === "interview_experience") {
+          apiUrl = `/api/interviewExperiences?experienceId=${experienceId}`;
+        } else {
+          throw new Error("Unknown experience type");
+        }
+
+        const response = await fetch(apiUrl, {
           method: 'GET',
           headers: headers
         });
@@ -77,10 +94,6 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
     }
   }, [experienceId, user]); // Re-fetch when experienceId or user changes
 
-  const handleEditExperience = (experienceToEdit) => {
-    clientHomeEditExperience(experienceToEdit);
-  }
-
   if (loading) {
     return <div>Loading...</div>;
   }
@@ -96,8 +109,7 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
           Experience not found ! 🤦‍♂️
         </div>
       ) : (
-        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false}
-        editExperienceClicked={handleEditExperience} />
+        <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
       )}
     </div>
   );  

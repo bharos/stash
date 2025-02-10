@@ -20,12 +20,14 @@ export const DraftExperienceProvider = ({ children }) => {
         company_name: '',
         level: '',
         rounds: [{ round_type: '', details: '' }],
-        experienceId: null,
+        id: null,
       },
       general_post: {
+        id: null,
+        title: '',
         details: '',
       },
-      draftType: '', // Can be either 'experience' or 'general_post'
+      draftType: '', // Can be either 'interview_experience' or 'general_post'
     });
 
   // Log changes to the draftExperience
@@ -36,21 +38,23 @@ export const DraftExperienceProvider = ({ children }) => {
 // Function to reset the draft based on the draftType
 const resetDraftExperience = (draftType) => {
     setDraftExperience((prevState) => {
-      if (draftType === 'experience') {
+      if (draftType === 'interview_experience') {
         return {
           ...prevState,
           experience: {
             company_name: '',
             level: '',
             rounds: [{ round_type: '', details: '' }],
-            experienceId: null,
+            id: null,
           },
         };
       } else if (draftType === 'general_post') {
         return {
           ...prevState,
           general_post: {
+            title: '',
             details: '',
+            id: null,
           },
         };
       }

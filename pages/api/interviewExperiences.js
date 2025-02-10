@@ -1,12 +1,17 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
+function isEmptyHtml(html) {
+  const strippedHtml = html.replace(/<[^>]*>/g, "").trim(); // Strip HTML tags and check if it's empty
+  return strippedHtml === "";
+}
+
 const handleExperienceUpsert = async (req, res) => {
   const { company_name, level, rounds, experienceId, username } = req.body;
   const token = req.headers['authorization']?.split('Bearer ')[1];
 
-  console.log("Experience ID ", experienceId);
+  console.log("Interview Experience ID ", experienceId);
   if (req.method === 'PUT' && !experienceId) {
-    return res.status(400).json({ error: 'Experience ID is required for updates.' });
+    return res.status(400).json({ error: 'Interview Experience ID is required for updates.' });
   }
 
   if (req.method === 'POST' && !username) {
@@ -29,7 +34,7 @@ const handleExperienceUpsert = async (req, res) => {
     }
 
     for (const round of rounds) {
-      if (!round.round_type || !round.details) {
+      if (!round.round_type || !round.details || isEmptyHtml(round.details)) {
         return res.status(400).json({ error: 'Each round must have a round_type and details.' });
       }
     }
@@ -40,7 +45,7 @@ const handleExperienceUpsert = async (req, res) => {
       // POST logic
       const { data, error } = await supabase
         .from('experiences')
-        .insert([{ company_name, level, user_id: user.id , username}])
+        .insert([{ company_name, level, user_id: user.id , username, type : 'interview_experience'}])
         .select();
 
       if (error) {
@@ -68,6 +73,7 @@ const handleExperienceUpsert = async (req, res) => {
         .update({ company_name, level })
         .eq('id', experienceId)
         .eq('user_id', user.id)
+        .eq('type', 'interview_experience')
         .select(); // Add .select() here
       
       if (experienceError) {
@@ -150,8 +156,10 @@ export default async function handler(req, res) {
             user_id,
             username,
             rounds(id, round_type, details),
-            likes
+            likes,
+            type
           `)
+          .eq('type', 'interview_experience')
           .order('created_at', { ascending: false });
   
         if (company_name) {
@@ -216,7 +224,6 @@ export default async function handler(req, res) {
           const { user_id, ...rest } = experience;  // Destructure and exclude `user_id`
           return rest;
         });
-        console.log(experiencesWithoutUserId)
         res.status(200).json({ experiences: experiencesWithoutUserId });
       } catch (error) {
         res.status(500).json({ error: error.message });
