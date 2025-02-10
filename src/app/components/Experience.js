@@ -274,24 +274,48 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
   
     {/* Experience header, toggle when clicked anywhere on this part */}
     <div className ="experience-header" onClick={() => toggleExperienceDetails(experience)}>
-    <div className="flex items-center gap-4 mt-3 relative">
-      {/* Profile Image */}
-      <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
-        <span className="text-lg font-bold">{experience.company_name[0]}</span>
-      </div>
-  
-      {/* Company Details Section */}
-      <div className="flex-grow min-w-0">
-        <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.company_name}</h3>
-        <p className="text-gray-500">
-          Level: <span className="font-medium text-gray-700">{experience.level}</span>
-        </p>
-        {/* Display Username */}
-        <p className="text-gray-400 text-sm">
-        Submitted by: {experience?.username || 'Anonymous'}
-        </p>
-      </div>
-    </div>
+        <div className="flex items-center gap-4 mt-3 relative">
+          {experience.type == 'interview_experience' ? (
+           <>
+            {/* Company Profile Image */}
+            <div className="w-12 h-12 bg-blue-500 text-white rounded-full flex items-center justify-center">
+              <span className="text-lg font-bold">{experience.company_name[0]}</span>
+            </div>
+            {/* Company Details Section */}
+            <div className="flex-grow min-w-0">
+              <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.company_name}</h3>
+              <p className="text-gray-500">
+                Level: <span className="font-medium text-gray-700">{experience.level}</span>
+              </p>
+              {/* Display Username */}
+              <p className="text-gray-400 text-sm">
+              <div className="flex items-center gap-1">
+                <span className="material-icons text-gray-500">
+                  {`face_${Math.floor(Math.random() * 5) + 2}`} 
+                </span>
+                <span className="font-semibold">{experience?.username || 'Anonymous'}</span>
+              </div>
+              </p>
+            </div>
+            </>
+          ): experience.type == 'general_post' && (
+            <>
+            <div className="flex-grow min-w-0">
+              {/* Post title */}
+              <h3 className="text-2xl font-semibold text-gray-900 truncate">{experience.title}</h3>
+              {/* Display Username */}
+              <p className="text-gray-400 text-sm">
+              <div className="flex items-center gap-1">
+                <span className="material-icons text-gray-500">
+                  {`face_${Math.floor(Math.random() * 5) + 2}`} 
+                </span>
+                <span className="font-semibold">{experience?.username || 'Anonymous'}</span>
+              </div>
+              </p>
+            </div>
+            </>
+          )}
+        </div>
   
       {/* Share Modal */}
       {showShareModal && (
@@ -322,7 +346,10 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
         </div>
       )}
     </div>
-      {/* Card content: Experience Details */}
+      
+    {experience.type == 'interview_experience' ? (
+      <>
+      {/* Card content: interview Experience Details */}
       <div className="experience-details mt-4">
         {experience.rounds.map((round, index) => (
           <div key={index} className="round-container mb-4">
@@ -350,6 +377,10 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton , edi
           </div>
         ))}
       </div>
+      </>
+    ) : experience.type == 'general_post' && (
+      <div>General post: {experience.details}</div>
+    )}
 
 {/* Like and Comment counts Section */}
 <div className="like-comment-section flex items-center gap-14 mt-6 ml-6">

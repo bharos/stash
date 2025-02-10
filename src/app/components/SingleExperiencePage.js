@@ -30,6 +30,13 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
   useEffect(() => {
     const fetchExperience = async () => {
       try {
+        const typeResponse = await fetch(`/api/experienceType?experienceId=${experienceId}`);
+        const typeData = await typeResponse.json();
+
+        if (!typeResponse.ok) {
+          throw new Error(typeData.error || "Failed to fetch experience type");
+        }
+
         // Prepare the fetch headers
         const headers = {
           'Content-Type': 'application/json',
@@ -40,7 +47,17 @@ const SingleExperiencePage = ({ experienceId, clientHomeEditExperience }) => {
           headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
         }
 
-        const response = await fetch(`/api/experiences?experienceId=${experienceId}`, {
+        // Call the appropriate API based on the experience type
+        let apiUrl;
+        if (typeData.type === "general_post") {
+          apiUrl = `/api/generalPosts?experienceId=${experienceId}`;
+        } else if (typeData.type === "interview_experience") {
+          apiUrl = `/api/interviewExperiences?experienceId=${experienceId}`;
+        } else {
+          throw new Error("Unknown experience type");
+        }
+
+        const response = await fetch(apiUrl, {
           method: 'GET',
           headers: headers
         });

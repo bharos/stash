@@ -4,9 +4,9 @@ const handleExperienceUpsert = async (req, res) => {
   const { company_name, level, rounds, experienceId, username } = req.body;
   const token = req.headers['authorization']?.split('Bearer ')[1];
 
-  console.log("Experience ID ", experienceId);
+  console.log("Interview Experience ID ", experienceId);
   if (req.method === 'PUT' && !experienceId) {
-    return res.status(400).json({ error: 'Experience ID is required for updates.' });
+    return res.status(400).json({ error: 'Interview Experience ID is required for updates.' });
   }
 
   if (req.method === 'POST' && !username) {
@@ -40,7 +40,7 @@ const handleExperienceUpsert = async (req, res) => {
       // POST logic
       const { data, error } = await supabase
         .from('experiences')
-        .insert([{ company_name, level, user_id: user.id , username}])
+        .insert([{ company_name, level, user_id: user.id , username, type : 'interview_experience'}])
         .select();
 
       if (error) {
@@ -68,6 +68,7 @@ const handleExperienceUpsert = async (req, res) => {
         .update({ company_name, level })
         .eq('id', experienceId)
         .eq('user_id', user.id)
+        .eq('type', 'interview_experience')
         .select(); // Add .select() here
       
       if (experienceError) {
@@ -150,8 +151,10 @@ export default async function handler(req, res) {
             user_id,
             username,
             rounds(id, round_type, details),
-            likes
+            likes,
+            type
           `)
+          .eq('type', 'interview_experience')
           .order('created_at', { ascending: false });
   
         if (company_name) {
