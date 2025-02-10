@@ -112,6 +112,7 @@ const UserProfile = () => {
           <input
             type="text"
             value={newUsername}
+            maxLength={12}
             onChange={(e) => setNewUsername(e.target.value)}
             className="w-full px-4 py-2 border rounded-lg"
             required

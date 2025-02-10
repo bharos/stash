@@ -362,6 +362,7 @@ const ExperienceForm = () => {
           <input
             type="text"
             value={generalPostTitle}
+            maxLength={140}
             onChange={(e) => setGeneralPostTitle(e.target.value)}
             placeholder="Enter title..."
             className="w-full p-2 mb-2 border rounded-md"
