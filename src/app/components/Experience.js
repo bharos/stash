@@ -334,6 +334,34 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
         {experience.isExpanded ? '–' : '+'}
       </button>
     </div>
+    {/* Share Modal */}
+    {showShareModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
+          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
+            <h4 className="text-2xl font-semibold mb-6 text-center text-gray-800">Share this Experience</h4>
+            <div className="flex items-center space-x-2 mb-6">
+              <input
+                type="text"
+                readOnly
+                value={`${window.location.origin}/experience/${experience.id}`}
+                className="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+              />
+              <button
+                onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
+                className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {isLinkCopied ? 'Copied!' : 'Copy Link'}
+              </button>
+            </div>
+            <button
+              onClick={() => setShowShareModal(false)}
+              className="w-full py-2 mt-4 text-center text-white-600 font-medium hover:text-gray-800 transition-all duration-200"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
   </div>
     {/* Experience header, toggle when clicked anywhere on this part */}
     <div className ="experience-header" onClick={() => toggleExperienceDetails(experience)}>
@@ -367,36 +395,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           </>
         ) : null}
       </div>
-
-  
-      {/* Share Modal */}
-      {showShareModal && (
-        <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-            <h4 className="text-2xl font-semibold mb-6 text-center text-gray-800">Share this Experience</h4>
-            <div className="flex items-center space-x-2 mb-6">
-              <input
-                type="text"
-                readOnly
-                value={`${window.location.origin}/experience/${experience.id}`}
-                className="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
-              />
-              <button
-                onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
-                className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {isLinkCopied ? 'Copied!' : 'Copy Link'}
-              </button>
-            </div>
-            <button
-              onClick={() => setShowShareModal(false)}
-              className="w-full py-2 mt-4 text-center text-white-600 font-medium hover:text-gray-800 transition-all duration-200"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
     </div>
 
      {/* Card content: interview Experience Details */}
