@@ -38,8 +38,10 @@ const GeneralPosts = () => {
           // Loop through the experiences and fetch comments for each
           for (let post of postsData.experiences) {
             const commentsResponse = await fetch(
-              `/api/comments?experience_id=${post.id}`
-            );
+                `/api/comments?experience_id=${post.id}`, {
+                  method: 'GET',
+                  headers: headers
+                });
             const commentsData = await commentsResponse.json();
             
             if (commentsResponse.ok) {

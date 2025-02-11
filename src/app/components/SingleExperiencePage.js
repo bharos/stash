@@ -68,7 +68,11 @@ const SingleExperiencePage = ({ experienceId }) => {
           fetchedExperience.isExpanded = true;
   
           // Fetch the comments for the experience
-          const commentsResponse = await fetch(`/api/comments?experience_id=${fetchedExperience.id}`);
+          const commentsResponse = await fetch(
+            `/api/comments?experience_id=${fetchedExperience.id}`, {
+              method: 'GET',
+              headers: headers
+            });
           const commentsData = await commentsResponse.json();
   
           if (commentsResponse.ok) {

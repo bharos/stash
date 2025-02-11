@@ -47,11 +47,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   const [commentError, setCommentError] = useState(''); // State to store the error message
   const [likes, setLikes] = useState(experience.likes || 0);
   const [hasLiked, setHasLiked] = useState(experience.user_liked || false);
-  const [editingComment, setEditingComment] = useState(null);
-  const [editText, setEditText] = useState({});
-  const [replyingTo, setReplyingTo] = useState(null);
-  const [replies, setReplies] = useState({}); // Track replies for each comment
-  const [menuOpen, setMenuOpen] = useState(null);
 
   useEffect(() => {
     if (experience.user_liked !== hasLiked) {
@@ -253,15 +248,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       </div>
     </p>
   );
-
-  const handleEditComment = (commentId, editText) => {
-    console.log("Editing comment ID ", commentId, " text ", editText);
-    setEditingComment(null);
-  };
-
-  const handleDeleteComment = (commentId) => {
-    console.log("Delete comment ID ", commentId);
-  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {

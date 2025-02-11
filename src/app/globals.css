@@ -130,3 +130,8 @@ input:focus, textarea:focus, button:focus {
   outline: none;
   border-color: var(--accent);
 }
+
+.replies-container {
+  max-height: 300px; /* Adjust based on your layout */
+  overflow-y: auto;
+}

@@ -11,10 +11,19 @@ const Comment = ({ experienceId, comment }) => {
   const [replyingTo, setReplyingTo] = useState(false);
   const [replies, setReplies] = useState(""); // Track replies for each comment
   const [menuOpen, setMenuOpen] = useState(null);
+  const [likes, setLikes] = useState(comment.likes || 0);
   const [likedByUser, setLikedByUser] = useState(comment.user_liked || false);
-
+  const [commentError, setCommentError] = useState("");
+  const [commentSuccess, setCommentSuccess] = useState("");
+  const [deleted, setDeleted] = useState(false);
   const menuRef = useRef(null);
   const buttonRef = useRef(null);
+
+    useEffect(() => {
+      if (comment.user_liked !== likedByUser) {
+        setLikedByUser(comment.user_liked);  // Only update if hasLiked is different
+      }
+    }, [comment.user_liked]); // Update hasLiked when comment.user_liked changes
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -34,21 +43,144 @@ const Comment = ({ experienceId, comment }) => {
     };
   }, []);
 
-  const handleEditComment = (commentId, editText) => {
-    console.log("Editing comment ID ", commentId, " text ", editText);
-    setEditingComment(null);
+const handleEditComment = async (commentId, editText) => {
+  console.log("Editing comment ID ", commentId, " text ", editText);
+  
+  // Ensure the text is not empty before making the request
+  if (!editText.trim()) {
+    setCommentError('Comment text cannot be empty.');
+    return;
+  }
+
+  try {
+        // Get the user session
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error || !sessionData?.session || !sessionData.session.access_token) {
+        setCommentError('Sign in to edit a comment.');
+        return;
+        }
+
+        const token = sessionData.session.access_token;
+        
+        // Send PUT request to edit the comment
+        const response = await fetch('/api/comments', {
+        method: 'PUT',
+        body: JSON.stringify({
+            comment_id: commentId,
+            new_comment_text: editText,
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`, // Add the token to the Authorization header
+        },
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            comment.comment = data.comment.comment;
+            setCommentError('');
+            setCommentSuccess('Comment edit success!');
+            // Reset the success message after timeout
+            setTimeout(() => {
+                setCommentSuccess('');
+            }, 2000);
+        } else {
+            setCommentError(data.error || 'An error occurred while updating the comment.');
+        }
+
+    } catch (error) {
+        setCommentError(error.message || 'An unexpected error occurred.');
+    }
+    setEditingComment(null); // Close the edit UI after submission
+  }
+
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+    const confirmDelete = window.confirm("Delete this comment?");
+    if (!confirmDelete) return;
+      console.log("Delete comment ID ", commentId);
+        // Get the user session
+        const { data: sessionData, error } = await supabase.auth.getSession();
+        if (error || !sessionData?.session || !sessionData.session.access_token) {
+        setCommentError('You need to be signed in to delete a comment.');
+        return;
+        }
+
+    const token = sessionData.session.access_token;
+
+      // Make the DELETE request
+      const response = await fetch('/api/comments', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ comment_id: commentId }), // Send the commentId in the request body
+      });
+
+      // Handle the response
+      if (!response.ok) {
+        const errorData = await response.json();
+        setCommentError('Failed to delete comment:', errorData.error);
+        return;
+      }
+  
+      const responseData = await response.json();
+      console.log(responseData.message); // Log success message, or handle as needed
+      setCommentError('');
+      setCommentSuccess('Comment delete success!');
+      // Reset the success message after timeout
+      setTimeout(() => {
+          setCommentSuccess('');
+          setDeleted(true);
+      }, 2000);
+    } catch (error) {
+      setCommentError('Error deleting comment:', error);
+    }
   };
+  
 
-
-  const handleDeleteComment = (commentId) => {
-    console.log("Delete comment ID ", commentId);
+  const handleLike = async (commentId) => {
+    try {
+      // Check if the user is signed in
+      const { data: sessionData, error } = await supabase.auth.getSession();
+      if (error || !sessionData?.session || !sessionData.session.access_token) {
+        setCommentError('Sign in to like a comment.');
+        return;
+      }
+  
+      const token = sessionData.session.access_token;
+  
+      // Make the LIKE/UNLIKE request
+      const response = await fetch('/api/commentLikes', {
+        method: 'POST', // Assuming the like/unlike action is handled by a POST request
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ commentId }), // Send the commentId in the request body
+      });
+  
+      // Handle the response
+      if (!response.ok) {
+        const errorData = await response.json();
+        setCommentError('Failed to like/unlike comment:', errorData.error);
+        return;
+      }
+      const responseData = await response.json();
+      setLikes(responseData.liked ? likes + 1 : likes - 1);
+      setLikedByUser(responseData.liked); // Update like status
+      // Update UI with success response
+      setCommentError('');
+    } catch (error) {
+      setCommentError('Error liking/unliking comment:', error);
+    }
   };
+  
 
-  const handleLike = (commentId) => {
-    console.log("Like comment ID ", commentId);
-  };
-
-// Handle comment submission
+// Handle reply submission
 const handleReplySubmit = async (experienceId, parentCommentId = null) => {
     if (!parentCommentId) {
         console.error('No parent comment ID for reply submit');
@@ -60,7 +192,7 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
       try {
         const { data: sessionData, error } = await supabase.auth.getSession();
         if (error || !sessionData?.session || !sessionData.session.access_token) {
-          setCommentError('You need to be signed in to post a comment.');
+          setCommentError('Sign in to post a comment.');
           return;
         }
   
@@ -82,20 +214,23 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
         });
   
         const data = await response.json();
-  
         if (response.ok) {
-          comment.replies = [...comment.replies, replies];
+            comment.replies.unshift(data.comment);
             setReplies("");
             setReplyingTo(null);
         } else {
-          console.error('Failed to add comment:', data.error);
+          throw new Error('Failed to add reply:', data.error);
         }
       } catch (error) {
-        console.error('Error submitting comment:', error);
+        setCommentError(error.message || 'Error occurred while submitting reply.');
       }
     }
   };
-  
+
+  // If the comment is deleted, don't render anything
+  if (deleted) {
+    return null;
+  }
 
   return (
           <div key={comment.id} className="comment p-4 bg-gray-100 rounded-lg relative">
@@ -123,19 +258,29 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                   comment?.username || "Anonymous"
                 )}
               </p>
-    
-    
+              {commentError && (
+                <div className="mt-4 p-3 bg-red-100 text-red-700 border border-red-500 rounded-lg">
+                    {commentError}
+                </div>
+                )}
+                {commentSuccess && (
+                    <div className="mt-4 p-3 bg-green-100 text-green-700 border border-green-500 rounded-lg">
+                        {commentSuccess}
+                    </div>
+                )}
+
             <div className="flex items-center justify-between mt-3">
                   {/* Left Section (Reply and Like Buttons) */}
                   <div className="flex items-center gap-4">
-                    {/* Reply Button */}
-                    <span
-                      onClick={() => setReplyingTo(prev => !prev)}
-                      className="material-icons text-blue-600 text-xl cursor-pointer"
-                    >
-                      reply
-                    </span>
-    
+                    {/* Reply Button, show only for top level comment */}
+                    { !comment.parent_comment_id &&
+                        <span
+                        onClick={() => setReplyingTo(prev => !prev)}
+                        className="material-icons text-blue-600 text-xl cursor-pointer"
+                        >
+                        reply
+                        </span>
+                    }
                     {/* Like Button */}
                     <div
                       onClick={() => handleLike(comment.id)}
@@ -147,13 +292,12 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                         {likedByUser ? 'favorite' : 'favorite_border'}
                       </span>
                       {/* Heart Icon */}
-                      <span className="font-semibold text-sm">{comment.likes}</span> {/* Like Count */}
+                      <span className="font-semibold text-sm">{likes}</span> {/* Like Count */}
                     </div>
-                  </div>
-    
-                  {/* Right Section (More Options) */}
+                    {/* Right Section (More Options) */}
                   <div className="relative flex items-center">
                     {/* Three Dots Button */}
+                    { comment.posted_by_user &&
                     <button
                       ref={buttonRef} // Attach ref to the button
                       onClick={() => setMenuOpen(prev => !prev)}
@@ -161,7 +305,7 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                     >
                       <FiMoreVertical className="text-gray-500 text-lg" />
                     </button>
-    
+                    }
                     {/* Dropdown Menu */}
                     {menuOpen && (
                       <div
@@ -190,6 +334,7 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                       </div>
                     )}
               </div>
+                  </div>
             </div>
     
     
@@ -239,6 +384,13 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                 </button>
                 </div>
               )}
+              {comment.replies && comment.replies.length > 0 && (
+                <div className="mt-4 ml-6 border-l-2 border-gray-300 pl-4">
+                    {comment.replies.map((reply) => (
+                    <Comment key={reply.id} comment={reply} experienceId={experienceId} />
+                    ))}
+                </div>
+                )}
             </div>
     );
 };

@@ -80,8 +80,10 @@ const levelRef = useRef(level);
           // Loop through the experiences and fetch comments for each
           for (let experience of experiencesData.experiences) {
             const commentsResponse = await fetch(
-              `/api/comments?experience_id=${experience.id}`
-            );
+              `/api/comments?experience_id=${experience.id}`, {
+                method: 'GET',
+                headers: headers
+              });
             const commentsData = await commentsResponse.json();
             
             if (commentsResponse.ok) {
