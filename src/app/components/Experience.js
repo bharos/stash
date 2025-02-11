@@ -6,7 +6,7 @@ import { useUser } from '../context/UserContext';
 import { useDraftExperience } from '../context/DraftExperience';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the custom hook for activeMenu context
 import { useRouter } from 'next/navigation'
-import { FiMoreVertical } from "react-icons/fi";
+import Comment from './Comment'
 
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
@@ -481,159 +481,21 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   </div>
 </div>
 
-
-    <div className="comments mt-4">
-    <div className="comments-list space-y-4">
-    {experience.comments && experience.comments.length > 0 ? (
-      experience.comments.map((comment, index) => (
-      <div key={index} className="comment p-4 bg-gray-100 rounded-lg relative">
-          {/* Comment Content */}
-          {editingComment === comment.id ? (
-            <textarea
-              value={editText[comment.id] || comment.comment}
-              onChange={(e) =>
-                setEditText({ ...editText, [comment.id]: e.target.value })
-              }
-              className="w-full p-2 border border-gray-300 rounded-lg"
-            />
-          ) : (
-            <p className="text-gray-800">{comment?.comment || "No content available"}</p>
-          )}
-
-          {/* Commenter Info */}
-          <p className="text-gray-500 text-sm mt-1">
-            By:{" "}
-            {comment?.is_op ? (
-              <span className="font-bold text-red-500" title="Original Poster (OP)">
-                OP
-              </span>
-            ) : (
-              comment?.username || "Anonymous"
-            )}
-          </p>
-
-
-        <div className="flex items-center justify-between mt-3">
-              {/* Left Section (Reply and Like Buttons) */}
-              <div className="flex items-center gap-4">
-                {/* Reply Button */}
-                <span
-                  onClick={() => setReplyingTo(replyingTo === comment.id ? null : comment.id)}
-                  className="material-icons text-blue-600 text-xl cursor-pointer"
-                >
-                  reply
-                </span>
-
-                {/* Like Button */}
-                <div
-                  onClick={handleLike}
-                  className={`flex items-center gap-2 cursor-pointer text-xl transition-all duration-200 ease-in-out transform hover:scale-110`}
-                >
-                  <span
-                    className={`material-icons ${hasLiked ? 'text-red-500' : 'text-gray-500'}`}
-                  >
-                    {hasLiked ? 'favorite' : 'favorite_border'}
-                  </span>
-                  {/* Heart Icon */}
-                  <span className="font-semibold text-sm">{likes}</span> {/* Like Count */}
-                </div>
-              </div>
-
-              {/* Right Section (More Options) */}
-              <div className="relative flex items-center">
-                {/* Three Dots Button */}
-                <button
-                  ref={buttonRef} // Attach ref to the button
-                  onClick={() => setMenuOpen(menuOpen === comment.id ? null : comment.id)}
-                  className="p-1 hover:bg-gray-400 bg-gray-200 rounded-full"
-                >
-                  <FiMoreVertical className="text-gray-500 text-lg" />
-                </button>
-
-                {/* Dropdown Menu */}
-                {menuOpen === comment.id && (
-                  <div
-                    ref={menuRef} // Attach ref to the dropdown menu
-                    className="absolute right-0 mt-1 w-24 bg-slate-500 shadow-md rounded-md border text-sm"
-                  >
-                    <button
-                      onClick={() => {
-                        setEditingComment(comment.id);
-                        setEditText({ ...editText, [comment.id]: comment.comment });
-                        setMenuOpen(null);
-                      }}
-                      className="block w-full px-2 py-1 text-left bg-transparent hover:bg-gray-400 border-none"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => {
-                        handleDeleteComment(comment.id);
-                        setMenuOpen(null);
-                      }}
-                      className="block w-full px-2 py-1 text-left bg-gray-400 bg-transparent hover:bg-red-400 text-red-700"
-                    >
-                      Delete
-                    </button>
-                  </div>
-                )}
-          </div>
-        </div>
-
-
-          {/* Edit & Save Buttons */}
-          {editingComment === comment.id && (
-            <div className="flex mt-2 space-x-2">
-              <button
-                onClick={() => {
-                  handleEditComment(comment.id, editText[comment.id]);
-                }}
-                className="px-3 py-1 bg-blue-500 text-white rounded-lg"
-              >
-                Save
-              </button>
-              <button
-                onClick={() => setEditingComment(null)}
-                className="px-3 py-1 bg-gray-300 rounded-lg"
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-
-          {/* Reply Box */}
-          {replyingTo === comment.id && (
-            <div className="mt-3">
-              <textarea
-                value={replies[comment.id] || ""}
-                onChange={(e) =>
-                  setReplies({ ...replies, [comment.id]: e.target.value })
-                }
-                placeholder="Write a reply..."
-                className="w-full p-2 border border-gray-300 rounded-lg"
-              />
-              <button
-                onClick={() => {
-                  handleCommentSubmit(comment.id, replies[comment.id]);
-                  setReplies({ ...replies, [comment.id]: "" });
-                  setReplyingTo(null);
-                }}
-                className="mt-2 px-3 py-1 bg-blue-500 text-white rounded-lg"
-              >
-                Reply
-              </button>
-            </div>
-          )}
-        </div>
-      ))
-    ) : (
-      <p className="text-gray-500">No comments yet.</p>
-    )}
-  </div>
-
-
-        {/* Add Comment */}
-        <div className="add-comment mt-4">
+  {/* Comments section */}
+  <div className="comments mt-4">
+      {experience.comments && experience.comments.length > 0 ? (
+        experience.comments.map((comment) => (
+          <Comment
+            key={comment.id}
+            experienceId={experience.id}
+            comment={comment}
+          />
+        ))
+      ) : (
+        <p className="text-gray-500">No comments yet.</p>
+      )}
+              {/* Add Comment */}
+              <div className="add-comment mt-4">
           <textarea
             value={newComments[experience.id] || ''}
             onChange={(e) =>
@@ -660,7 +522,8 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
             Add Comment
           </button>
         </div>
-      </div>
+    </div>
+
 
     </div>
   );
