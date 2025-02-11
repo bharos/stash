@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import supabase from '../utils/supabaseClient';
@@ -238,16 +238,21 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     router.push('/');
   };
   
-  const renderUsername = (username) => (
-    <p className="text-gray-400 text-sm">
-      <div className="flex items-center gap-1">
-        <span className="material-icons text-gray-500">
-          {`face_${Math.floor(Math.random() * 5) + 2}`}
-        </span>
-        <span className="font-semibold">{username || 'Anonymous'}</span>
-      </div>
-    </p>
-  );
+  const renderUsername = (username) => {
+    // Use useMemo to generate a random face only once per component lifecycle
+    const randomFace = useMemo(() => `face_${Math.floor(Math.random() * 5) + 2}`, []);
+  
+    return (
+      <p className="text-gray-400 text-sm">
+        <div className="flex items-center gap-1">
+          <span className="material-icons text-gray-500">
+            {randomFace}
+          </span>
+          <span className="font-semibold">{username || 'Anonymous'}</span>
+        </div>
+      </p>
+    );
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -278,8 +283,9 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       experience.isExpanded ? 'h-auto' : 'h-[200px]'
     }`}
   >
+    <div class="card-container p-0">
     {/* Buttons Section (separate row above the company name) */}
-    <div className="flex justify-end w-full absolute top-2 right-2">
+    <div className="flex justify-end w-full">
       {/* If posted_by_user is set, add a delete button */}
       {experience.posted_by_user && (
         <button
@@ -328,10 +334,10 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
         {experience.isExpanded ? '–' : '+'}
       </button>
     </div>
-  
+  </div>
     {/* Experience header, toggle when clicked anywhere on this part */}
     <div className ="experience-header" onClick={() => toggleExperienceDetails(experience)}>
-      <div className="flex items-center gap-4 mt-3 relative">
+      <div className="flex items-center gap-4 mt-2 sm:mt-3 relative">
         {experience.type === 'interview_experience' ? (
           <>
             {/* Company Profile Image */}
