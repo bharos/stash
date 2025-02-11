@@ -74,7 +74,7 @@ export default async function handler(req, res) {
     // Add required fields like 'is_op' and 'replies'
     newComment.is_op = isOp;
     newComment.replies = []; // Initialize 'replies' as an empty array
-
+    newComment.posted_by_user = true;
       res.status(200).json({ message: 'Comment added successfully', comment: newComment });
   
     } catch (error) {

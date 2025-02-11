@@ -22,11 +22,12 @@ export default async function handler(req, res) {
         
         const userId = user.id;
 
-        // Fetch experiences created by the user
+        // Fetch interview_experiences created by the user
         const { data: experiences, error: expError } = await supabase
             .from('experiences')
-            .select('id, company_name, level, created_at, likes')
+            .select('id, company_name, level, created_at, likes, type')
             .eq('user_id', userId)
+            .eq('type', 'interview_experience')
             .order('created_at', { ascending: false });
 
         if (expError) throw expError;
@@ -49,35 +50,52 @@ export default async function handler(req, res) {
 
         if (commentError) throw commentError;
 
+        // Fetch general posts made by the user (joining with experiences)
+        const { data: generalPosts, error: generalPostsError } = await supabase
+        .from('general_posts')
+        .select(`
+          experience_id, 
+          created_at, 
+          title, 
+          experiences!inner(user_id)
+        `)
+        .eq('experiences.user_id', userId)
+        .order('created_at', { ascending: false });
+
         // Combine both experiences and likes into activity
         const activity = [
             ...experiences.map(exp => ({
-                type: 'experience_posted',
-                id: exp.id,
+                activity_type: 'experience_posted',
+                experience_id: exp.id,
                 company_name: exp.company_name,
                 level: exp.level,
                 created_at: exp.created_at,
                 likes: exp.likes
             })),
             ...likes.map(like => ({
-                type: 'liked_experience',
+                activity_type: 'liked_experience',
                 experience_id: like.experience_id,
                 created_at: like.created_at,
                 company_name: like.experiences?.company_name,
                 level: like.experiences?.level
             })),
             ...comments.map(comment => ({
-                type: 'commented_experience',
+                activity_type: 'commented_experience',
                 experience_id: comment.experience_id,
                 created_at: comment.created_at,
                 company_name: comment.experiences?.company_name,
                 level: comment.experiences?.level
+            })),
+            ...generalPosts.map(generalPost => ({
+                activity_type: 'general_post',
+                experience_id: generalPost.experience_id,
+                created_at: generalPost.created_at,
+                title: generalPost.title
             }))
         ];
 
         // Sort all activity by most recent date (created_at or liked_at)
         activity.sort((a, b) => new Date(b.created_at || b.liked_at) - new Date(a.created_at || a.liked_at));
-
         res.status(200).json({ activity });
     } catch (error) {
         console.error('Error fetching user activity:', error);

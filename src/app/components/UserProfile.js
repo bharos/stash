@@ -44,7 +44,9 @@ const UserProfile = () => {
   
       const activityData = await activityRes.json();
       // Assuming activityData contains posts and likes
-      setExperiences(activityData.activity.filter(item => item.type === 'experience_posted'));
+      setExperiences(activityData.activity.filter(item => item.activity_type === 'experience_posted' 
+        || item.activity_type === 'general_post'
+      ));
       setActivity(activityData.activity);
     } catch (err) {
       console.error('Error fetching user data:', err);
@@ -127,21 +129,37 @@ const UserProfile = () => {
       <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Your Experiences Section */}
         <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-3">Your Experiences 📩</h2>
+          <h2 className="text-xl font-semibold mb-3">Your Posts 📩</h2>
           {loading ? (
             <p>Loading...</p>
           ) : experiences.length > 0 ? (
             experiences.map((exp) => (
-              <div key={exp.id} className="border p-4 rounded-md shadow mb-3">
-                <h3 className="text-lg font-medium">
-                  <Link href={`/experience/${exp.id}`} className="text-blue-600 hover:underline">
-                    {exp.company_name}
-                  </Link>
-                </h3>
-                <p className="text-gray-700">{exp.level}</p>
+              <div key={exp.experience_id} className="border p-4 rounded-md shadow mb-3">
+                {exp.activity_type === "experience_posted" ? (
+                  <>
+                    <h3 className="text-sm sm:text-md font-medium">
+                      <Link href={`/experience/${exp.experience_id}`} className="text-blue-600 hover:underline">
+                        {exp.company_name}
+                      </Link>
+                    </h3>
+                    <p className="text-sm sm:text-md text-gray-700">{exp.level}</p>
+                  </>
+                ) : exp.activity_type === "general_post" ? (
+                  <>
+                  <h3 className="text-sm sm:text-md font-medium">
+                    <Link 
+                      href={`/experience/${exp.experience_id}`} 
+                      className="text-blue-600 hover:underline block w-full break-words max-w-md"
+                    >
+                      {exp.title}
+                    </Link>
+                  </h3>
+                </>
+                ) : null}
                 <p className="text-sm text-gray-500">{new Date(exp.created_at).toLocaleString()}</p>
               </div>
-            ))
+            )
+          )
           ) : (
             <p>No experiences posted yet.</p>
           )}
@@ -154,34 +172,50 @@ const UserProfile = () => {
             <p>Loading...</p>
           ) : activity.length > 0 ? (
             activity.map((act, index) => (
-              <div key={`${act.id}-${act.type}-${index}`} className="border p-4 rounded-md shadow mb-3">
-                {act.type === 'experience_posted' ? (
+              <div key={`${act.id}-${act.activity_type}-${index}`} className="border p-4 rounded-md shadow mb-3">
+                {act.activity_type === 'experience_posted' ? (
                   <>
-                    <h3 className="text-lg font-medium">
+                    <h3 className="text-sm sm:text-md">
                       Posted an experience for {' '}
                       <Link href={`/experience/${act.id}`} className="text-blue-600 hover:underline">
                         {act.company_name}
                       </Link>
+                      <p className="text-gray-700">Level: {act.level}</p>
                     </h3>
-                    <p className="text-gray-700">Level: {act.level}</p>
                   </>
-                ) : act.type === 'liked_experience' ? (
-                  <h3 className="text-lg font-medium">
+                ) : act.activity_type === 'liked_experience' ? (
+                  <h3 className="text-sm sm:text-md">
                     Liked an{' '}
                     <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
                       experience
                     </Link>{' '}
-                    at {act.company_name} (Level: {act.level})
+                    {act.company_name && act.level && (
+                      <p>
+                        at {act.company_name} (Level: {act.level})
+                      </p>
+                    )}
                   </h3>
-                ) : act.type === 'commented_experience' ? (
-                  <h3 className="text-lg font-medium">
+                ) : act.activity_type === 'commented_experience' ? (
+                  <h3 className="text-sm sm:text-md">
                     Commented on{' '}
                     <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
                       experience
                     </Link>{' '}
-                    at {act.company_name} (Level: {act.level})
+                    {act.company_name && act.level && (
+                      <p>
+                        at {act.company_name} (Level: {act.level})
+                      </p>
+                    )}
                   </h3>
-                ) : (
+                ) : act.activity_type === 'general_post'? (
+                  <h3 className="text-sm sm:text-md">
+                    Posted{' '}
+                    <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline w-full break-words max-w-md">
+                      {act.title}
+                    </Link>{' '}
+                  </h3>
+                )
+                :(
                   <div>Invalid activity</div>
                 )}
                 <p className="text-sm text-gray-500">{new Date(act.created_at).toLocaleString()}</p>
