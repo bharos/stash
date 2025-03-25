@@ -15,18 +15,10 @@ const OAuthSignin = () => {
       // Use Supabase's signInWithOAuth method to handle the OAuth flow
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}`, // Ensure it redirects properly
-        }
         // No need for manual token passing, Supabase will handle the OAuth flow
       })
 
       if (error) throw error
-      // If OAuth URL is received, open it in a new browser window/tab
-    if (data?.url) {
-      console.log('Opening Google OAuth page in a new window', data.url)
-      window.open(data.url, '_blank'); // This opens the OAuth page in the default system browser
-    }
       console.log('Successfully logged in with Google OAuth')
 
       // Update session state
