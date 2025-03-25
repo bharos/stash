@@ -103,6 +103,16 @@ button:hover {
   background-color: #005bb5;
 }
 
+button:disabled {
+  cursor: not-allowed;
+  background-color: #b0b0b0; /* Adjust this color as needed */
+}
+
+/* Prevent hover effect on disabled buttons */
+button:disabled:hover {
+  background-color: #b0b0b0; /* Keep the same color on hover */
+}
+
 /* Error message styling */
 .error {
   color: var(--error);

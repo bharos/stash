@@ -1,6 +1,5 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
-
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({ error: 'Method Not Allowed' });
@@ -8,95 +7,166 @@ export default async function handler(req, res) {
 
     // Extract the token from the Authorization header
     const token = req.headers['authorization']?.split('Bearer ')[1];
-  
+
     if (!token) {
-      return res.status(401).json({ error: 'Authorization token is missing.' });
+        return res.status(401).json({ error: 'Authorization token is missing.' });
     }
 
     try {
+        // Get pagination parameters (default to page 1, page size 10)
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * pageSize;
+
+        // Extract the activity type (experience, like, comment, etc.)
+        const activityType = req.query.type;
+
         // Use the token to fetch the user data securely from Supabase Auth server
         const { data: { user }, error: authError } = await supabase.auth.getUser(token);
         if (authError || !user?.id) {
             return res.status(401).json({ error: 'User not authenticated. Are you signed in?' });
         }
-        
+
         const userId = user.id;
 
-        // Fetch interview_experiences created by the user
-        const { data: experiences, error: expError } = await supabase
-            .from('experiences')
-            .select('id, company_name, level, created_at, likes, type')
+        // Query based on activity type
+        let query;
+        if (activityType === 'experience') {
+            query = supabase
+                .from('experiences')
+                .select('id, company_name, level, created_at, likes, type')
+                .eq('user_id', userId)
+                .eq('type', 'interview_experience')
+                .order('created_at', { ascending: false })
+                .range(offset, offset + pageSize - 1);  // Pagination
+        } else if (activityType === 'like') {
+            // Query for likes
+            query = supabase
+                .from('user_likes')
+                .select('experience_id, created_at, experiences(id, company_name, level, type)')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+                .range(offset, offset + pageSize - 1);  // Pagination
+        
+            // Execute the query
+            const { data: likes, error } = await query;
+            if (error) {
+                throw error;
+            }
+
+            const generalPostExperienceIds = likes
+            .filter(like => like.experiences?.type === 'general_post')
+            .map(like => like.experience_id);
+
+            let generalPosts = [];
+            if (generalPostExperienceIds.length > 0) {
+                const { data: posts, error: postError } = await supabase
+                    .from('general_posts')
+                    .select('experience_id, title')
+                    .in('experience_id', generalPostExperienceIds);
+
+                if (postError) {
+                    console.error("Error fetching general post titles:", postError);
+                } else {
+                    generalPosts = posts;
+                }
+            }
+        
+            // If the data is returned successfully, proceed to enrich it
+            const finalResults = likes.map(like => {
+                // Check if the experience is of type 'general_post'
+                if (like.experiences?.type === 'general_post') {
+                    // Find the corresponding general post title from the generalPosts array
+                    const post = generalPosts.find(p => p.experience_id === like.experience_id);
+                    return {
+                        ...like,
+                        title: post ? post.title : null // Add title if found, otherwise null
+                    };
+                }
+                return like; // Return like unchanged if it's not a general_post
+            });
+            // Return the enriched data in the response
+            return res.status(200).json({
+                data: finalResults,  // Enriched likes data
+                page,
+                page_size: pageSize
+            });
+        } else if (activityType === 'comment') {
+            query = supabase
+            .from('comments')
+            .select(`
+                experience_id, 
+                created_at, 
+                experiences(id, company_name, level, type)
+            `)
             .eq('user_id', userId)
-            .eq('type', 'interview_experience')
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false })
+            .range(offset, offset + pageSize - 1);
+        
+             const { data: comments, error } = await query;
+        
+            if (error) {
+                console.error("Error fetching comments:", error);
+            } else {
+                // For experiences that are of type 'general_post', fetch titles from general_posts
+                const generalPostExperienceIds = comments
+                    .filter(comment => comment.experiences?.type === 'general_post')
+                    .map(comment => comment.experience_id);
+            
+                let generalPosts = [];
+                if (generalPostExperienceIds.length > 0) {
+                    const { data: posts, error: postError } = await supabase
+                        .from('general_posts')
+                        .select('experience_id, title')
+                        .in('experience_id', generalPostExperienceIds);
+            
+                    if (postError) {
+                        console.error("Error fetching general post titles:", postError);
+                    } else {
+                        generalPosts = posts;
+                    }
+                }
+        
+                // Merge general post titles with comments
+                const finalResults = comments.map(comment => {
+                    if (comment.experiences?.type === 'general_post') {
+                        const post = generalPosts.find(p => p.experience_id === comment.experience_id);
+                        return {
+                            ...comment,
+                            title: post ? post.title : null
+                        };
+                    }
+                    return comment;
+                });
+                return res.status(200).json({
+                    data: finalResults,
+                    page,
+                    page_size: pageSize
+                });    
+            }
+        } else if (activityType === 'general_post') {
+            query = supabase
+                .from('general_posts')
+                .select('experience_id, created_at, title, experiences(id)')
+                .eq('experiences.user_id', userId)
+                .order('created_at', { ascending: false })
+                .range(offset, offset + pageSize - 1);
+        } else {
+            return res.status(400).json({ error: 'Invalid activity type.' });
+        }
 
-        if (expError) throw expError;
+        // Execute the query
+        const { data, error } = await query;
 
-        // Fetch likes made by the user (joining with experiences)
-        const { data: likes, error: likeError } = await supabase
-            .from('user_likes')
-            .select('experience_id, created_at, experiences(id, company_name, level)')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-
-        if (likeError) throw likeError;
-
-        // Fetch comments made by the user (joining with experiences)
-        const { data: comments, error: commentError } = await supabase
-        .from('comments')
-        .select('experience_id, created_at, experiences(id, company_name, level)')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-        if (commentError) throw commentError;
-
-        // Fetch general posts made by the user (joining with experiences)
-        const { data: generalPosts, error: generalPostsError } = await supabase
-        .from('general_posts')
-        .select(`
-          experience_id, 
-          created_at, 
-          title, 
-          experiences!inner(user_id)
-        `)
-        .eq('experiences.user_id', userId)
-        .order('created_at', { ascending: false });
-
-        // Combine both experiences and likes into activity
-        const activity = [
-            ...experiences.map(exp => ({
-                activity_type: 'experience_posted',
-                experience_id: exp.id,
-                company_name: exp.company_name,
-                level: exp.level,
-                created_at: exp.created_at,
-                likes: exp.likes
-            })),
-            ...likes.map(like => ({
-                activity_type: 'liked_experience',
-                experience_id: like.experience_id,
-                created_at: like.created_at,
-                company_name: like.experiences?.company_name,
-                level: like.experiences?.level
-            })),
-            ...comments.map(comment => ({
-                activity_type: 'commented_experience',
-                experience_id: comment.experience_id,
-                created_at: comment.created_at,
-                company_name: comment.experiences?.company_name,
-                level: comment.experiences?.level
-            })),
-            ...generalPosts.map(generalPost => ({
-                activity_type: 'general_post',
-                experience_id: generalPost.experience_id,
-                created_at: generalPost.created_at,
-                title: generalPost.title
-            }))
-        ];
-
-        // Sort all activity by most recent date (created_at or liked_at)
-        activity.sort((a, b) => new Date(b.created_at || b.liked_at) - new Date(a.created_at || a.liked_at));
-        res.status(200).json({ activity });
+        if (error) {
+            throw error;
+        }
+        console.log(data)
+        res.status(200).json({
+            data,
+            page,
+            page_size: pageSize
+        });
     } catch (error) {
         console.error('Error fetching user activity:', error);
         res.status(500).json({ error: 'Internal Server Error' });
