@@ -10,10 +10,15 @@ const GeneralPosts = () => {
   const { user } = useUser(); // Use user from context here
   const [generalPosts, setGeneralPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
+  const [page, setPage] = useState(1); // Track current page
+  const [hasMore, setHasMore] = useState(true); // Check if more posts are available
+  const limit = 5; // Number of posts per request
 
   console.log('general posts page');
   const fetchGeneralPosts = useCallback(
-    debounce(async () => {
+    debounce(async (currentPage) => {
+      if (!hasMoreRef.current) return;  // Stop fetching if no more posts
+
       setPostsLoading(true);
       try {
         // Prepare the fetch headers
@@ -26,15 +31,13 @@ const GeneralPosts = () => {
           headers['Authorization'] = `Bearer ${sessionData.session.access_token}`;
         }
 
-        const postsResponse = await fetch(`/api/generalPosts`, {
+        const postsResponse = await fetch(`/api/generalPosts?page=${currentPage}&limit=${limit}`, {
           method: 'GET',
           headers: headers
         });
         const postsData = await postsResponse.json();
 
-        if (postsResponse.ok) {
-          setGeneralPosts(postsData.experiences);
-  
+        if (postsResponse.ok) {  
           // Loop through the experiences and fetch comments for each
           for (let post of postsData.experiences) {
             const commentsResponse = await fetch(
@@ -53,6 +56,11 @@ const GeneralPosts = () => {
   
           // Keep the 'isExpanded' flag true for the all experiences (UI state)
             postsData.experiences.map(experience => experience.isExpanded = true);
+            const newPosts = postsData.experiences;
+            setGeneralPosts((prev) => [...prev, ...newPosts]);
+            if (newPosts.length < limit) {
+              setHasMore(false);
+            }
         } else {
           // If the fetch fails, clear the posts state
           setGeneralPosts([]);
@@ -68,10 +76,27 @@ const GeneralPosts = () => {
     [] // Empty dependency array ensures that 'fetchExperiences' doesn't get recreated on every render
   );
 
+const hasMoreRef = useRef(true); // Store latest value for hasMore in ref to use in the debounced callback
+
+useEffect(() => {
+  hasMoreRef.current = hasMore; // Keep ref updated when hasMore changes
+}, [hasMore]);
+
 // This effect updates the refs whenever the state values change
 useEffect(() => {
-  fetchGeneralPosts(); // Trigger the debounced fetch function
+  setGeneralPosts([]); // Reset posts when user changes
+  setPage(1);
+  setHasMore(true);
+  fetchGeneralPosts(1);
 }, [user]);
+
+const loadMorePosts = () => {
+  if (hasMore) {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchGeneralPosts(nextPage);
+  }
+};
 
   /**
  * Updates the list of experiences in the state.
@@ -98,9 +123,7 @@ const updatePost = (updatedPost) => {
 
       {/* Posts List */}
       <div className="experience-list space-y-6">
-        {postsLoading ? (
-          <p className="text-center text-gray-500">Loading posts...</p>
-        ) : generalPosts.length > 0 ? (
+        {generalPosts.length > 0 ? (
           generalPosts.map((post) => (
             <Experience
             key={post.id}
@@ -113,6 +136,22 @@ const updatePost = (updatedPost) => {
           <p className="text-center text-gray-500">No posts available 🤐</p> // Show this when no posts are available
         )}
       </div>
+      {/* Load More Button */}
+      {hasMore ? (
+        <div className="text-center mt-4">
+          <button
+            onClick={loadMorePosts}
+            disabled={postsLoading}
+            className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600 disabled:bg-gray-300"
+          >
+            {postsLoading ? 'Loading...' : 'Load More'}
+          </button>
+        </div>
+      ) : (
+        <div className="text-center mt-4">
+          <p className="text-gray-500">🏁 You’ve reached the end of the posts 🔚</p>
+        </div>
+      )}
     </div>
   );
 };

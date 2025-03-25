@@ -115,8 +115,10 @@ export default async function handler(req, res) {
     case 'PUT':
       return handleExperienceUpsert(req, res);
       case 'GET':
-        const { experienceId, page = 1, limit = 10 } = req.query; // Default page = 1, limit = 10
-      
+        const experienceId = req.query.experienceId;
+        // Get pagination parameters (default to page 1, limit 10)
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         try {
           const token = req.headers['authorization']?.split('Bearer ')[1];
           let userId;
@@ -149,7 +151,7 @@ export default async function handler(req, res) {
             const end = start + limit - 1;
             query = query.range(start, end); // Apply pagination
           }
-      
+
           const { data, error } = await query;
           const experiences = data.map(experience => ({
             ...experience,  // Spread the original experience object

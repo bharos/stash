@@ -172,15 +172,18 @@ const updateExperience = (updatedExperience) => {
         ) : !companyName ? (
           <p className="text-center text-gray-500">Choose a company to view interview experiences 👀</p> // Show this when no company is selected
         ) : experiences.length > 0 ? (
-          experiences.map((experience) => (
+          <>
+          {experiences.map((experience) => (
             <Experience
             key={experience.id}
             experience={experience}
             updateExperience={updateExperience}
             showOpenInNewTabButton={true}
           />
-          
-        ))) : (
+          ))}
+          <p className="text-center text-gray-500 mt-4">🏁 You’ve reached the end 🔚</p>
+          </>
+          ) : (
           <p className="text-center text-gray-500">No experiences available 🤐</p> // Show this when no experiences are available for the selected company
         )}
       </div>

@@ -9,7 +9,6 @@ const UserProfile = () => {
   const [newUsername, setNewUsername] = useState(user.username || '');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("experiences");
   const [experiences, setExperiences] = useState([]);
@@ -246,11 +245,10 @@ const UserProfile = () => {
               generalPosts.map((post) => (
                 <div key={post.experience_id} className="border p-4 rounded-md shadow mb-3">
                  <h3 className="text-sm sm:text-md font-medium">
-  <Link href={`/experience/${post.experience_id}`} className="text-blue-600 hover:underline break-words">
-    {post.title}
-  </Link>
-</h3>
-
+                  <Link href={`/experience/${post.experience_id}`} className="text-blue-600 hover:underline break-words">
+                    {post.title}
+                  </Link>
+                </h3>
                   <p className="text-sm text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
                 </div>
               ))
@@ -358,22 +356,22 @@ const UserProfile = () => {
               <p>No comments yet.</p>
             )}
           <div className="flex justify-between mt-4">
-  <button
-    onClick={() => handlePageChange(-1)}
-    disabled={pageComments <= 1}
-    className={`px-4 py-2 rounded ${pageComments <= 1 ? 'bg-gray-400' : 'bg-blue-400'}`}
-  >
-    Previous
-  </button>
-  <button
-    onClick={() => handlePageChange(1)}
-    disabled={comments.length < limit}
-    className={`px-4 py-2 rounded ${comments.length < limit ? 'bg-gray-400' : 'bg-blue-400'}`}
-  >
-    Next
-  </button>
-</div>
+            <button
+              onClick={() => handlePageChange(-1)}
+              disabled={pageComments <= 1}
+              className={`px-4 py-2 rounded ${pageComments <= 1 ? 'bg-gray-400' : 'bg-blue-400'}`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => handlePageChange(1)}
+              disabled={comments.length < limit}
+              className={`px-4 py-2 rounded ${comments.length < limit ? 'bg-gray-400' : 'bg-blue-400'}`}
+            >
+              Next
+            </button>
           </div>
+        </div>
         )}
       </>
     )}
