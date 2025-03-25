@@ -4,34 +4,43 @@ import { useRouter } from 'next/navigation';
 import supabase from '../utils/supabaseClient';
 import Link from 'next/link';
 
-
 const UserProfile = () => {
   const { user, setUser } = useUser();
   const [newUsername, setNewUsername] = useState(user.username || '');
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
-  const [experiences, setExperiences] = useState([]);
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("experiences");
+  const [experiences, setExperiences] = useState([]);
+  const [generalPosts, setGeneralPosts] = useState([]);
+  const [likes, setLikes] = useState([]);
+  const [comments, setComments] = useState([]);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10); // Set a limit for the number of items per page
   const router = useRouter();
 
+  // Function to fetch user activity from the new API
   const fetchUserActivityData = async () => {
     try {
-      // Fetch user's activity (posts + likes)
+      // Fetch the user's session data
       const { data: sessionData, error } = await supabase.auth.getSession();
       if (error || !sessionData?.session || !sessionData.session.access_token) {
-        setExperiences([]);
-        setActivity([]);
+        setPosts([]);
+        setLikes([]);
+        setComments([]);
         return;
       }
-
+  
       const token = sessionData.session.access_token;
       if (!token) {
         console.error('No token found. User is not authenticated.');
         return;
       }
-
-      const activityRes = await fetch('/api/activity', {
+  
+      // Construct the API endpoint with the query parameters based on activeTab
+      const type = getTypeFromTab(activeTab); // Get the correct activity type based on the active tab
+      const activityRes = await fetch(`/api/activity?type=${type}&page=${page}&limit=${limit}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -41,13 +50,16 @@ const UserProfile = () => {
       if (!activityRes.ok) {
         throw new Error('Failed to fetch activity');
       }
-  
       const activityData = await activityRes.json();
-      // Assuming activityData contains posts and likes
-      setExperiences(activityData.activity.filter(item => item.activity_type === 'experience_posted' 
-        || item.activity_type === 'general_post'
-      ));
-      setActivity(activityData.activity);
+      if (activeTab === 'general posts') {
+        setGeneralPosts(activityData.data);
+      } else if (activeTab === 'likes') {
+        setLikes(activityData.data);
+      } else if (activeTab === 'comments') {
+        setComments(activityData.data);
+      } else if (activeTab === 'experiences') {
+        setExperiences(activityData.data);
+      }
     } catch (err) {
       console.error('Error fetching user data:', err);
     } finally {
@@ -55,10 +67,24 @@ const UserProfile = () => {
     }
   };
   
+  const getTypeFromTab = (tab) => {
+    switch (tab) {
+      case 'general posts':
+        return 'general_post';
+      case 'likes':
+        return 'like';
+      case 'comments':
+        return 'comment';
+      default:
+        return 'experience';
+    }
+  };
+  
+
   useEffect(() => {
-    setLoading(true);
+    setLoading(true);  // Set loading to true before making the fetch request
     fetchUserActivityData();
-  }, [user.user_id]); // Re-fetch when user_id changes
+  }, [user.user_id, activeTab, page]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,7 +98,7 @@ const UserProfile = () => {
     setSuccessMessage('');
 
     try {
-      // if new username is same as current, don't call API
+      // If new username is the same as current, don't call API
       if (newUsername === user.username) {
         setError('Same as current.');
         return;
@@ -90,7 +116,7 @@ const UserProfile = () => {
         setUser({ ...user, username: newUsername });
         router.push('/'); // Redirect after update
       } else {
-        setError(result.error ? result.error : 'Something went wrong. Failed to update username.'); 
+        setError(result.error ? result.error : 'Something went wrong. Failed to update username.');
       }
     } catch (err) {
       setError('Failed to update username.');
@@ -125,108 +151,142 @@ const UserProfile = () => {
         </form>
       </div>
 
-      {/* Experiences & Activity Section - Side by Side on Large Screens */}
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Your Experiences Section */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-3">Your Posts 📩</h2>
-          {loading ? (
-            <p>Loading...</p>
-          ) : experiences.length > 0 ? (
-            experiences.map((exp) => (
-              <div key={exp.experience_id} className="border p-4 rounded-md shadow mb-3">
-                {exp.activity_type === "experience_posted" ? (
-                  <>
-                    <h3 className="text-sm sm:text-md font-medium">
-                      <Link href={`/experience/${exp.experience_id}`} className="text-blue-600 hover:underline">
-                        {exp.company_name}
-                      </Link>
-                    </h3>
-                    <p className="text-sm sm:text-md text-gray-700">{exp.level}</p>
-                  </>
-                ) : exp.activity_type === "general_post" ? (
-                  <>
+      <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+  {/* Tab Navigation */}
+  <div className="flex border-b mb-4">
+    {["experiences", "general posts", "likes", "comments"].map((tab) => (
+      <button
+        key={tab}
+        onClick={() => setActiveTab(tab)}
+        className={`flex-1 text-center py-2 ${
+          activeTab === tab ? "border-b-2 border-blue-600 font-semibold text-blue-600" : "text-gray-500"
+        }`}
+      >
+        {tab.charAt(0).toUpperCase() + tab.slice(1)}
+      </button>
+    ))}
+  </div>
+
+  {/* Tab Content */}
+  <div>
+    {loading ? (
+      <p>Loading...</p>
+    ) : (
+        <>
+        {activeTab === "experiences" && (
+          <div>
+            {experiences.length > 0 ? (
+              experiences.map((exp) => (
+                <div key={exp.id} className="border p-4 rounded-md shadow mb-3">
+                    <>
+                      <h3 className="text-sm sm:text-md font-medium">
+                        <Link href={`/experience/${exp.id}`} className="text-blue-600 hover:underline">
+                          {exp.company_name}
+                        </Link>
+                      </h3>
+                      <p className="text-sm sm:text-md text-gray-700">{exp.level}</p>
+                    </>
+                  <p className="text-sm text-gray-500">{new Date(exp.created_at).toLocaleString()}</p>
+                </div>
+              ))
+            ) : (
+              <p>No posts yet.</p>
+            )}
+          </div>
+        )}
+        {activeTab === "general posts" && (
+          <div>
+            {generalPosts.length > 0 ? (
+              generalPosts.map((post) => (
+                <div key={post.experience_id} className="border p-4 rounded-md shadow mb-3">
                   <h3 className="text-sm sm:text-md font-medium">
-                    <Link 
-                      href={`/experience/${exp.experience_id}`} 
-                      className="text-blue-600 hover:underline block w-full break-words max-w-md"
-                    >
-                      {exp.title}
+                    <Link href={`/experience/${post.experience_id}`} className="text-blue-600 hover:underline">
+                      {post.title}
                     </Link>
                   </h3>
-                </>
-                ) : null}
-                <p className="text-sm text-gray-500">{new Date(exp.created_at).toLocaleString()}</p>
-              </div>
-            )
-          )
-          ) : (
-            <p>No experiences posted yet.</p>
-          )}
-        </div>
+                  <p className="text-sm text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
+                </div>
+              ))
+            ) : (
+              <p>No posts yet.</p>
+            )}
+          </div>
+        )}
 
-        {/* Your Activity Section */}
-        <div className="bg-white p-6 rounded-lg shadow-lg">
-          <h2 className="text-xl font-semibold mb-3">Your Activity 🎊</h2>
-          {loading ? (
-            <p>Loading...</p>
-          ) : activity.length > 0 ? (
-            activity.map((act, index) => (
-              <div key={`${act.id}-${act.activity_type}-${index}`} className="border p-4 rounded-md shadow mb-3">
-                {act.activity_type === 'experience_posted' ? (
-                  <>
-                    <h3 className="text-sm sm:text-md">
-                      Posted an experience for {' '}
-                      <Link href={`/experience/${act.id}`} className="text-blue-600 hover:underline">
-                        {act.company_name}
+        {activeTab === "likes" && (
+          <div>
+            {likes.length > 0 ? (
+              likes.map((act, index) => (
+                <div key={`${act.experience_id}-comment-${index}`} className="border p-4 rounded-md shadow mb-3">
+                  <h3 className="text-sm sm:text-md">
+                    Liked {" "}
+                    {act.experiences?.type === "general_post" ? (
+                      <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
+                        {act.title}
                       </Link>
-                      <p className="text-gray-700">Level: {act.level}</p>
-                    </h3>
-                  </>
-                ) : act.activity_type === 'liked_experience' ? (
-                  <h3 className="text-sm sm:text-md">
-                    Liked an{' '}
-                    <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
-                      experience
-                    </Link>{' '}
-                    {act.company_name && act.level && (
-                      <p>
-                        at {act.company_name} (Level: {act.level})
-                      </p>
+                    ) : (
+                      <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
+                        experience
+                      </Link>
                     )}
                   </h3>
-                ) : act.activity_type === 'commented_experience' ? (
+
+                  {/* Show company name and level for non-general_post types */}
+                  {act.experiences?.type !== "general_post" && act.experiences?.company_name && act.experiences?.level && (
+                    <p className="text-sm sm:text-md">
+                      at {act.experiences.company_name} (Level: {act.experiences.level})
+                    </p>
+                  )}
+
+                  <p className="text-sm text-gray-500">{new Date(act.created_at).toLocaleString()}</p>
+                </div>
+              ))
+            ) : (
+              <p>No comments yet.</p>
+            )}
+          </div>
+        )}
+
+        {activeTab === "comments" && (
+          <div>
+            {comments.length > 0 ? (
+              comments.map((act, index) => (
+                <div key={`${act.experience_id}-comment-${index}`} className="border p-4 rounded-md shadow mb-3">
                   <h3 className="text-sm sm:text-md">
-                    Commented on{' '}
-                    <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
-                      experience
-                    </Link>{' '}
-                    {act.company_name && act.level && (
-                      <p>
-                        at {act.company_name} (Level: {act.level})
-                      </p>
+                    Commented on{" "}
+                    {act.experiences?.type === "general_post" ? (
+                      <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
+                        {act.title}
+                      </Link>
+                    ) : (
+                      <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline">
+                        experience
+                      </Link>
                     )}
                   </h3>
-                ) : act.activity_type === 'general_post'? (
-                  <h3 className="text-sm sm:text-md">
-                    Posted{' '}
-                    <Link href={`/experience/${act.experience_id}`} className="text-blue-600 hover:underline w-full break-words max-w-md">
-                      {act.title}
-                    </Link>{' '}
-                  </h3>
-                )
-                :(
-                  <div>Invalid activity</div>
-                )}
-                <p className="text-sm text-gray-500">{new Date(act.created_at).toLocaleString()}</p>
-              </div>
-            ))
-          ) : (
-            <p>No activity yet.</p>
-          )}
-        </div>
-      </div>
-    </div>
+
+                  {/* Show company name and level for non-general_post types */}
+                  {act.experiences?.type !== "general_post" && act.experiences?.company_name && act.experiences?.level && (
+                    <p className="text-sm sm:text-md">
+                      at {act.experiences.company_name} (Level: {act.experiences.level})
+                    </p>
+                  )}
+
+                  <p className="text-sm text-gray-500">{new Date(act.created_at).toLocaleString()}</p>
+                </div>
+              ))
+            ) : (
+              <p>No comments yet.</p>
+            )}
+          </div>
+        )}
+
+      </>
+    )}
+  </div>
+</div>
+</div>
+      
   );
 };
 
