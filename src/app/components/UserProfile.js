@@ -16,11 +16,13 @@ const UserProfile = () => {
   const [generalPosts, setGeneralPosts] = useState([]);
   const [likes, setLikes] = useState([]);
   const [comments, setComments] = useState([]);
-  const [page, setPage] = useState(1);
+  const [pageExperiences, setPageExperiences] = useState(1);
+  const [pageGeneralPosts, setPageGeneralPosts] = useState(1);
+  const [pageLikes, setPageLikes] = useState(1);
+  const [pageComments, setPageComments] = useState(1);
   const [limit] = useState(10); // Set a limit for the number of items per page
   const router = useRouter();
 
-  // Function to fetch user activity from the new API
   const fetchUserActivityData = async () => {
     try {
       // Fetch the user's session data
@@ -40,6 +42,7 @@ const UserProfile = () => {
   
       // Construct the API endpoint with the query parameters based on activeTab
       const type = getTypeFromTab(activeTab); // Get the correct activity type based on the active tab
+      const page = getPageFromTab(activeTab);  // Get the page for the active tab
       const activityRes = await fetch(`/api/activity?type=${type}&page=${page}&limit=${limit}`, {
         method: 'GET',
         headers: {
@@ -79,12 +82,36 @@ const UserProfile = () => {
         return 'experience';
     }
   };
-  
+
+  const getPageFromTab = (tab) => {
+    switch (tab) {
+      case 'general posts':
+        return pageGeneralPosts;
+      case 'likes':
+        return pageLikes;
+      case 'comments':
+        return pageComments;
+      default:
+        return pageExperiences;
+    }
+  };
+
+  const handlePageChange = (direction) => {
+    if (activeTab === 'general posts') {
+      setPageGeneralPosts(prevPage => prevPage + direction);
+    } else if (activeTab === 'likes') {
+      setPageLikes(prevPage => prevPage + direction);
+    } else if (activeTab === 'comments') {
+      setPageComments(prevPage => prevPage + direction);
+    } else {
+      setPageExperiences(prevPage => prevPage + direction);
+    }
+  };
 
   useEffect(() => {
     setLoading(true);  // Set loading to true before making the fetch request
     fetchUserActivityData();
-  }, [user.user_id, activeTab, page]);
+  }, [user.user_id, activeTab, pageExperiences, pageGeneralPosts, pageLikes, pageComments]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -151,20 +178,25 @@ const UserProfile = () => {
         </form>
       </div>
 
-      <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
+  <div className="w-full max-w-4xl bg-white p-6 rounded-lg shadow-lg">
   {/* Tab Navigation */}
-  <div className="flex border-b mb-4">
-    {["experiences", "general posts", "likes", "comments"].map((tab) => (
-      <button
-        key={tab}
-        onClick={() => setActiveTab(tab)}
-        className={`flex-1 text-center py-2 ${
-          activeTab === tab ? "border-b-2 border-blue-600 font-semibold text-blue-600" : "text-gray-500"
-        }`}
-      >
-        {tab.charAt(0).toUpperCase() + tab.slice(1)}
-      </button>
-    ))}
+  <div className="mb-6">
+    <h2 className="text-2xl font-semibold text-center mb-4">Your Activity</h2>
+    <div className="flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 border-gray-300">
+      {["experiences", "general posts", "likes", "comments"].map((tab) => (
+        <div
+          key={tab}
+          onClick={() => setActiveTab(tab)}
+          className={`cursor-pointer py-2 text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors ${
+            activeTab === tab
+              ? "border-b-4 border-blue-600 text-blue-600"
+              : "border-b-2 border-transparent"
+          }`}
+        >
+          {tab.charAt(0).toUpperCase() + tab.slice(1)}
+        </div>
+      ))}
+    </div>
   </div>
 
   {/* Tab Content */}
@@ -178,20 +210,34 @@ const UserProfile = () => {
             {experiences.length > 0 ? (
               experiences.map((exp) => (
                 <div key={exp.id} className="border p-4 rounded-md shadow mb-3">
-                    <>
                       <h3 className="text-sm sm:text-md font-medium">
                         <Link href={`/experience/${exp.id}`} className="text-blue-600 hover:underline">
                           {exp.company_name}
                         </Link>
                       </h3>
                       <p className="text-sm sm:text-md text-gray-700">{exp.level}</p>
-                    </>
                   <p className="text-sm text-gray-500">{new Date(exp.created_at).toLocaleString()}</p>
                 </div>
               ))
             ) : (
               <p>No posts yet.</p>
             )}
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => handlePageChange(-1)}
+                disabled={pageExperiences <= 1}
+                className={`px-4 py-2 rounded ${pageExperiences <= 1 ? 'bg-gray-400' : 'bg-blue-400'}`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={experiences.length < limit}
+                className={`px-4 py-2 rounded ${experiences.length < limit ? 'bg-gray-400' : 'bg-blue-400'}`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
         {activeTab === "general posts" && (
@@ -199,17 +245,34 @@ const UserProfile = () => {
             {generalPosts.length > 0 ? (
               generalPosts.map((post) => (
                 <div key={post.experience_id} className="border p-4 rounded-md shadow mb-3">
-                  <h3 className="text-sm sm:text-md font-medium">
-                    <Link href={`/experience/${post.experience_id}`} className="text-blue-600 hover:underline">
-                      {post.title}
-                    </Link>
-                  </h3>
+                 <h3 className="text-sm sm:text-md font-medium">
+  <Link href={`/experience/${post.experience_id}`} className="text-blue-600 hover:underline break-words">
+    {post.title}
+  </Link>
+</h3>
+
                   <p className="text-sm text-gray-500">{new Date(post.created_at).toLocaleString()}</p>
                 </div>
               ))
             ) : (
               <p>No posts yet.</p>
             )}
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => handlePageChange(-1)}
+                disabled={pageGeneralPosts <= 1}
+                className={`px-4 py-2 rounded ${pageGeneralPosts <= 1 ? 'bg-gray-400' : 'bg-blue-400'}`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={generalPosts.length < limit}
+                className={`px-4 py-2 rounded ${generalPosts.length < limit ? 'bg-gray-400' : 'bg-blue-400'}`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
 
@@ -244,6 +307,22 @@ const UserProfile = () => {
             ) : (
               <p>No comments yet.</p>
             )}
+            <div className="flex justify-between mt-4">
+              <button
+                onClick={() => handlePageChange(-1)}
+                disabled={pageLikes <= 1}
+                className={`px-4 py-2 rounded ${pageLikes <= 1 ? 'bg-gray-400' : 'bg-blue-400'}`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => handlePageChange(1)}
+                disabled={likes.length < limit}
+                className={`px-4 py-2 rounded ${likes.length < limit ? 'bg-gray-400' : 'bg-blue-400'}`}
+              >
+                Next
+              </button>
+            </div>
           </div>
         )}
 
@@ -278,9 +357,24 @@ const UserProfile = () => {
             ) : (
               <p>No comments yet.</p>
             )}
+          <div className="flex justify-between mt-4">
+  <button
+    onClick={() => handlePageChange(-1)}
+    disabled={pageComments <= 1}
+    className={`px-4 py-2 rounded ${pageComments <= 1 ? 'bg-gray-400' : 'bg-blue-400'}`}
+  >
+    Previous
+  </button>
+  <button
+    onClick={() => handlePageChange(1)}
+    disabled={comments.length < limit}
+    className={`px-4 py-2 rounded ${comments.length < limit ? 'bg-gray-400' : 'bg-blue-400'}`}
+  >
+    Next
+  </button>
+</div>
           </div>
         )}
-
       </>
     )}
   </div>
