@@ -400,7 +400,10 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
      {/* Card content: interview Experience Details */}
 <div className="experience-details mt-4">
   {experience.type === 'interview_experience' ? (
-    experience.rounds.map((round, index) => (
+     <>
+    {/* Display only one round for non-logged in users */}
+    {experience.rounds.slice(0, user?.user_id ? rounds.length : 1)
+      .map((round, index) => (
       <div key={index} className="round-container mb-4">
         <h4 className="font-semibold text-xl text-blue-600">
           Round {index + 1}: {round.round_type}
@@ -424,7 +427,31 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           />
         </div>
       </div>
-    ))
+    ))}
+   
+    {/* Show a hidden round for non-logged-in users if there are multiple rounds */}
+    {!user?.user_id && experience.rounds.length > 1 && (
+      <div className="round-container mb-4 relative bg-gray-200 p-4 rounded-md">
+        <div className="absolute inset-0 bg-gray-500 bg-opacity-40 flex items-center justify-center text-white text-lg font-semibold">
+          Sign in to view more rounds
+        </div>
+        <h4 className="font-semibold text-lg text-red-500">
+          Hidden Content
+        </h4>
+        <div className="w-full p-0 border-none rounded-md blur-sm">
+          <ReactQuill
+            value="Hidden content"
+            readOnly
+            theme="snow"
+            className="w-full bg-transparent p-0 text-blue-900 min-h-[50px]"
+            modules={{
+              toolbar: false, // No toolbar
+            }}
+          />
+        </div>
+      </div>
+    )}
+    </>
   ) : experience.type === 'general_post' && experience ? (
     <div className="round-container mb-4">
       <div className="w-full p-0 border-none rounded-md">
