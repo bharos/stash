@@ -402,7 +402,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   {experience.type === 'interview_experience' ? (
      <>
     {/* Display only one round for non-logged in users */}
-    {experience.rounds.slice(0, user?.user_id ? rounds.length : 1)
+    {experience.rounds.slice(0, user?.user_id ? experience.rounds.length : 1)
       .map((round, index) => (
       <div key={index} className="round-container mb-4">
         <h4 className="font-semibold text-xl text-blue-600">
