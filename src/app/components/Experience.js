@@ -8,6 +8,7 @@ import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the cust
 import { useRouter } from 'next/navigation'
 import Comment from './Comment'
 
+
 // Dynamically import ReactQuill
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -47,7 +48,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   const [commentError, setCommentError] = useState(''); // State to store the error message
   const [likes, setLikes] = useState(experience.likes || 0);
   const [hasLiked, setHasLiked] = useState(experience.user_liked || false);
-  const [showRoundsLogin, setShowRoundsLogin] = useState(false);
 
   useEffect(() => {
     if (experience.user_liked !== hasLiked) {
@@ -60,26 +60,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       setLikes(experience.likes); // Only update if likes is different
     }
   }, [experience.likes]); // Update likes when experience.likes changes
-
-
-  useEffect(() => {
-    const fetchshowRoundsLoginFeatureFlag = async () => {
-      try {
-        const res = await fetch('/api/featureFlags?feature=show_rounds_login');
-        const data = await res.json();
-        if (res.ok) {
-          setShowRoundsLogin(data.status); 
-          console.log('feature flag', data.status)
-        } else {
-          setError(data.error || 'Error fetching feature flag');
-        }
-      } catch (err) {
-        setError('An unexpected error occurred');
-      }
-    };
-
-    fetchshowRoundsLoginFeatureFlag();
-  }, []);  // Empty dependency array makes this run only once when the component mounts
 
 
   const toggleExperienceDetails = (experience) => {
@@ -424,8 +404,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   {experience.type === 'interview_experience' ? (
      <>
     {/* Display only one round for non-logged in users */}
-    {experience.rounds.slice(0, user?.user_id || !showRoundsLogin ? experience.rounds.length : 1)
-      .map((round, index) => (
+    {experience.rounds.map((round, index) => (
       <div key={index} className="round-container mb-4">
         <h4 className="font-semibold text-xl text-blue-600">
           Round {index + 1}: {round.round_type}
@@ -452,7 +431,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     ))}
    
     {/* Show a hidden round for non-logged-in users if there are multiple rounds */}
-    {!user?.user_id && experience.rounds.length > 1 && showRoundsLogin && (
+    {experience.has_more_rounds && (
       <div className="round-container mb-4 relative bg-gray-200 p-4 rounded-md">
         <div className="absolute inset-0 bg-gray-500 bg-opacity-40 flex items-center justify-center text-white text-lg font-semibold">
           Sign in to view more rounds
