@@ -12,6 +12,7 @@ import LandingPage from './LandingPage';
 import UserProfile from './UserProfile';
 import SingleExperiencePage from './SingleExperiencePage';
 import GeneralPosts from './GeneralPosts';
+import MagicLinkLogin from './MagicLinkLogin';
 
 // Dynamically import ExperienceForm and InterviewExperienceDashboard
 const ExperienceForm = dynamic(() => import('./ExperienceForm'), { ssr: false });
@@ -209,6 +210,7 @@ const ClientHome = () => {
         ) : (
           <UserProfile />
         )}
+        <MagicLinkLogin />
       </div>
     </div>
   );
