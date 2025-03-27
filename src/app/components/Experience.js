@@ -432,13 +432,10 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
    
     {/* Show a hidden round for non-logged-in users if there are multiple rounds */}
     {experience.has_more_rounds && (
-      <div className="round-container mb-4 relative bg-gray-200 p-4 rounded-md">
+      <div className="round-container mb-4 relative bg-gray-200 p-10 rounded-md">
         <div className="absolute inset-0 bg-gray-500 bg-opacity-40 flex items-center justify-center text-white text-lg font-semibold">
           Sign in to view more rounds
         </div>
-        <h4 className="font-semibold text-lg text-red-500">
-          Hidden Content
-        </h4>
         <div className="w-full p-0 border-none rounded-md blur-sm">
           <ReactQuill
             value="Hidden content"
