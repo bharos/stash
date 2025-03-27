@@ -219,6 +219,12 @@ export default async function handler(req, res) {
           experiences.forEach(exp => {
             exp.posted_by_user = false;
           });
+          // Keep only the first round for each experience if userId is not provided. Also add a flag to indicate more rounds
+          experiences.forEach(exp => {
+            const totalRounds = exp.rounds.length;
+            exp.rounds = exp.rounds.slice(0, 1);
+            exp.has_more_rounds = totalRounds > exp.rounds.length;
+          });
         }
         const experiencesWithoutUserId = experiences.map(experience => {
           const { user_id, ...rest } = experience;  // Destructure and exclude `user_id`
