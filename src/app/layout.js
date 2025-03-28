@@ -1,5 +1,4 @@
 import './globals.css';
-import OAuthSignin from './components/OAuthSignin';
 import { UserProvider } from './context/UserContext';
 import ClientHome from './components/ClientHome';
 import { ActiveMenuProvider } from './context/ActiveMenuContext';
@@ -19,7 +18,6 @@ export default function RootLayout({ children }) {
           <DraftExperienceProvider>
             <ActiveMenuProvider>
             <FlagsProvider>
-              <OAuthSignin />
               <ClientHome>
                 {children}
               </ClientHome>
