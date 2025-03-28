@@ -12,6 +12,7 @@ import LandingPage from './LandingPage';
 import UserProfile from './UserProfile';
 import SingleExperiencePage from './SingleExperiencePage';
 import GeneralPosts from './GeneralPosts';
+import OAuthSignin from './OAuthSignin';
 
 // Dynamically import ExperienceForm and InterviewExperienceDashboard
 const ExperienceForm = dynamic(() => import('./ExperienceForm'), { ssr: false });
@@ -25,6 +26,7 @@ const ClientHome = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(true);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false) // To control login modal visibility
 
   useEffect(() => {
     setIsClient(true);
@@ -39,6 +41,11 @@ const ClientHome = () => {
     router.push('/'); // Push to the home page when changing menu
     toggleSidebar();
   };
+
+  const handleSignIn = () => {
+    setIsLoginModalOpen(true) // Open modal to log in
+    toggleSidebar();
+  }
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -176,6 +183,16 @@ const ClientHome = () => {
           </List>
         )}
 
+        {/* Login Button */}
+        {!user.user_id && (
+          <List sx={{ marginTop: '20px' }}>
+            <ListItemButton onClick={handleSignIn}>
+              <span className="material-icons ml-2 mr-2">login</span>
+              <ListItemText primary="Login" />
+            </ListItemButton>
+          </List>
+        )}
+
         {/* Welcome message */}
         <List sx={{ marginTop: 'auto' }}>
           <ListItemButton sx={{ padding: '10px 20px' }}>
@@ -223,6 +240,8 @@ const ClientHome = () => {
         ) : (
           <UserProfile />
         )}
+        {/* OAuthSignin Modal */}
+      <OAuthSignin isModalOpen={isLoginModalOpen} setIsModalOpen={setIsLoginModalOpen} />
       </div>
     </div>
   );

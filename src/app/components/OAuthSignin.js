@@ -6,11 +6,10 @@ import supabase from '../utils/supabaseClient'
 import './OAuthSignin.css'
 import Modal from './Modal'
 
-const OAuthSignin = () => {
+const OAuthSignin = ({ isModalOpen, setIsModalOpen }) => {
   const router = useRouter()
   const [session, setSession] = useState(null) // Track session state
   const [email, setEmail] = useState('') // For Magic Link email input
-  const [isModalOpen, setIsModalOpen] = useState(false) // Modal state
 
   // Initialize Google OAuth (OAuth SignIn using Google)
   const initializeGoogleOAuth = async () => {
@@ -64,32 +63,19 @@ const OAuthSignin = () => {
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session) // Update session state when it changes
     })
-
-    return () => {
-      listener?.unsubscribe() // Clean up listener on unmount
-    }
   }, [])
 
   return (
     <>
-    {/* Button to open the modal */}
-    {!session && (
-     <button
-     className="px-4 py-2 bg-blue-500/80 text-white rounded-full cursor-pointer shadow-lg transition-all hover:bg-blue-500/100 active:bg-blue-700 max-w-max"
-     onClick={() => setIsModalOpen(true)}
-   >
-          Login
-        </button>
-      )}
      {/* Modal with sign-in options */}
      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
       <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md relative animate-fade-in">
           {/* Close Button */}
           <button
-  className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full transition"
-  onClick={() => setIsModalOpen(false)}
->
+            className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center bg-gray-200 hover:bg-gray-300 rounded-full transition"
+            onClick={() => setIsModalOpen(false)}
+          >
             ✕
           </button>
 
