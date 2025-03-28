@@ -147,7 +147,7 @@ export default async function handler(req, res) {
         } else if (activityType === 'general_post') {
             query = supabase
                 .from('general_posts')
-                .select('experience_id, created_at, title, experiences(id)')
+                .select('experience_id, created_at, title, experiences!inner(id, user_id)')
                 .eq('experiences.user_id', userId)
                 .order('created_at', { ascending: false })
                 .range(offset, offset + pageSize - 1);
