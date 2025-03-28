@@ -5,6 +5,7 @@ import ClientHome from './components/ClientHome';
 import { ActiveMenuProvider } from './context/ActiveMenuContext';
 import { DraftExperienceProvider } from './context/DraftExperience';
 import { FlagsProvider } from './context/flagContext';
+import Header from './components/Header';
 import Footer from './components/Footer';
 
 export default function RootLayout({ children }) {
@@ -19,7 +20,7 @@ export default function RootLayout({ children }) {
           <DraftExperienceProvider>
             <ActiveMenuProvider>
             <FlagsProvider>
-              <OAuthSignin />
+              <Header />
               <ClientHome>
                 {children}
               </ClientHome>

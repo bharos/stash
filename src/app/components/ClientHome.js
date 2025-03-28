@@ -61,6 +61,20 @@ const ClientHome = () => {
     }
   }, [experienceId]); // Only trigger when experienceId changes
 
+  useEffect(() => {
+    // Capture the URL hash for magic link errors
+    const hash = window.location.hash;
+    if (hash) {
+      const urlParams = new URLSearchParams(hash.replace('#', '?'));
+      const errorCode = urlParams.get('error_code');
+      const errorDescription = urlParams.get('error_description');
+
+      if (errorCode || errorDescription) {
+      alert(`Login failed. Error: ${errorCode}\n${errorDescription}`);
+      }
+    }
+  }, [pathname]); // Re-run when the pathname changes
+
   if (!isClient) {
     return <div>Loading...</div>;
   }
