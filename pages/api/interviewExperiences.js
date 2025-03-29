@@ -157,10 +157,21 @@ export default async function handler(req, res) {
             username,
             rounds(id, round_type, details),
             likes,
-            type
+            type,
+            created_at
           `)
-          .eq('type', 'interview_experience')
-          .order('created_at', { ascending: false });
+          .eq('type', 'interview_experience');
+
+        // Apply sorting based on sort_by parameter
+        const sort_by = req.query.sort_by || 'recent';
+        if (sort_by === 'recent') {
+          query = query.order('created_at', { ascending: false });
+        } else if (sort_by === 'popular') {
+          query = query.order('likes', { ascending: false });
+        } else {
+          // Default to recent
+          query = query.order('created_at', { ascending: false });
+        }
   
         if (company_name) {
           query = query.ilike('company_name', `%${company_name}%`);

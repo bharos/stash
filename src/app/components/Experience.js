@@ -278,6 +278,34 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   const menuRef = useRef(null); // To track the dropdown menu
   const buttonRef = useRef(null); // To track the button
 
+  const getRelativeTime = (date) => {
+    const now = new Date();
+    const diff = now - new Date(date);
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (years > 0) return `${years}y`;
+    if (months > 0) return `${months}mo`;
+    if (days > 0) return `${days}d`;
+    if (hours > 0) return `${hours}h`;
+    if (minutes > 0) return `${minutes}m`;
+    return 'just now';
+  };
+
+  const getFullDateTime = (date) => {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
     <div
     key={experience.id}
@@ -380,19 +408,35 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
               <p className="text-gray-500">
                 Level: <span className="font-medium text-gray-700">{experience.level}</span>
               </p>
-              {/* Display Username */}
-              {renderUsername(experience.username)}
+              {/* Display Username and Date */}
+              <div className="flex items-center gap-4">
+                {renderUsername(experience.username)}
+                <span 
+                  className="text-gray-400 text-sm cursor-default border-b border-dotted border-gray-400" 
+                  title={getFullDateTime(experience.created_at)}
+                >
+                  {getRelativeTime(experience.created_at)}
+                </span>
+              </div>
             </div>
           </>
-        ) : experience.type === 'general_post' && experience? (
+        ) : experience.type === 'general_post' && experience ? (
           <>
             <div className="flex-grow min-w-0 sm:ml-10">
               {/* Post Title */}
               <h3 className="text-md sm:text-xl font-semibold text-gray-900 break-words">
                 {experience.title}
               </h3>
-              {/* Display Username */}
-              {renderUsername(experience.username)}
+              {/* Display Username and Date */}
+              <div className="flex items-center gap-4">
+                {renderUsername(experience.username)}
+                <span 
+                  className="text-gray-400 text-sm cursor-default border-b border-dotted border-gray-400" 
+                  title={getFullDateTime(experience.created_at)}
+                >
+                  {getRelativeTime(experience.created_at)}
+                </span>
+              </div>
             </div>
           </>
         ) : null}
