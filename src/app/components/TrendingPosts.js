@@ -72,9 +72,6 @@ const TrendingPosts = () => {
             <div className="flex items-center mt-2 text-sm text-gray-500">
               <span className="material-icons text-sm mr-1">favorite</span>
               <span>{post.likes || 0}</span>
-              <span className="mx-2">•</span>
-              <span className="material-icons text-sm mr-1">comment</span>
-              <span>{post.comments?.length || 0}</span>
             </div>
           </a>
         ))}
