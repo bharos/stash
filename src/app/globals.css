@@ -16,6 +16,9 @@
   --border: #e0e0e0; /* Light gray border for inputs and dividers */
   --card-background: #ffffff; /* Card background */
   --error: #f87171; /* Soft red for errors */
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
 }
 
 /* Dark mode adjustments */
@@ -27,6 +30,9 @@
     --border: #555555;
     --card-background: #1f1f1f;
     --error: #fca5a5;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 
@@ -144,4 +150,21 @@ input:focus, textarea:focus, button:focus {
 .replies-container {
   max-height: 300px; /* Adjust based on your layout */
   overflow-y: auto;
+}
+
+/* Add smooth transitions for dark mode */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Ensure proper dark mode text colors */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body {
+  background-color: rgb(17, 24, 39);
+  color: rgb(255, 255, 255);
 }

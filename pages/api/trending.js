@@ -1,6 +1,4 @@
-
 import supabase from '../../src/app/utils/supabaseClient';
-
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -8,9 +6,9 @@ export default async function handler(req, res) {
   }
 
   try {
-     // Get pagination parameters (default to page 1, limit 10)
-     const page = parseInt(req.query.page) || 1;
-     const limit = parseInt(req.query.limit) || 10;
+    // Get pagination parameters (default to page 1, limit 10)
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     
     const offset = (page - 1) * limit; // Calculate offset
 

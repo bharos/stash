@@ -13,6 +13,7 @@ import UserProfile from './UserProfile';
 import SingleExperiencePage from './SingleExperiencePage';
 import GeneralPosts from './GeneralPosts';
 import OAuthSignin from './OAuthSignin';
+import { useDarkMode } from '../context/DarkModeContext';
 
 // Dynamically import ExperienceForm and InterviewExperienceDashboard
 const ExperienceForm = dynamic(() => import('./ExperienceForm'), { ssr: false });
@@ -27,6 +28,7 @@ const ClientHome = () => {
   const [isClient, setIsClient] = useState(false);
   const [exploreOpen, setExploreOpen] = useState(true);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false) // To control login modal visibility
+  const { darkMode, toggleDarkMode, resetToSystem } = useDarkMode();
 
   useEffect(() => {
     setIsClient(true);
@@ -90,7 +92,7 @@ const ClientHome = () => {
   };
 
   return (
-    <div className="flex h-screen relative bg-gray-50">
+    <div className={`flex h-screen relative ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Sidebar Toggle Button */}
       <IconButton
         onClick={toggleSidebar}
@@ -100,13 +102,13 @@ const ClientHome = () => {
           left: sidebarOpen ? 270 : 20,
           width: 50,
           height: 50,
-          backgroundColor: 'rgba(66, 64, 64, 0.8)',
+          backgroundColor: darkMode ? 'rgba(17, 24, 39, 0.8)' : 'rgba(66, 64, 64, 0.8)',
           borderRadius: '50%',
           zIndex: 1300,
           boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
           transition: 'all 0.3s ease-in-out',
           '&:hover': { 
-            backgroundColor: 'rgba(243, 237, 237, 0.95)',
+            backgroundColor: darkMode ? 'rgba(31, 41, 55, 0.95)' : 'rgba(243, 237, 237, 0.95)',
             transform: 'scale(1.05)'
           },
           display: sidebarOpen ? 'none' : 'block',
@@ -130,7 +132,8 @@ const ClientHome = () => {
             display: 'flex',
             flexDirection: 'column',
             paddingTop: '20px',
-            backgroundColor: '#ffffff',
+            backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+            color: darkMode ? '#ffffff' : '#000000',
             boxShadow: '2px 0 8px rgba(0, 0, 0, 0.1)',
           },
         }}
@@ -286,6 +289,44 @@ const ClientHome = () => {
           </List>
         )}
 
+        {/* Dark Mode Toggle */}
+        <List sx={{ marginTop: '20px' }}>
+          <div className="flex items-center justify-between px-4 py-2">
+            <button
+              onClick={() => {
+                toggleDarkMode();
+                toggleSidebar();
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                darkMode 
+                  ? 'bg-yellow-500 text-white' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <span className="material-icons text-lg">
+                {darkMode ? 'light_mode' : 'dark_mode'}
+              </span>
+              <span className="text-sm font-medium">
+                {darkMode ? 'Light' : 'Dark'}
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                resetToSystem();
+                toggleSidebar();
+              }}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                darkMode 
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <span className="material-icons text-lg">refresh</span>
+              <span className="text-sm font-medium">Auto</span>
+            </button>
+          </div>
+        </List>
+
         {/* Welcome message */}
         <List sx={{ marginTop: 'auto', borderTop: '1px solid #e5e7eb' }}>
           <ListItemButton 
@@ -309,10 +350,9 @@ const ClientHome = () => {
 
       {/* Main Content Area */}
       <div 
-        className="flex-1 p-4 sm:p-8 overflow-auto transition-all duration-300 ease-in-out" 
+        className={`flex-1 p-4 sm:p-8 overflow-auto transition-all duration-300 ease-in-out ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}
         style={{ 
           marginLeft: sidebarOpen ? 270 : 0,
-          backgroundColor: '#f9fafb'
         }}
       >
         {/* Show Experience Page if the user navigated to `/experience/[id]` */}

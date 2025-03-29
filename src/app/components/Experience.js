@@ -7,6 +7,7 @@ import { useDraftExperience } from '../context/DraftExperience';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the custom hook for activeMenu context
 import { useRouter } from 'next/navigation'
 import Comment from './Comment'
+import { useDarkMode } from '../context/DarkModeContext';
 
 
 // Dynamically import ReactQuill
@@ -48,6 +49,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   const [commentError, setCommentError] = useState(''); // State to store the error message
   const [likes, setLikes] = useState(experience.likes || 0);
   const [hasLiked, setHasLiked] = useState(experience.user_liked || false);
+  const { darkMode } = useDarkMode();
 
   useEffect(() => {
     if (experience.user_liked !== hasLiked) {
@@ -309,7 +311,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   return (
     <div
     key={experience.id}
-    className={`experience-card bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow p-3 sm:p-6 mt-4 relative overflow-hidden ${
+    className={`experience-card ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-lg hover:shadow-xl transition-shadow p-3 sm:p-6 mt-4 relative overflow-hidden border ${
       experience.isExpanded ? 'h-auto' : 'h-[200px]'
     }`}
   >
@@ -320,7 +322,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       {experience.posted_by_user && (
         <button
         onClick={() => handleDelete(experience.id)}
-        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+        className={`text-blue-600 font-semibold text-2xl w-8 h-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-full flex items-center justify-center border border-blue-600 ml-2`}
       >
         <span className="material-icons">delete</span>
       </button>
@@ -332,7 +334,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           onClick={() =>
             window.open(`${window.location.origin}/experience/${experience.id}`, '_blank')
           }
-          className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+          className={`text-blue-600 font-semibold text-2xl w-8 h-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-full flex items-center justify-center border border-blue-600 ml-2`}
         >
           <span className="material-icons">open_in_new</span>
         </button>
@@ -342,7 +344,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       {experience.posted_by_user && (
       <button
         onClick={() => handleEditExperience(experience)}
-        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+        className={`text-blue-600 font-semibold text-2xl w-8 h-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-full flex items-center justify-center border border-blue-600 ml-2`}
       >
         <span className="material-icons ml-2 mr-2">edit</span>
       </button>
@@ -351,7 +353,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       {/* Share button */}
       <button
         onClick={() => handleShareExperience(experience.id)}
-        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+        className={`text-blue-600 font-semibold text-2xl w-8 h-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-full flex items-center justify-center border border-blue-600 ml-2`}
       >
         <span className="material-icons ml-2 mr-2">share</span>
       </button>
@@ -359,7 +361,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       {/* Toggle details button */}
       <button
         onClick={() => toggleExperienceDetails(experience)}
-        className="text-blue-600 font-semibold text-2xl w-8 h-8 bg-white rounded-full flex items-center justify-center border border-blue-600 ml-2"
+        className={`text-blue-600 font-semibold text-2xl w-8 h-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-full flex items-center justify-center border border-blue-600 ml-2`}
       >
         {experience.isExpanded ? '–' : '+'}
       </button>
@@ -367,14 +369,18 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     {/* Share Modal */}
     {showShareModal && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-gray-800 bg-opacity-50">
-          <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full">
-            <h4 className="text-2xl font-semibold mb-6 text-center text-gray-800">Share this Experience</h4>
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg max-w-md w-full border`}>
+            <h4 className={`text-2xl font-semibold mb-6 text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>Share this Experience</h4>
             <div className="flex items-center space-x-2 mb-6">
               <input
                 type="text"
                 readOnly
                 value={`${window.location.origin}/experience/${experience.id}`}
-                className="w-full p-3 border border-gray-300 rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                className={`w-full p-3 border rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white' 
+                    : 'bg-white border-gray-300 text-gray-900'
+                }`}
               />
               <button
                 onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
@@ -385,7 +391,9 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
             </div>
             <button
               onClick={() => setShowShareModal(false)}
-              className="w-full py-2 mt-4 text-center text-white-600 font-medium hover:text-gray-800 transition-all duration-200"
+              className={`w-full py-2 mt-4 text-center font-medium transition-all duration-200 ${
+                darkMode ? 'text-gray-300 hover:text-white' : 'text-gray-600 hover:text-gray-800'
+              }`}
             >
               Close
             </button>
@@ -404,15 +412,15 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
             </div>
             {/* Company Details Section */}
             <div className="flex-grow min-w-0">
-              <h3 className="text-2xl font-semibold text-gray-900 break-words">{experience.company_name}</h3>
-              <p className="text-gray-500">
-                Level: <span className="font-medium text-gray-700">{experience.level}</span>
+              <h3 className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} break-words`}>{experience.company_name}</h3>
+              <p className={darkMode ? 'text-gray-400' : 'text-gray-500'}>
+                Level: <span className={`font-medium ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>{experience.level}</span>
               </p>
               {/* Display Username and Date */}
               <div className="flex items-center gap-4">
                 {renderUsername(experience.username)}
                 <span 
-                  className="text-gray-400 text-sm cursor-default border-b border-dotted border-gray-400" 
+                  className={`${darkMode ? 'text-gray-400' : 'text-gray-400'} text-sm cursor-default border-b border-dotted ${darkMode ? 'border-gray-400' : 'border-gray-400'}`}
                   title={getFullDateTime(experience.created_at)}
                 >
                   {getRelativeTime(experience.created_at)}
@@ -424,14 +432,14 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           <>
             <div className="flex-grow min-w-0 sm:ml-10">
               {/* Post Title */}
-              <h3 className="text-md sm:text-xl font-semibold text-gray-900 break-words">
+              <h3 className={`text-md sm:text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-900'} break-words`}>
                 {experience.title}
               </h3>
               {/* Display Username and Date */}
               <div className="flex items-center gap-4">
                 {renderUsername(experience.username)}
                 <span 
-                  className="text-gray-400 text-sm cursor-default border-b border-dotted border-gray-400" 
+                  className={`${darkMode ? 'text-gray-400' : 'text-gray-400'} text-sm cursor-default border-b border-dotted ${darkMode ? 'border-gray-400' : 'border-gray-400'}`}
                   title={getFullDateTime(experience.created_at)}
                 >
                   {getRelativeTime(experience.created_at)}
@@ -458,13 +466,13 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
             value={round.details}
             readOnly
             theme="snow"
-            className="w-full bg-transparent p-0 text-gray-900 min-h-[50px]"
+            className={`w-full bg-transparent p-0 ${darkMode ? 'text-gray-100' : 'text-gray-900'} min-h-[50px]`}
             modules={{
               toolbar: false, // No toolbar
             }}
             style={{
               backgroundColor: 'transparent',
-              color: '#333',
+              color: darkMode ? '#f3f4f6' : '#333',
               margin: 0,
               padding: 0,
               width: '100%',
@@ -501,13 +509,13 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           value={experience.details}
           readOnly
           theme="snow"
-          className="w-full bg-transparent p-0 text-gray-900 min-h-[50px]"
+          className={`w-full bg-transparent p-0 ${darkMode ? 'text-gray-100' : 'text-gray-900'} min-h-[50px]`}
           modules={{
             toolbar: false, // No toolbar
           }}
           style={{
             backgroundColor: 'transparent',
-            color: '#333',
+            color: darkMode ? '#f3f4f6' : '#333',
             margin: 0,
             padding: 0,
             width: '100%',
@@ -526,17 +534,17 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
     className={`flex items-center gap-2 cursor-pointer text-xl transition-all duration-200 ease-in-out transform hover:scale-110`}
   >
     <span
-      className={`material-icons ${hasLiked ? 'text-red-500' : 'text-gray-500'}`}
+      className={`material-icons ${hasLiked ? 'text-red-500' : darkMode ? 'text-gray-400' : 'text-gray-500'}`}
     >
       {hasLiked ? 'favorite' : 'favorite_border'}
     </span> {/* Heart Icon */}
-    <span className="font-semibold">{likes}</span> {/* Like Count */}
+    <span className={`font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>{likes}</span> {/* Like Count */}
   </div>
 
   {/* Comment icon and counts */}
   <div className="flex items-center gap-2">
-    <span className="material-icons text-gray-500">comment</span> {/* Comment Icon */}
-    <span className="font-semibold">{experience.comments ? experience.comments.length : 0}</span> {/* Comment Count */}
+    <span className={`material-icons ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>comment</span> {/* Comment Icon */}
+    <span className={`font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-900'}`}>{experience.comments ? experience.comments.length : 0}</span> {/* Comment Count */}
   </div>
 </div>
 
@@ -551,37 +559,48 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
           />
         ))
       ) : (
-        <p className="text-gray-500">No comments yet.</p>
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>No comments yet.</p>
       )}
-              {/* Add Comment */}
-              <div className="add-comment mt-4">
-          <textarea
-            value={newComments[experience.id] || ''}
-            onChange={(e) =>
-              setNewComments({ ...newComments, [experience.id]: e.target.value })
-            }
-            placeholder="Add a comment"
-            className="w-full p-2 border border-gray-300 rounded-lg"
-          />
-          {/* Display Comment Error */}
-          {commentError && (
-            <div className="mt-4 p-3 bg-red-100 text-red-700 border border-red-500 rounded-lg">
-              {commentError}
-            </div>
-          )}
-          <button
-            onClick={() => handleCommentSubmit(experience.id)}
-            className={`mt-2 p-2 rounded-lg text-white ${
-              !newComments[experience.id] || !newComments[experience.id].trim()
-                ? 'bg-gray-400 cursor-not-allowed' // Disabled button styles
-                : 'bg-blue-600 hover:bg-blue-700' // Active button styles
-            } ${!newComments[experience.id] || !newComments[experience.id].trim() ? 'hover:bg-gray-400' : ''}`} // Remove hover effect when disabled
-            disabled={!newComments[experience.id] || !newComments[experience.id].trim()} // Disable button if empty or whitespace
-          >
-            Add Comment
-          </button>
-        </div>
-    </div>
+      {/* Add Comment */}
+      <div className="add-comment mt-4">
+        <textarea
+          value={newComments[experience.id] || ''}
+          onChange={(e) =>
+            setNewComments({ ...newComments, [experience.id]: e.target.value })
+          }
+          placeholder="Add a comment"
+          className={`w-full p-3 border rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+            darkMode 
+              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+          }`}
+          rows="3"
+        />
+        {/* Display Comment Error */}
+        {commentError && (
+          <div className={`mt-4 p-3 rounded-lg border ${
+            darkMode 
+              ? 'bg-red-900/50 border-red-700 text-red-200' 
+              : 'bg-red-50 border-red-200 text-red-700'
+          }`}>
+            {commentError}
+          </div>
+        )}
+        <button
+          onClick={() => handleCommentSubmit(experience.id)}
+          className={`mt-2 px-4 py-2 rounded-lg text-white transition-colors duration-200 ${
+            !newComments[experience.id] || !newComments[experience.id].trim()
+              ? darkMode 
+                ? 'bg-gray-700 cursor-not-allowed' 
+                : 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+          disabled={!newComments[experience.id] || !newComments[experience.id].trim()}
+        >
+          Add Comment
+        </button>
+      </div>
+  </div>
 
 
     </div>

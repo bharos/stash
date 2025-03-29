@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from "react";
 import { FiMoreVertical } from "react-icons/fi";
 import supabase from '../utils/supabaseClient';
 import { useUser } from '../context/UserContext';
+import { useDarkMode } from '../context/DarkModeContext';
 
 const Comment = ({ experienceId, comment }) => {
   const { user } = useUser(); // Access the user from the context
+  const { darkMode } = useDarkMode();
     
   const [editingComment, setEditingComment] = useState(null);
   const [editText, setEditText] = useState(comment.comment);
@@ -232,8 +234,28 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
     return null;
   }
 
+  const getRelativeTime = (date) => {
+    const now = new Date();
+    const diff = now - new Date(date);
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+    const months = Math.floor(days / 30);
+    const years = Math.floor(days / 365);
+
+    if (years > 0) return `${years}y`;
+    if (months > 0) return `${months}mo`;
+    if (days > 0) return `${days}d`;
+    if (hours > 0) return `${hours}h`;
+    if (minutes > 0) return `${minutes}m`;
+    return 'just now';
+  };
+
   return (
-          <div key={comment.id} className="comment p-4 bg-gray-100 rounded-lg relative">
+          <div key={comment.id} className={`comment p-4 rounded-lg mb-4 ${
+            darkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'
+          } border`}>
               {/* Comment Content */}
               {editingComment === comment.id ? (
                 <textarea
@@ -241,23 +263,37 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                   onChange={(e) =>
                     setEditText(e.target.value)
                   }
-                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  className={`w-full p-2 border rounded-lg mb-2 ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
+                  rows="3"
                 />
               ) : (
-                <p className="text-gray-800">{comment?.comment || "No content available"}</p>
+                <p className={`mt-2 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                  {comment?.comment || "No content available"}
+                </p>
               )}
     
               {/* Commenter Info */}
-              <p className="text-gray-500 text-sm mt-1">
-                By:{" "}
-                {comment?.is_op ? (
-                  <span className="font-bold text-red-500" title="Original Poster (OP)">
-                    OP
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="material-icons text-gray-500">face</span>
+                  <span className={`font-medium ${darkMode ? 'text-gray-200' : 'text-gray-900'}`}>
+                    {comment?.is_op ? (
+                      <span className="font-bold text-red-500" title="Original Poster (OP)">
+                        OP
+                      </span>
+                    ) : (
+                      comment?.username || "Anonymous"
+                    )}
                   </span>
-                ) : (
-                  comment?.username || "Anonymous"
-                )}
-              </p>
+                </div>
+                <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {getRelativeTime(comment.created_at)}
+                </span>
+              </div>
               {commentError && (
                 <div className="mt-4 p-3 bg-red-100 text-red-700 border border-red-500 rounded-lg">
                     {commentError}
@@ -365,7 +401,12 @@ const handleReplySubmit = async (experienceId, parentCommentId = null) => {
                     value={replies || ""}
                     onChange={(e) => setReplies(e.target.value)}
                     placeholder="Write a reply..."
-                    className="w-full p-2 border border-gray-300 rounded-lg"
+                    className={`w-full p-2 border rounded-lg mb-2 ${
+                      darkMode 
+                        ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                        : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                    }`}
+                    rows="3"
                   />
                   <button
                   onClick={() => {
