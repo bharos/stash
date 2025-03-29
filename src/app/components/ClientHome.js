@@ -379,7 +379,7 @@ const ClientHome = () => {
             </div>
           ): (
             <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
-              <h2 className="text-3xl font-bold text-gray-800 mb-6">Login to share your experiences! 🫵</h2>
+              <h2 className={`text-3xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'} mb-6`}>Login to share your experiences! 🫵</h2>
               <button
                 className="px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-48 mt-4 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-lg"
                 onClick={() => setIsLoginModalOpen(true)}

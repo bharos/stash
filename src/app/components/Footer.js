@@ -1,18 +1,29 @@
+'use client';
+
 import Link from 'next/link';
+import { useDarkMode } from '../context/DarkModeContext';
 
 export default function Footer() {
+  const { darkMode } = useDarkMode();
+
   return (
-    <footer style={styles.footer}>
-      <nav style={styles.nav}>
-        <Link href="/privacyPolicy.html" style={styles.link}>
+    <footer className={`text-center py-5 mt-10 text-sm ${darkMode ? 'bg-gray-800 text-gray-300' : 'bg-gray-50 text-gray-700'}`}>
+      <nav className="mb-2">
+        <Link 
+          href="/privacyPolicy.html" 
+          className={`mx-2.5 ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors duration-200`}
+        >
           Privacy Policy
         </Link>
-        <span style={styles.separator}>|</span>
-        <Link href="/contactUs.html" style={styles.link}>
+        <span className={`mx-2.5 ${darkMode ? 'text-gray-500' : 'text-gray-400'}`}>|</span>
+        <Link 
+          href="/contactUs.html" 
+          className={`mx-2.5 ${darkMode ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-700'} transition-colors duration-200`}
+        >
           Contact Us
         </Link>
       </nav>
-      <p style={styles.copyright}>
+      <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
         © {new Date().getFullYear()} Stash. All rights reserved.
       </p>
     </footer>

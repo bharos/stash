@@ -131,19 +131,19 @@ const LandingPage = ({ setActiveMenu }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Share experiences anonymously with confidence</p>
+                <p className={`text-sm ${darkMode ? 'text-gray-100' : 'text-gray-600'}`}>Share experiences anonymously with confidence</p>
               </div>
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Real interview experiences from verified users</p>
+                <p className={`text-sm ${darkMode ? 'text-gray-100' : 'text-gray-600'}`}>Real interview experiences from verified users</p>
               </div>
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Community-driven insights and tips</p>
+                <p className={`text-sm ${darkMode ? 'text-gray-100' : 'text-gray-600'}`}>Community-driven insights and tips</p>
               </div>
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600 dark:text-gray-300">Stay updated with latest interview trends</p>
+                <p className={`text-sm ${darkMode ? 'text-gray-100' : 'text-gray-600'}`}>Stay updated with latest interview trends</p>
               </div>
             </div>
           </div>
