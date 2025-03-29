@@ -90,21 +90,25 @@ const ClientHome = () => {
   };
 
   return (
-    <div className="flex h-screen relative">
+    <div className="flex h-screen relative bg-gray-50">
       {/* Sidebar Toggle Button */}
       <IconButton
         onClick={toggleSidebar}
         sx={{
-          position: 'absolute',
+          position: 'fixed',
           top: 20,
           left: sidebarOpen ? 270 : 20,
           width: 50,
           height: 50,
-          backgroundColor: 'rgba(66, 64, 64, 0.7)',
+          backgroundColor: 'rgba(66, 64, 64, 0.8)',
           borderRadius: '50%',
           zIndex: 1300,
-          boxShadow: '0px 4px 6px rgba(0, 0, 0, 0.1)',
-          '&:hover': { backgroundColor: 'rgba(243, 237, 237, 0.9)' },
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+          transition: 'all 0.3s ease-in-out',
+          '&:hover': { 
+            backgroundColor: 'rgba(243, 237, 237, 0.95)',
+            transform: 'scale(1.05)'
+          },
           display: sidebarOpen ? 'none' : 'block',
         }}
       >
@@ -126,49 +130,114 @@ const ClientHome = () => {
             display: 'flex',
             flexDirection: 'column',
             paddingTop: '20px',
+            backgroundColor: '#ffffff',
+            boxShadow: '2px 0 8px rgba(0, 0, 0, 0.1)',
           },
         }}
       >
         {/* App Name */}
         <List>
-          <ListItemButton onClick={() => handleMenuChange('landingPage')} sx={{ padding: '10px 20px' }}>
-            <span className="material-icons ml-2 mr-2">home</span>
-            <ListItemText primary="Stash" />
+          <ListItemButton 
+            onClick={() => handleMenuChange('landingPage')} 
+            sx={{ 
+              padding: '15px 20px',
+              '&:hover': {
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              }
+            }}
+          >
+            <span className="material-icons ml-2 mr-2 text-blue-600">home</span>
+            <ListItemText 
+              primary="Stash" 
+              primaryTypographyProps={{
+                style: { fontWeight: 600, fontSize: '1.2rem' }
+              }}
+            />
           </ListItemButton>
         </List>
 
         {/* Menu Items */}
         <List sx={{ marginTop: '20px' }}>
           {/* Parent ListItemButton - "Explore" */}
-      <ListItemButton onClick={handleExploreToggle}>
-        <span className="material-icons ml-2 mr-2">explore</span>
-        <ListItemText primary="Explore" />
-      </ListItemButton>
-      {/* Collapsible Child ListItems */}
-      <Collapse in={exploreOpen} timeout="auto" unmountOnExit>
-        <List sx={{ paddingLeft: 3 }}> {/* Adding some left padding for nesting effect */}
-          <ListItemButton onClick={() => handleMenuChange('interviewExperienceDashboard')}>
-            <span className="material-icons ml-2 mr-2">work</span> {/* Icon for Interview Experiences */}
-            <ListItemText primary="Interview Experiences" />
+          <ListItemButton 
+            onClick={handleExploreToggle}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              }
+            }}
+          >
+            <span className="material-icons ml-2 mr-2 text-blue-600">explore</span>
+            <ListItemText 
+              primary="Explore"
+              primaryTypographyProps={{
+                style: { fontWeight: 500 }
+              }}
+            />
           </ListItemButton>
-          <ListItemButton onClick={() => handleMenuChange('generalPosts')}>
-            <span className="material-icons ml-2 mr-2">forum</span> {/* Icon for General Posts */}
-            <ListItemText primary="General Posts" />
-          </ListItemButton>
-        </List>
-      </Collapse>
+          {/* Collapsible Child ListItems */}
+          <Collapse in={exploreOpen} timeout="auto" unmountOnExit>
+            <List sx={{ paddingLeft: 3 }}>
+              <ListItemButton 
+                onClick={() => handleMenuChange('interviewExperienceDashboard')}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  }
+                }}
+              >
+                <span className="material-icons ml-2 mr-2 text-gray-600">work</span>
+                <ListItemText primary="Interview Experiences" />
+              </ListItemButton>
+              <ListItemButton 
+                onClick={() => handleMenuChange('generalPosts')}
+                sx={{
+                  '&:hover': {
+                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  }
+                }}
+              >
+                <span className="material-icons ml-2 mr-2 text-gray-600">forum</span>
+                <ListItemText primary="General Posts" />
+              </ListItemButton>
+            </List>
+          </Collapse>
 
-        <ListItemButton onClick={() => handleMenuChange('postExperience')}>
-          <span className="material-icons ml-2 mr-2">post_add</span>
-          <ListItemText primary="New Post" />
-        </ListItemButton>
+          <ListItemButton 
+            onClick={() => handleMenuChange('postExperience')}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              }
+            }}
+          >
+            <span className="material-icons ml-2 mr-2 text-green-600">post_add</span>
+            <ListItemText 
+              primary="New Post"
+              primaryTypographyProps={{
+                style: { fontWeight: 500 }
+              }}
+            />
+          </ListItemButton>
         </List>
 
         {user.user_id && (
           <List sx={{ marginTop: '20px' }}>
-            <ListItemButton onClick={() => handleMenuChange('UserProfile')}>
-              <span className="material-icons ml-2 mr-2">account_circle</span>
-              <ListItemText primary="View Profile" />
+            <ListItemButton 
+              onClick={() => handleMenuChange('UserProfile')}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                }
+              }}
+            >
+              <span className="material-icons ml-2 mr-2 text-purple-600">account_circle</span>
+              <ListItemText 
+                primary="View Profile"
+                primaryTypographyProps={{
+                  style: { fontWeight: 500 }
+                }}
+              />
             </ListItemButton>
           </List>
         )}
@@ -176,9 +245,21 @@ const ClientHome = () => {
         {/* SignOut Button */}
         {user.user_id && (
           <List sx={{ marginTop: '20px' }}>
-            <ListItemButton onClick={handleSignOut}>
-              <span className="material-icons ml-2 mr-2">logout</span>
-              <ListItemText primary="Sign Out" />
+            <ListItemButton 
+              onClick={handleSignOut}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                }
+              }}
+            >
+              <span className="material-icons ml-2 mr-2 text-red-600">logout</span>
+              <ListItemText 
+                primary="Sign Out"
+                primaryTypographyProps={{
+                  style: { fontWeight: 500 }
+                }}
+              />
             </ListItemButton>
           </List>
         )}
@@ -186,62 +267,113 @@ const ClientHome = () => {
         {/* Login Button */}
         {!user.user_id && (
           <List sx={{ marginTop: '20px' }}>
-            <ListItemButton onClick={handleSignIn}>
-              <span className="material-icons ml-2 mr-2">login</span>
-              <ListItemText primary="Login" />
+            <ListItemButton 
+              onClick={handleSignIn}
+              sx={{
+                '&:hover': {
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                }
+              }}
+            >
+              <span className="material-icons ml-2 mr-2 text-blue-600">login</span>
+              <ListItemText 
+                primary="Login"
+                primaryTypographyProps={{
+                  style: { fontWeight: 500 }
+                }}
+              />
             </ListItemButton>
           </List>
         )}
 
         {/* Welcome message */}
-        <List sx={{ marginTop: 'auto' }}>
-          <ListItemButton sx={{ padding: '10px 20px' }}>
-            <span className="material-icons ml-2 mr-2">account_circle</span>
-            <ListItemText primary={`Welcome ${user.username || 'Guest'}`} />
+        <List sx={{ marginTop: 'auto', borderTop: '1px solid #e5e7eb' }}>
+          <ListItemButton 
+            sx={{ 
+              padding: '15px 20px',
+              '&:hover': {
+                backgroundColor: 'transparent',
+              }
+            }}
+          >
+            <span className="material-icons ml-2 mr-2 text-gray-600">account_circle</span>
+            <ListItemText 
+              primary={`Welcome ${user.username || 'Guest'}`}
+              primaryTypographyProps={{
+                style: { fontWeight: 500, color: '#4b5563' }
+              }}
+            />
           </ListItemButton>
         </List>
       </Drawer>
 
       {/* Main Content Area */}
-      <div className="flex-1 p-1 sm:p-6 overflow-auto" style={{ marginLeft: sidebarOpen ? 270 : 0 }}>
+      <div 
+        className="flex-1 p-4 sm:p-8 overflow-auto transition-all duration-300 ease-in-out" 
+        style={{ 
+          marginLeft: sidebarOpen ? 270 : 0,
+          backgroundColor: '#f9fafb'
+        }}
+      >
         {/* Show Experience Page if the user navigated to `/experience/[id]` */}
         {activeMenu === 'UserProfile' ? (
-          <UserProfile />
+          <div className="max-w-7xl mx-auto">
+            <UserProfile />
+          </div>
         ) : activeMenu === 'landingPage' ? (
-          <LandingPage setActiveMenu={setActiveMenu} />
+          <div className="max-w-7xl mx-auto">
+            <LandingPage setActiveMenu={setActiveMenu} />
+          </div>
         ) : !user.user_id ? (
           activeMenu === 'interviewExperienceDashboard' ? (
-            <InterviewExperienceDashboard/>
+            <div className="max-w-7xl mx-auto">
+              <InterviewExperienceDashboard/>
+            </div>
           ):  activeMenu === 'generalPosts' ? (
+            <div className="max-w-7xl mx-auto">
               <GeneralPosts/>
-          ) :activeMenu === 'singleExperiencePage' ? (
-            <SingleExperiencePage experienceId={experienceId} />
+            </div>
+          ): activeMenu === 'singleExperiencePage' ? (
+            <div className="max-w-7xl mx-auto">
+              <SingleExperiencePage experienceId={experienceId} />
+            </div>
           ): (
-          <div className="text-center mt-24">
-            <h2 className="text-2xl font-bold">Login to share your experiences! 🫵</h2>
-          <button
-          className="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-48 mt-4"
-          onClick={() => setActiveMenu('interviewExperienceDashboard')}
-          >
-          🧭  Explore
-          </button>
-          </div>
+            <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
+              <h2 className="text-3xl font-bold text-gray-800 mb-6">Login to share your experiences! 🫵</h2>
+              <button
+                className="px-6 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-48 mt-4 transition-all duration-200 ease-in-out transform hover:scale-105 shadow-lg"
+                onClick={() => setIsLoginModalOpen(true)}
+              >
+                <span className="material-icons mr-2">login</span>
+                Login
+              </button>
+            </div>
           )
         ) : user.username ? (
           activeMenu === 'interviewExperienceDashboard' ? (
-            <InterviewExperienceDashboard />
+            <div className="max-w-7xl mx-auto">
+              <InterviewExperienceDashboard />
+            </div>
           ): activeMenu === 'generalPosts' ? (
-            <GeneralPosts/>
+            <div className="max-w-7xl mx-auto">
+              <GeneralPosts/>
+            </div>
           ): activeMenu === 'postExperience' ? (
-            <ExperienceForm/>
+            <div className="max-w-7xl mx-auto">
+              <ExperienceForm/>
+            </div>
           ) : activeMenu === 'singleExperiencePage' ? (
-            <SingleExperiencePage experienceId={experienceId} />
+            <div className="max-w-7xl mx-auto">
+              <SingleExperiencePage experienceId={experienceId} />
+            </div>
           ) : null
         ) : (
-          <UserProfile />
+          <div className="max-w-7xl mx-auto">
+            <UserProfile />
+          </div>
         )}
         {/* OAuthSignin Modal */}
-      <OAuthSignin isModalOpen={isLoginModalOpen} setIsModalOpen={setIsLoginModalOpen} />
+        <OAuthSignin isModalOpen={isLoginModalOpen} setIsModalOpen={setIsLoginModalOpen} />
       </div>
     </div>
   );

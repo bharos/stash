@@ -116,6 +116,7 @@ export default async function handler(req, res) {
       return handleExperienceUpsert(req, res);
       case 'GET':
         const experienceId = req.query.experienceId;
+        const sort_by = req.query.sort_by || 'recent';
         // Get pagination parameters (default to page 1, limit 10)
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
@@ -139,10 +140,23 @@ export default async function handler(req, res) {
               username,
               general_posts: general_posts(title, details),
               likes,
-              type
+              type,
+              created_at
             `)
-            .eq('type', 'general_post')
-            .order('created_at', { ascending: false });
+            .eq('type', 'general_post');
+
+          // Apply sorting based on sort_by parameter
+          if (sort_by === 'recent') {
+            console.log('sorting by recent');
+            query = query.order('created_at', { ascending: false });
+          } else if (sort_by === 'popular') {
+            console.log('sorting by popular');
+            query = query.order('likes', { ascending: false });
+          } else {
+            console.log('sorting by recent');
+            // Default to recent
+            query = query.order('created_at', { ascending: false });
+          }
       
           if (experienceId) {
             query = query.eq('id', experienceId); // Fetch a single experience
