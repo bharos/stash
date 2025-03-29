@@ -24,7 +24,7 @@
     "@tiptap/react": "^2.11.3",
     "@tiptap/starter-kit": "^2.11.3",
     "axios": "^1.7.9",
-    "dompurify": "^3.2.3",
+    "dompurify": "^3.2.4",
     "google-one-tap": "^1.0.6",
     "lexical": "^0.23.1",
     "lodash.debounce": "^4.0.8",

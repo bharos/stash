@@ -5,6 +5,15 @@ import { ActiveMenuProvider } from './context/ActiveMenuContext';
 import { DraftExperienceProvider } from './context/DraftExperience';
 import { FlagsProvider } from './context/flagContext';
 import Footer from './components/Footer';
+import { Inter } from 'next/font/google';
+import { DarkModeProvider } from './context/DarkModeContext';
+
+const inter = Inter({ subsets: ['latin'] });
+
+export const metadata = {
+  title: 'Stash - Interview Database',
+  description: 'Share and learn from interview experiences',
+};
 
 export default function RootLayout({ children }) {
   return (
@@ -13,19 +22,21 @@ export default function RootLayout({ children }) {
         <title>Stash - Interview Experiences</title>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
       </head>
-      <body>
-        <UserProvider>
-          <DraftExperienceProvider>
-            <ActiveMenuProvider>
-            <FlagsProvider>
-              <ClientHome>
-                {children}
-              </ClientHome>
-              <Footer />
-              </FlagsProvider>
-            </ActiveMenuProvider>
-          </DraftExperienceProvider>
-        </UserProvider>
+      <body className={inter.className}>
+        <DarkModeProvider>
+          <UserProvider>
+            <DraftExperienceProvider>
+              <ActiveMenuProvider>
+                <FlagsProvider>
+                  <ClientHome>
+                    {children}
+                  </ClientHome>
+                  <Footer />
+                </FlagsProvider>
+              </ActiveMenuProvider>
+            </DraftExperienceProvider>
+          </UserProvider>
+        </DarkModeProvider>
       </body>
     </html>
   );

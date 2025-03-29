@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
+import { sanitizeAndStripHTML } from '../utils/textUtils';
+import { useDarkMode } from '../context/DarkModeContext';
 
 const LandingPage = ({ setActiveMenu }) => {
+  const { darkMode } = useDarkMode();
   const [trendingPosts, setTrendingPosts] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -83,7 +86,7 @@ const LandingPage = ({ setActiveMenu }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-b from-gray-50 to-white'}`}>
       {/* Modern Hero Section */}
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-purple-800 opacity-95 z-0"></div>
@@ -120,27 +123,27 @@ const LandingPage = ({ setActiveMenu }) => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Why use Stash Section */}
         <div className="mb-12">
-          <div className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100 animate-fade-in">
-            <h3 className="text-lg font-semibold mb-4 flex items-center text-gray-800">
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl shadow-sm p-6 border animate-fade-in`}>
+            <h3 className={`text-lg font-semibold mb-4 flex items-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
               <span className="material-icons text-purple-500 mr-2">lightbulb</span>
               Why use Stash?
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600">Share experiences anonymously with confidence</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Share experiences anonymously with confidence</p>
               </div>
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600">Real interview experiences from verified users</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Real interview experiences from verified users</p>
               </div>
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600">Community-driven insights and tips</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Community-driven insights and tips</p>
               </div>
               <div className="flex items-start group">
                 <span className="material-icons text-green-500 mr-2 group-hover:scale-110 transition-transform duration-300">check_circle</span>
-                <p className="text-sm text-gray-600">Stay updated with latest interview trends</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300">Stay updated with latest interview trends</p>
               </div>
             </div>
           </div>
@@ -149,15 +152,15 @@ const LandingPage = ({ setActiveMenu }) => {
         {/* Trending Posts Section */}
         <div>
           <div className="flex items-center justify-between mb-8">
-            <h2 className="text-2xl font-bold flex items-center text-gray-800">
+            <h2 className={`text-2xl font-bold flex items-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
               <span className="material-icons text-blue-500 mr-2">trending_up</span>
               Trending Posts
             </h2>
           </div>
 
           {trendingPosts.length === 0 && !loading ? (
-            <div className="text-center py-12 bg-white rounded-2xl shadow-sm border border-gray-100">
-              <p className="text-gray-500">No trending posts available.</p>
+            <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl shadow-sm border`}>
+              <p className="text-gray-500 dark:text-gray-400">No trending posts available.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -167,7 +170,7 @@ const LandingPage = ({ setActiveMenu }) => {
                   <a
                     key={post.experience_id}
                     href={`/experience/${post.experience_id}`}
-                    className="group block bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border border-gray-100 animate-fade-in-up"
+                    className={`group block ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border animate-fade-in-up`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
                     {/* Header with Emoji and Company/Title */}
@@ -178,12 +181,12 @@ const LandingPage = ({ setActiveMenu }) => {
                             {emoji}
                           </div>
                           <div className="ml-3">
-                            <h3 className={`text-base font-semibold ${textColor} group-hover:text-blue-600 transition-colors duration-300`}>
+                            <h3 className={`text-base font-semibold ${textColor} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300`}>
                               {post.type === 'interview_experience' ? post.company_name : post.title}
                             </h3>
                             <div className="flex items-center mt-1">
-                              <span className="text-xs text-gray-500">{post.username || 'Anonymous'}</span>
-                              <span className="mx-2 text-gray-300">•</span>
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{post.username || 'Anonymous'}</span>
+                              <span className="mx-2 text-gray-300 dark:text-gray-600">•</span>
                               <span className={`text-xs ${textColor}`}>
                                 {post.type === 'interview_experience' ? 'Interview' : 'Post'}
                               </span>
@@ -196,28 +199,28 @@ const LandingPage = ({ setActiveMenu }) => {
                       </div>
                       
                       {/* Post Preview */}
-                      <p className="text-gray-600 text-sm line-clamp-2">
+                      <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">
                         {post.type === 'interview_experience' 
                           ? `Interview experience for ${post.level || 'Software Engineer'} role`
-                          : post.title}
+                          : sanitizeAndStripHTML(post.details, 150)}
                       </p>
                     </div>
 
                     {/* Footer with Tags and Likes */}
-                    <div className="px-6 py-4 bg-gray-50 flex items-center justify-between">
+                    <div className={`px-6 py-4 ${darkMode ? 'bg-gray-700' : 'bg-gray-50'} flex items-center justify-between`}>
                       <div className="flex flex-wrap gap-2">
                         {post.tags?.slice(0, 2).map((tag, index) => (
-                          <span key={index} className="px-2 py-0.5 bg-white text-gray-600 text-xs rounded-full border border-gray-200 shadow-sm group-hover:border-blue-200 transition-colors duration-300">
+                          <span key={index} className={`px-2 py-0.5 ${darkMode ? 'bg-gray-800 text-gray-300 border-gray-600' : 'bg-white text-gray-600 border-gray-200'} text-xs rounded-full border shadow-sm group-hover:border-blue-200 transition-colors duration-300`}>
                             {tag}
                           </span>
                         ))}
                         {post.tags?.length > 2 && (
-                          <span className="px-2 py-0.5 bg-white text-gray-400 text-xs rounded-full border border-gray-200 shadow-sm">
+                          <span className={`px-2 py-0.5 ${darkMode ? 'bg-gray-800 text-gray-500 border-gray-600' : 'bg-white text-gray-400 border-gray-200'} text-xs rounded-full border shadow-sm`}>
                             +{post.tags.length - 2} more
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center text-gray-500">
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
                         <span className="material-icons text-sm mr-1">thumb_up</span>
                         <span className="text-xs">{post.likes || 0}</span>
                       </div>
@@ -245,7 +248,7 @@ const LandingPage = ({ setActiveMenu }) => {
           {loading && (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-gray-500 mt-4">Loading more posts...</p>
+              <p className="text-gray-500 dark:text-gray-400 mt-4">Loading more posts...</p>
             </div>
           )}
         </div>

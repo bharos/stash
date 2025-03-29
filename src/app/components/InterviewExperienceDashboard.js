@@ -3,11 +3,13 @@ import 'react-quill-new/dist/quill.snow.css';
 import Select from 'react-select';
 import debounce from 'lodash.debounce';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
+import { useDarkMode } from '../context/DarkModeContext';
 import Experience from './Experience';
 import TrendingPosts from './TrendingPosts';
 import supabase from '../utils/supabaseClient';
 
 const InterviewExperienceDashboard = () => {
+  const { darkMode } = useDarkMode();
   const [companyName, setCompanyName] = useState('');
   const { user } = useUser(); // Use user from context here
   const [level, setLevel] = useState('');
@@ -198,7 +200,7 @@ useEffect(() => {
 }, [fetchTrendingPosts, fetchTags]);
 
   return (
-    <div className="dashboard-container p-2 sm:p-6 space-y-6">
+    <div className={`dashboard-container p-2 sm:p-6 space-y-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white mb-8">
         <h1 className="text-3xl font-bold mb-4">Interview Experiences</h1>
@@ -210,7 +212,7 @@ useEffect(() => {
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Filters Section */}
-          <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm p-4 space-y-4 border`}>
             <div className="flex flex-col sm:flex-row gap-4">
               <Select
                 value={companyName ? { label: companyName, value: companyName } : null}
@@ -220,13 +222,38 @@ useEffect(() => {
                 className="w-full sm:w-1/2"
                 isClearable
                 isSearchable
+                theme={(theme) => ({
+                  ...theme,
+                  colors: {
+                    ...theme.colors,
+                    primary: '#3b82f6',
+                    primary75: '#60a5fa',
+                    primary50: '#93c5fd',
+                    primary25: '#bfdbfe',
+                    neutral0: darkMode ? '#1f2937' : '#ffffff',
+                    neutral5: darkMode ? '#374151' : '#f3f4f6',
+                    neutral10: darkMode ? '#4b5563' : '#e5e7eb',
+                    neutral20: darkMode ? '#6b7280' : '#d1d5db',
+                    neutral30: darkMode ? '#9ca3af' : '#9ca3af',
+                    neutral40: darkMode ? '#d1d5db' : '#6b7280',
+                    neutral50: darkMode ? '#e5e7eb' : '#4b5563',
+                    neutral60: darkMode ? '#f3f4f6' : '#374151',
+                    neutral70: darkMode ? '#f9fafb' : '#1f2937',
+                    neutral80: darkMode ? '#ffffff' : '#111827',
+                    neutral90: darkMode ? '#ffffff' : '#111827',
+                  },
+                })}
               />
               <input
                 type="text"
                 placeholder="Level search"
                 value={level}
                 onChange={(e) => setLevel(e.target.value)}
-                className="w-full sm:w-1/2 p-2 border border-gray-300 rounded-lg"
+                className={`w-full sm:w-1/2 p-2 border rounded-lg ${
+                  darkMode 
+                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                }`}
               />
             </div>
             
@@ -245,7 +272,9 @@ useEffect(() => {
                   className={`px-3 py-1 rounded-full text-sm ${
                     selectedTags.includes(tag)
                       ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      : darkMode
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
                   {tag}
@@ -260,7 +289,9 @@ useEffect(() => {
                 className={`px-4 py-2 rounded-lg ${
                   sortBy === 'recent'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : darkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 Recent
@@ -270,7 +301,9 @@ useEffect(() => {
                 className={`px-4 py-2 rounded-lg ${
                   sortBy === 'popular'
                     ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : darkMode
+                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 Popular
@@ -283,17 +316,17 @@ useEffect(() => {
             {loading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading company options...</p>
+                <p className={`mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading company options...</p>
               </div>
             ) : experiencesLoading ? (
               <div className="text-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className="text-gray-500 mt-4">Loading experiences...</p>
+                <p className={`mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading experiences...</p>
               </div>
             ) : !companyName ? (
               <>
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                  <h3 className="text-xl font-semibold text-gray-800">Choose a company to view interview experiences 👀</h3>
+                <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm border`}>
+                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Choose a company to view interview experiences 👀</h3>
                 </div>
                 {/* Show Trending Posts on mobile when no company is selected */}
                 <div className="lg:hidden">
@@ -310,13 +343,13 @@ useEffect(() => {
                     showOpenInNewTabButton={true}
                   />
                 ))}
-                <p className="text-center text-gray-500 mt-4">🏁 You've reached the end 🔚</p>
+                <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-4`}>🏁 You've reached the end 🔚</p>
               </>
             ) : (
               <>
-                <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-                  <h3 className="text-xl font-semibold text-gray-800 mb-2">No experiences available 🤐</h3>
-                  <p className="text-gray-600">Try selecting a different company or level</p>
+                <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm border`}>
+                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>No experiences available 🤐</h3>
+                  <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Try selecting a different company or level</p>
                 </div>
                 {/* Show Trending Posts on mobile when no experiences are found */}
                 <div className="lg:hidden">
