@@ -198,7 +198,7 @@ const LandingPage = ({ setActiveMenu }) => {
                       {/* Post Preview */}
                       <p className="text-gray-600 text-sm line-clamp-2">
                         {post.type === 'interview_experience' 
-                          ? `Interview experience for ${post.position || 'Software Engineer'} position`
+                          ? `Interview experience for ${post.level || 'Software Engineer'} role`
                           : post.title}
                       </p>
                     </div>
