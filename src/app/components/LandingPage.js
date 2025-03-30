@@ -199,7 +199,7 @@ const LandingPage = ({ setActiveMenu }) => {
                       </div>
                       
                       {/* Post Preview */}
-                      <p className="text-gray-600 dark:text-gray-300 text-sm line-clamp-2">
+                      <p className={`text-sm line-clamp-2 ${darkMode ? 'text-gray-700' : 'text-gray-600'}`}>
                         {post.type === 'interview_experience' 
                           ? `Interview experience for ${post.level || 'Software Engineer'} role`
                           : sanitizeAndStripHTML(post.details, 150)}
@@ -220,7 +220,7 @@ const LandingPage = ({ setActiveMenu }) => {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                      <div className={`flex items-center ${post.likes > 0 ? 'text-indigo-500 dark:text-indigo-400' : darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                         <span className="material-icons text-sm mr-1">thumb_up</span>
                         <span className="text-xs">{post.likes || 0}</span>
                       </div>

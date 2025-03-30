@@ -203,8 +203,8 @@ useEffect(() => {
     <div className={`dashboard-container p-2 sm:p-6 space-y-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-8 text-white mb-8">
-        <h1 className="text-3xl font-bold mb-4">Interview Experiences</h1>
-        <p className="text-lg opacity-90">Discover real interview experiences and learn from others' journeys</p>
+        <h1 className="text-3xl font-bold mb-4 text-white">Interview Experiences</h1>
+        <p className="text-lg text-blue-100">Discover real interview experiences and learn from others' journeys</p>
       </div>
 
       {/* Main Content Grid */}
