@@ -4,9 +4,11 @@ import { useUser } from '../context/UserContext';
 import Experience from './Experience';
 import TrendingPosts from './TrendingPosts';
 import supabase from '../utils/supabaseClient';
+import { useDarkMode } from '../context/DarkModeContext';
 
 const GeneralPosts = () => {
   const { user } = useUser();
+  const { darkMode } = useDarkMode();
   const [generalPosts, setGeneralPosts] = useState([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [page, setPage] = useState(1);
@@ -117,8 +119,8 @@ const GeneralPosts = () => {
     <div className="dashboard-container p-2 sm:p-6 space-y-6">
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-8 text-white mb-8">
-        <h1 className="text-3xl font-bold mb-4">General Posts</h1>
-        <p className="text-lg opacity-90">Share your thoughts, tips, and experiences with the community</p>
+        <h1 className="text-3xl font-bold mb-4 text-white">General Posts</h1>
+        <p className="text-lg text-purple-100">Share your thoughts, tips, and experiences with the community</p>
       </div>
 
       {/* Main Content Grid */}
@@ -126,7 +128,7 @@ const GeneralPosts = () => {
         {/* Main Content Area */}
         <div className="lg:col-span-2 space-y-6">
           {/* Filters Section */}
-          <div className="bg-white rounded-lg shadow-sm p-4 space-y-4">
+          <div className={`${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-sm p-4 space-y-4`}>
             {/* Sort Options */}
             <div className="flex gap-4">
               <button
@@ -135,7 +137,7 @@ const GeneralPosts = () => {
                 className={`px-4 py-2 rounded-lg ${
                   sortBy === 'recent'
                     ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : `${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
                 }`}
               >
                 Recent
@@ -146,7 +148,7 @@ const GeneralPosts = () => {
                 className={`px-4 py-2 rounded-lg ${
                   sortBy === 'popular'
                     ? 'bg-purple-600 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    : `${darkMode ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`
                 }`}
               >
                 Popular

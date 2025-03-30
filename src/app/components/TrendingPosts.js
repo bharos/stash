@@ -95,8 +95,12 @@ const TrendingPosts = () => {
                 )}
               </div>
               <div className="flex items-center gap-2 ml-4">
-                <div className={`flex items-center group-hover:text-red-500 dark:group-hover:text-red-400 transition-colors duration-200 ${
-                  darkMode ? 'text-gray-400' : 'text-gray-500'
+                <div className={`flex items-center group-hover:text-indigo-500 dark:group-hover:text-indigo-400 transition-colors duration-200 ${
+                  post.likes > 0 
+                    ? 'text-indigo-500 dark:text-indigo-400' 
+                    : darkMode 
+                      ? 'text-gray-400' 
+                      : 'text-gray-500'
                 }`}>
                   <span className="material-icons text-sm">favorite</span>
                   <span className="text-sm ml-1">{post.likes || 0}</span>
