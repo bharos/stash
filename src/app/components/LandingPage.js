@@ -170,18 +170,18 @@ const LandingPage = ({ setActiveMenu }) => {
                   <a
                     key={post.experience_id}
                     href={`/experience/${post.experience_id}`}
-                    className={`group block ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border animate-fade-in-up`}
-                    style={{ animationDelay: `${index * 100}ms` }}
+                    className={`group block ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 overflow-hidden border animate-fade-in`}
+                    style={{ animationDelay: `${index * 100}ms`, display: 'flex', flexDirection: 'column' }}
                   >
                     {/* Header with Emoji and Company/Title */}
-                    <div className={`p-6 ${bgColor} border-b ${borderColor}`}>
+                    <div className={`p-6 ${bgColor} border-b ${borderColor} flex-grow`}>
                       <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center">
                           <div className={`w-10 h-10 rounded-xl ${bgColor} flex items-center justify-center text-xl shadow-sm group-hover:scale-110 transition-transform duration-300`}>
                             {emoji}
                           </div>
                           <div className="ml-3">
-                            <h3 className={`text-base font-semibold ${textColor} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300`}>
+                            <h3 className={`text-base font-semibold ${textColor} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 line-clamp-2`} style={{ overflowWrap: 'break-word', wordBreak: 'break-all' }}>
                               {post.type === 'interview_experience' ? post.company_name : post.title}
                             </h3>
                             <div className="flex items-center mt-1">
