@@ -34,7 +34,6 @@ const LandingPage = ({ setActiveMenu }) => {
     try {
       const response = await fetch(`/api/trending?page=${page}&limit=${limit}`);
       const data = await response.json();
-
       if (data.length < limit) setHasMore(false);
       setTrendingPosts((prev) => [...prev, ...data]);
       setPage(page + 1);
@@ -181,7 +180,7 @@ const LandingPage = ({ setActiveMenu }) => {
                             {emoji}
                           </div>
                           <div className="ml-3">
-                            <h3 className={`text-base font-semibold ${textColor} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 line-clamp-2`} style={{ overflowWrap: 'break-word', wordBreak: 'break-all' }}>
+                            <h3 className={`text-base font-semibold ${textColor} group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 line-clamp-3`}>
                               {post.type === 'interview_experience' ? post.company_name : post.title}
                             </h3>
                             <div className="flex items-center mt-1">
