@@ -9,6 +9,7 @@ import { useDraftExperience } from '../context/DraftExperience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import { useRouter } from 'next/navigation';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the custom hook for activeMenu context
+import { useDarkMode } from '../context/DarkModeContext'; // Import the dark mode context
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 
@@ -17,6 +18,7 @@ const ExperienceForm = () => {
   const { setActiveMenu } = useActiveMenu(); // Access activeMenu from context
   const { draftExperience, setDraftExperience } = useDraftExperience(); // Use context
   const { user } = useUser();
+  const { darkMode } = useDarkMode(); // Get dark mode state from context
   const [companyName, setCompanyName] = useState(draftExperience?.experience?.company_name || '');
   const [level, setLevel] = useState(draftExperience?.experience?.level || '');
   const [rounds, setRounds] = useState(draftExperience?.experience?.rounds || [{ round_type: '', details: '' }]);
@@ -257,7 +259,7 @@ const ExperienceForm = () => {
   ];
 
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white shadow-lg rounded-xl">
+    <div className={`max-w-3xl mx-auto p-6 ${darkMode ? 'bg-gray-800 text-white dark-mode' : 'bg-white text-gray-800'} shadow-lg rounded-xl`}>
       <div className="mb-12 text-center">
         {formType === 'interview_experience' ? (
           <h2 className="text-xl font-semibold">
@@ -284,7 +286,7 @@ const ExperienceForm = () => {
       <form onSubmit={handleSubmit} className="space-y-1">
           {/* Form type selection */}
           <div className="mb-4">
-            <label className="block text-gray-700">Select Post Type</label>
+            <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Select Post Type</label>
             <Select
               value={{ label: formType === 'interview_experience' ? 'Interview Experience' : 'General Post', value: formType }}
               onChange={handleFormTypeChange}
@@ -293,13 +295,34 @@ const ExperienceForm = () => {
                 { label: 'General Post', value: 'general_post' },
               ]}
               className="w-full"
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary: '#3b82f6',
+                  primary75: '#60a5fa',
+                  primary50: '#93c5fd',
+                  primary25: '#bfdbfe',
+                  neutral0: darkMode ? '#1f2937' : '#ffffff',
+                  neutral5: darkMode ? '#374151' : '#f3f4f6',
+                  neutral10: darkMode ? '#4b5563' : '#e5e7eb',
+                  neutral20: darkMode ? '#6b7280' : '#d1d5db',
+                  neutral30: darkMode ? '#9ca3af' : '#9ca3af',
+                  neutral40: darkMode ? '#d1d5db' : '#6b7280',
+                  neutral50: darkMode ? '#e5e7eb' : '#4b5563',
+                  neutral60: darkMode ? '#f3f4f6' : '#374151',
+                  neutral70: darkMode ? '#f9fafb' : '#1f2937',
+                  neutral80: darkMode ? '#ffffff' : '#111827',
+                  neutral90: darkMode ? '#ffffff' : '#111827',
+                },
+              })}
             />
           </div>
         {formType === 'interview_experience' ? (
           <>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-gray-700">Company Name</label>
+            <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Company Name</label>
             <Select
               value={companyName ? { label: companyName, value: companyName } : null}
               onChange={handleCompanyChange}
@@ -308,23 +331,44 @@ const ExperienceForm = () => {
               className="w-full mb-3 sm:mb-0"
               isClearable
               isSearchable
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary: '#3b82f6',
+                  primary75: '#60a5fa',
+                  primary50: '#93c5fd',
+                  primary25: '#bfdbfe',
+                  neutral0: darkMode ? '#1f2937' : '#ffffff', // Background color
+                  neutral5: darkMode ? '#374151' : '#f3f4f6', // Border color
+                  neutral10: darkMode ? '#4b5563' : '#e5e7eb', // Light background for options
+                  neutral20: darkMode ? '#6b7280' : '#d1d5db', // Border color on hover
+                  neutral30: darkMode ? '#9ca3af' : '#9ca3af', // Text color
+                  neutral40: darkMode ? '#d1d5db' : '#6b7280', // Text color for selected option
+                  neutral50: darkMode ? '#e5e7eb' : '#4b5563', // Text color for selected value
+                  neutral60: darkMode ? '#f3f4f6' : '#374151', // Placeholder color
+                  neutral70: darkMode ? '#f9fafb' : '#1f2937', // Placeholder color on hover
+                  neutral80: darkMode ? '#ffffff' : '#111827', // Text color for options
+                  neutral90: darkMode ? '#ffffff' : '#111827', // Text color for options
+                },
+              })}
             />
           </div>
 
           <div>
-            <label className="block text-gray-700">Level</label>
+            <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Level</label>
             <input
               type="text"
               value={level}
               onChange={handleLevelChange}
-              className="w-full p-3 border rounded-md"
+              className={`w-full p-3 border rounded-md ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
               required
             />
           </div>
         </div>
 
         {rounds.map((round, index) => (
-          <div key={index} className="p-4 border rounded-md relative details-textarea">
+          <div key={index} className={`p-4 border rounded-md relative details-textarea ${darkMode ? 'bg-gray-700' : 'bg-white'}`}>
             <button
               type="button"
               className="absolute top-2 right-2 bg-red-500 text-white text-xs w-6 h-6 flex items-center justify-center rounded-full"
@@ -332,7 +376,7 @@ const ExperienceForm = () => {
             >
               ✖
             </button>
-            <label className="block text-gray-700">Round {index + 1}</label>
+            <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Round {index + 1}</label>
             <Select
               value={round.round_type ? { label: round.round_type, value: round.round_type } : null}
               onChange={(selectedOption) => handleRoundChange(index, selectedOption?.value || '', 'round_type')}
@@ -344,18 +388,44 @@ const ExperienceForm = () => {
               className="w-full sm:w-1/2 mb-3 sm:mb-0"
               isClearable
               isSearchable
+              theme={(theme) => ({
+                ...theme,
+                colors: {
+                  ...theme.colors,
+                  primary: '#3b82f6',
+                  primary75: '#60a5fa',
+                  primary50: '#93c5fd',
+                  primary25: '#bfdbfe',
+                  neutral0: darkMode ? '#1f2937' : '#ffffff', // Background color
+                  neutral5: darkMode ? '#374151' : '#f3f4f6', // Border color
+                  neutral10: darkMode ? '#4b5563' : '#e5e7eb', // Light background for options
+                  neutral20: darkMode ? '#6b7280' : '#d1d5db', // Border color on hover
+                  neutral30: darkMode ? '#9ca3af' : '#9ca3af', // Text color
+                  neutral40: darkMode ? '#d1d5db' : '#6b7280', // Text color for selected option
+                  neutral50: darkMode ? '#e5e7eb' : '#4b5563', // Text color for selected value
+                  neutral60: darkMode ? '#f3f4f6' : '#374151', // Placeholder color
+                  neutral70: darkMode ? '#f9fafb' : '#1f2937', // Placeholder color on hover
+                  neutral80: darkMode ? '#ffffff' : '#111827', // Text color for options
+                  neutral90: darkMode ? '#ffffff' : '#111827', // Text color for options
+                },
+              })}
             />
-            <label className="block text-gray-700 mt-2">Details</label>
+            <label className={`block ${darkMode ? 'text-gray-300' : 'text-gray-700'} mt-2`}>Details</label>
             {isClient && (
               <ReactQuill
+                key={`round-${index}`}
                 ref={(el) => quillRefs.current[index] = el}
                 value={round.details}
                 onChange={(value) => handleRoundChange(index, value, 'details')}
-                className="bg-white border rounded-md"
+                className={`bg-white border rounded-md ${darkMode ? 'bg-gray-700' : 'bg-white'}`}
                 modules={{
                   toolbar: {
                     container: toolbarOptions,
                   }
+                }}
+                style={{
+                  backgroundColor: darkMode ? '#4B5563' : '#FFFFFF',
+                  color: darkMode ? '#FFFFFF' : '#000000',
                 }}
               />
             )}
@@ -381,14 +451,18 @@ const ExperienceForm = () => {
             maxLength={140}
             onChange={(e) => setGeneralPostTitle(e.target.value)}
             placeholder="Enter title..."
-            className="w-full p-2 mb-2 border rounded-md"
+            className={`w-full p-2 mb-2 border rounded-md ${darkMode ? 'bg-gray-700 text-white' : 'bg-white text-black'}`}
           />
           <div className="w-full">
               <ReactQuill
                 value={generalPostContent}
                 onChange={setGeneralPostContent}
                 modules={{ toolbar: toolbarOptions }}
-                className="bg-white border rounded-md"
+                className={`bg-white border rounded-md ${darkMode ? 'bg-gray-700' : 'bg-white'}`}
+                style={{
+                  backgroundColor: darkMode ? '#4B5563' : '#FFFFFF',
+                  color: darkMode ? '#FFFFFF' : '#000000',
+                }}
               />
             </div>
           </div>
@@ -398,7 +472,7 @@ const ExperienceForm = () => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full p-3 m-1 bg-green-500 text-white rounded-md"
+          className={`w-full p-3 m-1 ${loading ? 'bg-gray-500' : 'bg-green-500'} text-white rounded-md`}
         >
           {loading ? 'Submitting...' : 'Submit'}
         </button>

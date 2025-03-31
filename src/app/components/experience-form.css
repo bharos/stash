@@ -1,3 +1,30 @@
 .ql-container {
   min-height: 100px;  /* Forces the content area to be at least 200px tall */
 }
+
+
+/* Change the fill color of SVG icons in the toolbar */
+.dark-mode .ql-toolbar svg {
+  fill: #ffffff; /* Set the fill color to white for visibility in dark mode */
+}
+
+/* Change the stroke color of SVG icons in the toolbar */
+.dark-mode .ql-toolbar .ql-stroke {
+  stroke: #ffffff; /* Set the stroke color to white for visibility in dark mode */
+}
+
+.dark-mode .ql-toolbar .ql-fill {
+  stroke: #ffffff; /* Set the stroke color to white for visibility in dark mode */
+}
+
+.dark-mode .ql-picker {
+  color: #ffffff;
+}
+
+.dark-mode .ql-picker-options {
+  background-color: #374151;
+}
+
+.dark-mode .ql-picker-item {
+  color: #ffffff;
+}
