@@ -23,6 +23,7 @@ const UserProfile = () => {
   const [limit] = useState(10); // Set a limit for the number of items per page
   const router = useRouter();
   const { darkMode } = useDarkMode();
+  const [isUnsubscribed, setIsUnsubscribed] = useState(false);
 
   const fetchUserActivityData = async () => {
     try {
@@ -118,7 +119,7 @@ const UserProfile = () => {
     e.preventDefault();
 
     if (!user.user_id) {
-      setError('You must be logged in to update your username.');
+      setError('You must be logged in to update your settings.');
       return;
     }
 
@@ -126,46 +127,48 @@ const UserProfile = () => {
     setSuccessMessage('');
 
     try {
-      // If new username is the same as current, don't call API
-      if (newUsername === user.username) {
-        setError('Same as current.');
-        return;
-      }
-
       const response = await fetch('/api/profiles', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ user_id: user.user_id, username: newUsername }),
+        body: JSON.stringify({ 
+          user_id: user.user_id, 
+          username: newUsername, 
+          isUnSubscribed: isUnsubscribed
+        }),
       });
 
       const result = await response.json();
       if (response.ok) {
-        setSuccessMessage('Username updated successfully!');
+        setSuccessMessage('Settings updated successfully!');
         setUser({ ...user, username: newUsername });
         router.push('/'); // Redirect after update
       } else {
-        setError(result.error ? result.error : 'Something went wrong. Failed to update username.');
+        setError(result.error ? result.error : 'Something went wrong. Failed to update settings.');
       }
     } catch (err) {
-      setError('Failed to update username.');
+      setError('Failed to update settings.');
       console.error(err);
     }
   };
 
   return (
     <div className={`min-h-screen flex flex-col items-center ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} p-6`}>
-      {/* Username Section */}
+      {/* Settings Section */}
       <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border`}>
         <h2 className={`text-2xl font-semibold text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-          {user.username ? 'Change Your Username 🎭' : 'Set Username 🥷'}
+          Settings
         </h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
-        <div className="text-center mb-4">
-          {user.username && <p className={darkMode ? 'text-gray-300' : 'text-gray-700'}>Current Username: {user.username}</p>}
-        </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-1">
+          <label 
+            htmlFor="username" 
+            className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block text-sm font-medium`}
+          >
+            {user.username ? 'Change Username' : 'Set Username'}
+          </label>
           <input
+            id="username"
             type="text"
             value={newUsername}
             maxLength={12}
@@ -177,6 +180,15 @@ const UserProfile = () => {
             }`}
             required
           />
+          <div className="flex items-center justify-between mt-4">
+            <label className={`${darkMode ? 'text-white' : 'text-gray-800'} block text-sm font-medium`}>Unsubscribe to Emails</label>
+            <input
+              type="checkbox"
+              checked={isUnsubscribed}
+              onChange={() => setIsUnsubscribed(!isUnsubscribed)}
+              className="form-checkbox h-5 w-5 text-blue-600"
+            />
+          </div>
           <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
             Save Changes
           </button>
