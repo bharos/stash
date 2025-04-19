@@ -13,6 +13,7 @@ import UserProfile from './UserProfile';
 import SingleExperiencePage from './SingleExperiencePage';
 import GeneralPosts from './GeneralPosts';
 import OAuthSignin from './OAuthSignin';
+import InvitePage from './InvitePage'; // Import InvitePage
 import { useDarkMode } from '../context/DarkModeContext';
 
 // Dynamically import ExperienceForm and InterviewExperienceDashboard
@@ -224,6 +225,26 @@ const ClientHome = () => {
           </ListItemButton>
         </List>
 
+        <List sx={{ marginTop: '20px' }}>
+          {/* Invite Button */}
+          <ListItemButton 
+            onClick={() => handleMenuChange('invitePage')}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              }
+            }}
+          >
+            <span className="material-icons ml-2 mr-2 text-orange-600">person_add</span>
+            <ListItemText 
+              primary="Invite"
+              primaryTypographyProps={{
+                style: { fontWeight: 500 }
+              }}
+            />
+          </ListItemButton>
+        </List>
+
         {user.user_id && (
           <List sx={{ marginTop: '20px' }}>
             <ListItemButton 
@@ -356,7 +377,11 @@ const ClientHome = () => {
         }}
       >
         {/* Show Experience Page if the user navigated to `/experience/[id]` */}
-        {activeMenu === 'UserProfile' ? (
+        {pathname === '/invite' || activeMenu === 'invitePage' ? (
+          <div className="max-w-7xl mx-auto">
+            <InvitePage />
+          </div>
+        ) : activeMenu === 'UserProfile' ? (
           <div className="max-w-7xl mx-auto">
             <UserProfile />
           </div>

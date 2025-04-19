@@ -39,15 +39,16 @@ export default async function handler(req, res) {
       }
 
     case 'POST':
-      const { user_id: postUserId, username } = req.body;
+      const { user_id: postUserId, username, isUnSubscribed } = req.body; // Changed to isUnSubscribed
 
-      if (!postUserId || !username) {
-        return res.status(400).json({ error: 'user_id and username are required' });
+      if (!postUserId) {
+        return res.status(400).json({ error: 'user_id is required' });
       }
 
-      if (username.length > 12) {
+      if (username && username.length > 12) {
         return res.status(400).json({ error: 'Username can\'t be longer than 12 letters' });
       }
+
       try {
         // Try fetching the existing profile
         const { data: existingProfile, error: profileError } = await supabase
@@ -56,38 +57,38 @@ export default async function handler(req, res) {
           .eq('user_id', postUserId)
           .single();
 
-        // If profile does not exist, insert a new one
+        const updates = {};
+        if (username) updates.username = username;
+        if (isUnSubscribed !== undefined) updates.is_unsubscribed = isUnSubscribed; // Updated field
+
         if (!existingProfile) {
+          // If profile does not exist, insert a new one
           const { error: createError } = await supabase
             .from('profiles')
-            .insert([{ user_id: postUserId, username }]);
+            .insert([{ user_id: postUserId, ...updates }]);
 
           if (createError) {
-            console.error('Error creating username:', createError.message);  // Log error
-            return res.status(500).json({ error: 'Error creating username' });
+            console.error('Error creating profile:', createError.message); // Log error
+            return res.status(500).json({ error: 'Error creating profile' });
           }
 
           return res.status(201).json({ message: 'Profile created successfully' });
         } else {
-          // Profile exists, update the username
+          // Profile exists, update the fields
           const { error: updateError } = await supabase
             .from('profiles')
-            .update({ username })
+            .update(updates)
             .eq('user_id', postUserId);
 
           if (updateError) {
-            console.log('Update error:', updateError);
-            if (updateError.code === '23505') {  // Unique constraint violation
-              return res.status(409).json({ error: 'Username already taken' });
-          }
-            return res.status(500).json({ error: 'Error updating username' });
+            console.error('Update error:', updateError);
+            return res.status(500).json({ error: 'Error updating profile' });
           }
 
-          return res.status(200).json({ message: 'Username updated successfully' });
+          return res.status(200).json({ message: 'Profile updated successfully' });
         }
-
       } catch (err) {
-        console.error('Unexpected error during POST request:', err);  // Log unexpected errors
+        console.error('Unexpected error during POST request:', err); // Log unexpected errors
         return res.status(500).json({ error: 'Unexpected error occurred' });
       }
 
