@@ -15,7 +15,7 @@ export default async function handler(req, res) {
         // Fetch user profile
         const { data, error } = await supabase
           .from('profiles')
-          .select('username')
+          .select('username, is_unsubscribed')  // Include is_unsubscribed
           .eq('user_id', user_id)  // Ensure that user_id matches your table's column name
           .single();  // Fetch single row
 
@@ -31,8 +31,11 @@ export default async function handler(req, res) {
           return res.status(500).json({ error: 'Error retrieving profile data' });
         }
 
-        // If profile data exists, return the username
-        return res.status(200).json({ username: data?.username || null });
+        // If profile data exists, return the username and is_unsubscribed
+        return res.status(200).json({ 
+          username: data?.username || null, 
+          is_unsubscribed: data?.is_unsubscribed || false  // Return is_unsubscribed
+        });
       } catch (err) {
         console.error('Unexpected error:', err);  // Log any unexpected errors
         return res.status(500).json({ error: 'Unexpected error occurred' });

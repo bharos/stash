@@ -110,6 +110,25 @@ const UserProfile = () => {
     }
   };
 
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetch(`/api/profiles?user_id=${user.user_id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch user profile');
+      }
+      const profileData = await response.json();
+      setIsUnsubscribed(profileData.is_unsubscribed || false); // Set the checkbox state
+    } catch (err) {
+      console.error('Error fetching user profile:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (user.user_id) {
+      fetchUserProfile(); // Fetch profile data on component load
+    }
+  }, [user.user_id]);
+
   useEffect(() => {
     setLoading(true);  // Set loading to true before making the fetch request
     fetchUserActivityData();
