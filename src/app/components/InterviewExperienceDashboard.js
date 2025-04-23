@@ -27,7 +27,7 @@ const InterviewExperienceDashboard = () => {
     
     setLoading(true);
     try {
-      const companyResponse = await fetch('/api/companyNames');
+      const companyResponse = await fetch('/api/companyNames?onlyWithQuestions=true');
       const companyData = await companyResponse.json();
       if (companyResponse.ok) {
         setCompanyOptions(
