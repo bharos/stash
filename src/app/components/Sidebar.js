@@ -15,11 +15,10 @@ import supabase from '../utils/supabaseClient';
 const Sidebar = () => {
   const router = useRouter();
   const { user, setUser } = useUser();
-  const { sidebarOpen, setSidebarOpen } = useSidebar();
+  const { sidebarOpen, setSidebarOpen, isLoginModalOpen, setIsLoginModalOpen } = useSidebar();
   const { darkMode, toggleDarkMode, resetToSystem } = useDarkMode();
   const { activeMenu, setActiveMenu } = useActiveMenu();
   const [exploreOpen, setExploreOpen] = useState(true);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false) // To control login modal visibility
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
