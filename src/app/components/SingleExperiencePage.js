@@ -1,13 +1,17 @@
+'use client';
 import React, { useEffect, useState } from 'react';
 import Experience from './Experience';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
+import { useSidebar } from '../context/SidebarContext';
 import supabase from '../utils/supabaseClient';
 
 const SingleExperiencePage = ({ experienceId }) => {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user, setUser } = useUser(); // Use user from context here
+  const { user } = useUser(); // Use user from context here
+  const { sidebarOpen } = useSidebar();
+
 
   // Define the updateExperience function to update the experience state
   const updateExperience = (updatedData) => {
@@ -29,6 +33,7 @@ const SingleExperiencePage = ({ experienceId }) => {
 
   useEffect(() => {
     const fetchExperience = async () => {
+      console.log("SinglePageExperience Fetching experience with ID:", experienceId);
       try {
         const typeResponse = await fetch(`/api/experienceType?experienceId=${experienceId}`);
         const typeData = await typeResponse.json();
@@ -99,11 +104,14 @@ const SingleExperiencePage = ({ experienceId }) => {
   }, [experienceId, user]); // Re-fetch when experienceId or user changes
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Loading123...</div>;
   }
 
   return (
-    <div>
+    <div className={`transition-all duration-300 ease-in-out`}
+    style={{ 
+      marginLeft: sidebarOpen ? 270 : 0,
+    }}>
       {error ? (
         <div className="flex justify-center items-center h-screen text-lg text-red-500">
           {error} 🙅‍♀️

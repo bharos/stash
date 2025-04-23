@@ -1,3 +1,4 @@
+'use client';
 import { useState, useRef, useEffect } from "react";
 import { FiMoreVertical } from "react-icons/fi";
 import supabase from '../utils/supabaseClient';
