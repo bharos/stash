@@ -27,36 +27,53 @@ async function fetchExperienceForSEO(experienceId) {
 
 // This function is used for SEO meta tags
 export async function generateMetadata({ params }) {
-    // Wait for params to be available
-    const { id } = await params; // Ensure params are awaited before using
+    const { id } = params;
   
-    const experience = await fetchExperienceForSEO(id); // Use the awaited id
+    const experience = await fetchExperienceForSEO(id);
   
-    // Create a custom description based on available fields
-    const description = `${experience?.company_name || 'Company'} - ${experience?.level || 'Level G9'}: ${experience?.type === 'interview_experience' ? 'Interview Experience' : 'General Post'} shared by ${experience?.username || 'Anonymous'}`;
+    // Fallbacks
+    const username = experience?.username || 'Anonymous';
+    const company = experience?.company_name || 'Company';
+    const level = experience?.level || 'Level';
+    const titleText = experience?.title || 'Shared Experience';
   
-    // Default metadata if the experience is not found
+    // Custom title & description logic
+    const isInterview = experience?.type === 'interview_experience';
+    const isGeneralPost = experience?.type === 'general_post';
+  
+    const title = isInterview
+      ? `${company} ${level} Interview Experience`
+      : isGeneralPost
+      ? `${titleText} - Post`
+      : 'Experience';
+  
+    const description = isInterview
+      ? `${company} ${level} interview experience shared by ${username}. Learn about the coding questions, design rounds, and more.`
+      : isGeneralPost
+      ? `Discussion: "${titleText}" by ${username}. Join the conversation and share your thoughts.`
+      : 'Explore someone’s experience. Real stories and learnings from interviews and discussions.';
+  
+    const pageUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/experience/${id}`;
+    const image = experience?.image_url || 'default-image.jpg';
+  
     return {
-      title: experience?.company_name || 'Shared Experience',  // Using company_name for the title
-      description: description || 'Explore someone’s experience',  // Use the generated description
+      title,
+      description,
       openGraph: {
-        title: experience?.company_name || 'Shared Experience',
-        description: description || 'Explore someone’s experience',
-        url: `${process.env.NEXT_PUBLIC_BASE_URL}/experience/${id}`,  // URL for OpenGraph
+        title,
+        description,
+        url: pageUrl,
         type: 'article',
-        images: [
-          // Add OpenGraph image URL if available (you can modify this part based on your data structure)
-          experience?.image_url || 'default-image.jpg',
-        ],
+        images: [image],
       },
       twitter: {
-        card: 'summary_large_image', // Twitter card type (can be changed)
-        title: experience?.company_name || 'Shared Experience',
-        description: description || 'Explore someone’s experience',
-        image: experience?.image_url || 'default-image.jpg',
-      }
+        card: 'summary_large_image',
+        title,
+        description,
+        image,
+      },
     };
-  }
+  }  
   
 
   export default async function ExperiencePage({ params }) {
