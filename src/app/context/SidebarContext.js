@@ -16,9 +16,17 @@ export const useSidebar = () => {
 // Provider component
 export const SidebarProvider = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false); // State to manage sidebar visibility
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false); // Login modal state
 
   return (
-    <SidebarContext.Provider value={{ sidebarOpen, setSidebarOpen }}>
+    <SidebarContext.Provider
+      value={{
+        sidebarOpen,
+        setSidebarOpen,
+        isLoginModalOpen,
+        setIsLoginModalOpen,
+      }}
+    >
       {children}
     </SidebarContext.Provider>
   );

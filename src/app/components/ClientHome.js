@@ -20,7 +20,7 @@ const InterviewExperienceDashboard = dynamic(() => import('./InterviewExperience
 const ClientHome = () => {
   const pathname = usePathname(); // Get the current URL path
   const { user } = useUser();
-  const { sidebarOpen } = useSidebar();
+  const { sidebarOpen, setIsLoginModalOpen } = useSidebar();
   const { activeMenu, setActiveMenu } = useActiveMenu(); // Access activeMenu from context
   const [isClient, setIsClient] = useState(false);
   const { darkMode } = useDarkMode();
