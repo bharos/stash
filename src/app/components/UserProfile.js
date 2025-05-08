@@ -249,7 +249,7 @@ const UserProfile = () => {
                         darkMode ? 'border-gray-700 bg-gray-700' : 'border-gray-200 bg-white'
                       }`}>
                         <h3 className={`text-sm sm:text-md font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                          <Link href={`/experience/${exp.id}`} className="text-blue-600 hover:underline">
+                          <Link href={`/experience/${exp.id}/${exp.slug}`} className="text-blue-600 hover:underline">
                             {exp.company_name}
                           </Link>
                         </h3>

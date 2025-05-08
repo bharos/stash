@@ -74,8 +74,6 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
   };
   
   const handleShareExperience = (experienceId) => {
-    // Generate a shareable link, ensuring that the URL structure is correct
-    const shareableLink = `${window.location.origin}/experience/${experience.id}`;
     setShowShareModal(true); // Show the modal when the share button is clicked
   };
 
@@ -333,7 +331,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
       {showOpenInNewTabButton && (
         <button
           onClick={() =>
-            window.open(`${window.location.origin}/experience/${experience.id}`, '_blank')
+            window.open(`${window.location.origin}/experience/${experience.id}/${experience.slug}`, '_blank')
           }
           className={`text-blue-600 font-semibold text-2xl w-8 h-8 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-full flex items-center justify-center border border-blue-600 ml-2`}
         >
@@ -376,7 +374,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
               <input
                 type="text"
                 readOnly
-                value={`${window.location.origin}/experience/${experience.id}`}
+                value={`${window.location.origin}/experience/${experience.id}/${experience.slug}`}
                 className={`w-full p-3 border rounded-l-lg focus:ring-2 focus:ring-blue-600 focus:outline-none ${
                   darkMode 
                     ? 'bg-gray-700 border-gray-600 text-white' 
@@ -384,7 +382,7 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
                 }`}
               />
               <button
-                onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}`)}
+                onClick={() => handleCopyLink(`${window.location.origin}/experience/${experience.id}/${experience.slug}`)}
                 className="p-3 bg-blue-600 text-white rounded-r-lg font-medium text-sm transition-all duration-200 hover:text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 {isLinkCopied ? 'Copied!' : 'Copy Link'}
