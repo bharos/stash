@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useDarkMode } from '../context/DarkModeContext';
 import supabase from '../utils/supabaseClient';
 import Link from 'next/link';
+import UserTokens from './UserTokens';
 
 const UserProfile = () => {
   const { user, setUser } = useUser();
@@ -172,6 +173,9 @@ const UserProfile = () => {
 
   return (
     <div className={`min-h-screen flex flex-col items-center ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} p-6`}>
+      {/* User Tokens Section */}
+      <UserTokens />
+      
       {/* Settings Section */}
       <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border`}>
         <h2 className={`text-2xl font-semibold text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>

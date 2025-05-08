@@ -3,6 +3,7 @@
 import './globals.css';
 import { usePathname } from 'next/navigation';
 import { UserProvider } from './context/UserContext';
+import { PremiumProvider } from './context/PremiumContext';
 import ClientHome from './components/ClientHome';
 import { ActiveMenuProvider } from './context/ActiveMenuContext';
 import { DraftExperienceProvider } from './context/DraftExperience';
@@ -30,21 +31,23 @@ function RootLayoutContent({ children }) {
       </head>
       <body className={`${inter.className} ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <UserProvider>
-          <SidebarProvider>
-          <DraftExperienceProvider>
-            <ActiveMenuProvider>
-              <FlagsProvider>
-                <Sidebar />
-                {useClientHome ? (
-                  <ClientHome>{children}</ClientHome>
-                ) : (
-                  children
-                )}
-                <Footer />
-              </FlagsProvider>
-            </ActiveMenuProvider>
-          </DraftExperienceProvider>
-        </SidebarProvider>
+          <PremiumProvider>
+            <SidebarProvider>
+              <DraftExperienceProvider>
+                <ActiveMenuProvider>
+                  <FlagsProvider>
+                    <Sidebar />
+                    {useClientHome ? (
+                      <ClientHome>{children}</ClientHome>
+                    ) : (
+                      children
+                    )}
+                    <Footer />
+                  </FlagsProvider>
+                </ActiveMenuProvider>
+              </DraftExperienceProvider>
+            </SidebarProvider>
+          </PremiumProvider>
         </UserProvider>
       </body>
     </html>

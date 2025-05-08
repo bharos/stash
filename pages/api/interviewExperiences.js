@@ -53,7 +53,7 @@ const handleExperienceUpsert = async (req, res) => {
       };
 
       const randomString = Math.random().toString(36).substring(2, 6); // Generate a random 4-character string
-      const slug = slugify(company_name+"-"+level+"-interview-experience-questions-post-by-"+username+"-"+randomString);
+      const slug = slugify(company_name+"-"+level+"-interview-experience-question-post-by-"+username+"-"+randomString);
       console.log("Generated Slug: ", slug);
 
       const { data, error } = await supabase
@@ -77,6 +77,29 @@ const handleExperienceUpsert = async (req, res) => {
 
       if (roundError) {
         return res.status(500).json({ error: roundError.message });
+      }
+      
+      // Award 100 coins to the user for posting a new interview experience
+      try {
+        // First, fetch current user tokens
+        const { data: userData, error: userError } = await supabase
+          .from('user_tokens')
+          .select('coins')
+          .eq('user_id', user.id)
+          .single();
+          
+        const currentCoins = userData?.coins || 0;
+        
+        // Update or insert user tokens
+        await supabase
+          .from('user_tokens')
+          .upsert([{
+            user_id: user.id,
+            coins: currentCoins + 100 // Add 100 coins for posting
+          }]);
+      } catch (tokenError) {
+        console.error('Error awarding tokens:', tokenError);
+        // Don't fail the request if token awarding fails
       }
 
     } else if (req.method === 'PUT') {
