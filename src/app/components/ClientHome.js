@@ -7,7 +7,6 @@ import { useActiveMenu } from '../context/ActiveMenuContext'; // Import the cust
 import dynamic from 'next/dynamic';
 import LandingPage from './LandingPage';
 import UserProfile from './UserProfile';
-import SingleExperiencePage from './SingleExperiencePage';
 import GeneralPosts from './GeneralPosts';
 import { useSidebar } from '../context/SidebarContext';
 import InvitePage from './InvitePage'; // Import InvitePage
@@ -28,15 +27,6 @@ const ClientHome = () => {
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Extract experienceId from URL (/experience/123)
-  const experienceMatch = pathname.match(/^\/experience\/(\d+)$/);
-  const experienceId = experienceMatch ? experienceMatch[1] : null;
-  useEffect(() => {
-    if (experienceId) {
-      setActiveMenu('singleExperiencePage');
-    }
-  }, [experienceId]); // Only trigger when experienceId changes
 
   useEffect(() => {
     // Capture the URL hash for magic link errors
@@ -66,7 +56,6 @@ const ClientHome = () => {
           marginLeft: sidebarOpen ? 270 : 0,
         }}
       >
-        {/* Show Experience Page if the user navigated to `/experience/[id]` */}
         {pathname === '/invite' || activeMenu === 'invitePage' ? (
           <div className="max-w-7xl mx-auto">
             <InvitePage />
@@ -87,10 +76,6 @@ const ClientHome = () => {
           ):  activeMenu === 'generalPosts' ? (
             <div className="max-w-7xl mx-auto">
               <GeneralPosts/>
-            </div>
-          ): activeMenu === 'singleExperiencePage' ? (
-            <div className="max-w-7xl mx-auto">
-              <SingleExperiencePage experienceId={experienceId} />
             </div>
           ): (
             <div className="flex flex-col items-center justify-center min-h-[80vh] text-center">
@@ -116,10 +101,6 @@ const ClientHome = () => {
           ): activeMenu === 'postExperience' ? (
             <div className="max-w-7xl mx-auto">
               <ExperienceForm/>
-            </div>
-          ) : activeMenu === 'singleExperiencePage' ? (
-            <div className="max-w-7xl mx-auto">
-              <SingleExperiencePage experienceId={experienceId} />
             </div>
           ) : null
         ) : (

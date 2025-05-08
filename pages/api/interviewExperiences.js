@@ -43,9 +43,22 @@ const handleExperienceUpsert = async (req, res) => {
 
     if (req.method === 'POST') {
       // POST logic
+
+       // Generate a slug using company_name, level, username, and a random string
+      const slugify = (text) => {
+        return text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
+          .replace(/^-|-$/g, '');      // Remove leading/trailing hyphens
+      };
+
+      const randomString = Math.random().toString(36).substring(2, 6); // Generate a random 4-character string
+      const slug = slugify(company_name+"-"+level+"-interview-experience-questions-post-by-"+username+"-"+randomString);
+      console.log("Generated Slug: ", slug);
+
       const { data, error } = await supabase
         .from('experiences')
-        .insert([{ company_name, level, user_id: user.id , username, type : 'interview_experience'}])
+        .insert([{ company_name, level, user_id: user.id , username, type : 'interview_experience', slug}])
         .select();
 
       if (error) {
@@ -158,7 +171,8 @@ export default async function handler(req, res) {
             rounds(id, round_type, details),
             likes,
             type,
-            created_at
+            created_at,
+            slug
           `)
           .eq('type', 'interview_experience');
 
