@@ -80,7 +80,7 @@ export default async function handler(req, res) {
           if (amount === 100) {
             premiumDays = 7; // 1 week
           } else if (amount === 300) {
-            premiumDays = 90; // 3 months
+            premiumDays = 30; // 1 month
           } else {
             return res.status(400).json({ error: 'Invalid amount for premium access' });
           }
@@ -103,7 +103,9 @@ export default async function handler(req, res) {
               user_id: user.id,
               coins: currentCoins - amount,
               premium_until: newPremiumUntil.toISOString()
-            }]);
+            }], { 
+              onConflict: 'user_id' // Specify the constraint to use for conflict detection
+            });
 
           if (updateError) {
             console.error('Error updating user tokens:', updateError);

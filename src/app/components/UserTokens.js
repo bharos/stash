@@ -164,7 +164,7 @@ const UserTokens = () => {
             
             <div className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
               <div className="flex justify-between items-center mb-2">
-                <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>3 Months Access</span>
+                <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>30 Day Access</span>
                 <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>300 Coins</span>
               </div>
               <button

@@ -125,7 +125,9 @@ const handleExperienceUpsert = async (req, res) => {
           .upsert([{
             user_id: user.id,
             coins: currentCoins + 100 // Add 100 coins for posting
-          }]);
+          }], { 
+            onConflict: 'user_id' // Specify the constraint to use for conflict detection
+          });
       } catch (tokenError) {
         console.error('Error awarding tokens:', tokenError);
         // Don't fail the request if token awarding fails

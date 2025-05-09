@@ -89,14 +89,18 @@ const handleExperienceUpsert = async (req, res) => {
           .single();
           
         const currentCoins = userData?.coins || 0;
-        
+        console.log("Current Coins: ", currentCoins);
         // Update or insert user tokens
         await supabase
           .from('user_tokens')
           .upsert([{
             user_id: user.id,
             coins: currentCoins + 100 // Add 100 coins for posting
-          }]);
+          }], { 
+            onConflict: 'user_id' // Specify the constraint to use for conflict detection
+          });
+
+        console.log("Successfully awarded 100 coins to user: ", user.id);
       } catch (tokenError) {
         console.error('Error awarding tokens:', tokenError);
         // Don't fail the request if token awarding fails
