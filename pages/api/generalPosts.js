@@ -69,6 +69,55 @@ const handleExperienceUpsert = async (req, res) => {
       if (generalPostError) {
         return res.status(500).json({ error: generalPostError.message });
       }
+      
+      // Award 25 coins to the user for posting a new general post
+      try {
+        // First, fetch current user tokens
+        const { data: userData, error: userError } = await supabase
+          .from('user_tokens')
+          .select('coins')
+          .eq('user_id', user.id)
+          .single();
+          
+        const currentCoins = userData?.coins || 0;
+        
+        // Update or insert user tokens
+        await supabase
+          .from('user_tokens')
+          .upsert([{
+            user_id: user.id,
+            coins: currentCoins + 25 // Add 25 coins for posting a general post
+          }], { 
+            onConflict: 'user_id' // Specify the constraint to use for conflict detection
+          });
+          
+        // Record the transaction in the ledger
+        console.log("Experience ID type:", typeof experience.id, "Value:", experience.id);
+        
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('token_transactions')
+          .insert([{
+            user_id: user.id,
+            amount: 25,
+            transaction_type: 'earn',
+            description: `Earned coins for general post: ${title.substring(0, 30)}${title.length > 30 ? '...' : ''}`,
+            source: 'general_post',
+            reference_id: experience.id // Now we can use the numeric ID directly
+          }])
+          .select();
+          
+        if (transactionError) {
+          console.error('Error recording transaction:', transactionError);
+          console.log('Transaction error details:', JSON.stringify(transactionError));
+        } else {
+          console.log("Successfully recorded transaction:", transactionData);
+        }
+          
+        console.log("Successfully awarded 25 coins to user: ", user.id);
+      } catch (tokenError) {
+        console.error('Error awarding tokens:', tokenError);
+        // Don't fail the request if token awarding fails
+      }
 
     } else if (req.method === 'PUT') {
         const { data, error: experienceError } = await supabase
@@ -106,31 +155,6 @@ const handleExperienceUpsert = async (req, res) => {
 
       if (postError) {
         return res.status(500).json({ error: postError.message });
-      }
-      
-      // Award 100 coins to the user for posting a new general post
-      try {
-        // First, fetch current user tokens
-        const { data: userData, error: userError } = await supabase
-          .from('user_tokens')
-          .select('coins')
-          .eq('user_id', user.id)
-          .single();
-          
-        const currentCoins = userData?.coins || 0;
-        
-        // Update or insert user tokens
-        await supabase
-          .from('user_tokens')
-          .upsert([{
-            user_id: user.id,
-            coins: currentCoins + 100 // Add 100 coins for posting
-          }], { 
-            onConflict: 'user_id' // Specify the constraint to use for conflict detection
-          });
-      } catch (tokenError) {
-        console.error('Error awarding tokens:', tokenError);
-        // Don't fail the request if token awarding fails
       }
 
     } else {

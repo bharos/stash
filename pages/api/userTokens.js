@@ -80,20 +80,19 @@ export default async function handler(req, res) {
           if (amount === 100) {
             premiumDays = 7; // 1 week
           } else if (amount === 300) {
-            premiumDays = 30; // 1 month
+            premiumDays = 30; // 30 days (1 month)
           } else {
             return res.status(400).json({ error: 'Invalid amount for premium access' });
           }
 
-          // Calculate new premium_until date
+          // Check if user already has premium
           const now = new Date();
-          let newPremiumUntil = new Date();
-          
-          // If user already has premium, extend from that date
           if (currentPremiumUntil && new Date(currentPremiumUntil) > now) {
-            newPremiumUntil = new Date(currentPremiumUntil);
+            return res.status(400).json({ error: 'You already have an active premium subscription. Please wait until it expires before purchasing again.' });
           }
           
+          // Calculate new premium_until date
+          let newPremiumUntil = new Date();
           newPremiumUntil.setDate(newPremiumUntil.getDate() + premiumDays);
 
           // Update user tokens
@@ -110,6 +109,32 @@ export default async function handler(req, res) {
           if (updateError) {
             console.error('Error updating user tokens:', updateError);
             return res.status(500).json({ error: 'Error updating token data' });
+          }
+          
+          // Record the transaction in the ledger
+          try {
+            const premiumDuration = amount === 100 ? '1 week' : '30 days';
+            const { data: transactionData, error: transactionError } = await supabase
+              .from('token_transactions')
+              .insert([{
+                user_id: user.id,
+                amount: amount, // Keep as positive since we're using transaction_type
+                transaction_type: 'spend',
+                description: `Premium access purchased (${premiumDuration})`,
+                source: 'premium_purchase',
+                reference_id: null // No need for a reference ID here
+              }])
+              .select();
+              
+            if (transactionError) {
+              console.error('Error recording transaction:', transactionError);
+              console.log('Transaction error details:', JSON.stringify(transactionError));
+            } else {
+              console.log("Successfully recorded premium purchase transaction:", transactionData);
+            }
+          } catch (transactionError) {
+            console.error('Error recording transaction:', transactionError);
+            // Continue anyway since the main functionality succeeded
           }
 
           return res.status(200).json({

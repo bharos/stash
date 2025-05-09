@@ -99,6 +99,26 @@ const handleExperienceUpsert = async (req, res) => {
           }], { 
             onConflict: 'user_id' // Specify the constraint to use for conflict detection
           });
+        
+        // Record the transaction in the ledger
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('token_transactions')
+          .insert([{
+            user_id: user.id,
+            amount: 100,
+            transaction_type: 'earn',
+            description: `Earned coins for posting interview experience: ${company_name}`,
+            source: 'interview_post',
+            reference_id: experience.id // Now using the actual experience ID
+          }])
+          .select();
+          
+        if (transactionError) {
+          console.error('Error recording transaction:', transactionError);
+          console.log('Transaction error details:', JSON.stringify(transactionError));
+        } else {
+          console.log("Successfully recorded transaction:", transactionData);
+        }
 
         console.log("Successfully awarded 100 coins to user: ", user.id);
       } catch (tokenError) {

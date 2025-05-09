@@ -5,6 +5,8 @@ import { useDarkMode } from '../context/DarkModeContext';
 import supabase from '../utils/supabaseClient';
 import Link from 'next/link';
 import UserTokens from './UserTokens';
+import TokenHistory from './TokenHistory';
+import PremiumBadge from './PremiumBadge';
 
 const UserProfile = () => {
   const { user, setUser } = useUser();
@@ -178,7 +180,7 @@ const UserProfile = () => {
       
       {/* Settings Section */}
       <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border`}>
-        <h2 className={`text-2xl font-semibold text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+        <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
           Settings
         </h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
@@ -222,12 +224,12 @@ const UserProfile = () => {
         {/* Tab Navigation */}
         <div className="mb-6">
           <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Your Activity</h2>
-          <div className={`flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-            {["experiences", "general posts", "likes", "comments"].map((tab) => (
+          <div className={`flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'} overflow-x-auto`}>
+            {["experiences", "general posts", "likes", "comments", "transactions"].map((tab) => (
               <div
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`cursor-pointer py-2 text-sm font-medium transition-colors ${
+                className={`cursor-pointer py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab
                     ? `${darkMode ? 'text-blue-400 border-b-4 border-blue-400' : 'text-blue-600 border-b-4 border-blue-600'}`
                     : `${darkMode ? 'text-gray-400 hover:text-gray-300 border-b-2 border-transparent' : 'text-gray-600 hover:text-blue-600 border-b-2 border-transparent'}`
@@ -419,6 +421,12 @@ const UserProfile = () => {
                       Next
                     </button>
                   </div>
+                </div>
+              )}
+              
+              {activeTab === "transactions" && (
+                <div className="mt-4">
+                  <TokenHistory />
                 </div>
               )}
             </>

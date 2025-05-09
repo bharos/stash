@@ -8,7 +8,8 @@ import { useRouter } from 'next/navigation';
 import OAuthSignin from './OAuthSignin';
 import { useDarkMode } from '../context/DarkModeContext'; // DarkMode Context
 import { useUser } from '../context/UserContext'; // User Context
-import {  useSidebar } from '../context/SidebarContext';
+import { useSidebar } from '../context/SidebarContext';
+import PremiumBadge from './PremiumBadge';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Active Menu Context
 import supabase from '../utils/supabaseClient';
 
@@ -110,12 +111,15 @@ const Sidebar = () => {
         }}
       >
         <span className="material-icons ml-2 mr-2 text-blue-600">home</span>
-        <ListItemText 
-          primary="Stash" 
-          primaryTypographyProps={{
-            style: { fontWeight: 600, fontSize: '1.2rem' }
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <ListItemText 
+            primary="Stash" 
+            primaryTypographyProps={{
+              style: { fontWeight: 600, fontSize: '1.2rem' }
+            }}
+          />
+          {user.user_id && <PremiumBadge />}
+        </div>
       </ListItemButton>
     </List>
 
