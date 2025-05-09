@@ -7,7 +7,6 @@ import { PremiumProvider } from './context/PremiumContext';
 import ClientHome from './components/ClientHome';
 import { ActiveMenuProvider } from './context/ActiveMenuContext';
 import { DraftExperienceProvider } from './context/DraftExperience';
-import { FlagsProvider } from './context/flagContext';
 import { SidebarProvider } from './context/SidebarContext';
 import Footer from './components/Footer';
 import { Inter } from 'next/font/google';
@@ -35,15 +34,13 @@ function RootLayoutContent({ children }) {
             <SidebarProvider>
               <DraftExperienceProvider>
                 <ActiveMenuProvider>
-                  <FlagsProvider>
-                    <Sidebar />
-                    {useClientHome ? (
-                      <ClientHome>{children}</ClientHome>
-                    ) : (
-                      children
-                    )}
-                    <Footer />
-                  </FlagsProvider>
+                  <Sidebar />
+                  {useClientHome ? (
+                    <ClientHome>{children}</ClientHome>
+                  ) : (
+                    children
+                  )}
+                  <Footer />
                 </ActiveMenuProvider>
               </DraftExperienceProvider>
             </SidebarProvider>
