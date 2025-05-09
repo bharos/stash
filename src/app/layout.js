@@ -11,6 +11,7 @@ import { SidebarProvider } from './context/SidebarContext';
 import Footer from './components/Footer';
 import { Inter } from 'next/font/google';
 import { DarkModeProvider, useDarkMode } from './context/DarkModeContext';
+import { ViewLimitProvider } from './context/ViewLimitContext';
 import Sidebar from './components/Sidebar';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -54,7 +55,9 @@ function RootLayoutContent({ children }) {
 export default function RootLayout({ children }) {
   return (
     <DarkModeProvider>
-      <RootLayoutContent>{children}</RootLayoutContent>
+      <ViewLimitProvider>
+        <RootLayoutContent>{children}</RootLayoutContent>
+      </ViewLimitProvider>
     </DarkModeProvider>
   );
 }

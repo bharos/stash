@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { IconButton, List, ListItemButton, ListItemText, Collapse, Drawer } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useRouter } from 'next/navigation';
@@ -11,6 +11,7 @@ import { useUser } from '../context/UserContext'; // User Context
 import { useSidebar } from '../context/SidebarContext';
 import PremiumBadge from './PremiumBadge';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Active Menu Context
+import { useViewLimitStatus } from '../hooks/useViewLimit'; // Import the view limit hook
 import supabase from '../utils/supabaseClient';
 
 const Sidebar = () => {
@@ -20,6 +21,7 @@ const Sidebar = () => {
   const { darkMode, toggleDarkMode, resetToSystem } = useDarkMode();
   const { activeMenu, setActiveMenu } = useActiveMenu();
   const [exploreOpen, setExploreOpen] = useState(true);
+  const viewLimitStatus = useViewLimitStatus(); // Get view limit status
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -125,6 +127,55 @@ const Sidebar = () => {
 
     {/* Menu Items */}
     <List sx={{ marginTop: '20px' }}>
+      {/* View Limit Indicator */}
+      {user.user_id && (
+        <div className={`mx-4 mb-2 p-3 rounded-lg ${
+          darkMode ? 'bg-gray-700' : 'bg-gray-100'
+        } ${
+          viewLimitStatus.isLimitReached && !viewLimitStatus.isPremium 
+            ? (darkMode ? 'border-red-500 border' : 'border-red-500 border') 
+            : ''
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>Daily Views</span>
+            {viewLimitStatus.isPremium ? (
+              <div className="flex items-center gap-1">
+                <span className="material-icons text-yellow-500 text-sm">stars</span>
+                <span className={`text-sm ${
+                  darkMode ? 'text-yellow-400' : 'text-yellow-600'
+                }`}>Unlimited</span>
+              </div>
+            ) : (
+              <div className={`text-sm font-medium ${
+                viewLimitStatus.isLimitReached 
+                  ? 'text-red-500' 
+                  : darkMode ? 'text-blue-400' : 'text-blue-600'
+              }`}>
+                {viewLimitStatus.remainingViews}/{2} left
+              </div>
+            )}
+          </div>
+          {!viewLimitStatus.isPremium && (
+            <div className="mt-1">
+              <div className="w-full bg-gray-300 rounded-full h-1.5 dark:bg-gray-600">
+                <div 
+                  className={`h-1.5 rounded-full ${
+                    viewLimitStatus.isLimitReached 
+                      ? 'bg-red-500' 
+                      : viewLimitStatus.remainingViews === 1
+                        ? 'bg-orange-500'
+                        : 'bg-green-500'
+                  }`}
+                  style={{ width: `${(viewLimitStatus.remainingViews / 2) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Parent ListItemButton - "Explore" */}
       <ListItemButton 
         onClick={handleExploreToggle}

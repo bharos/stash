@@ -1,8 +1,10 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import Experience from './Experience';
+import ContentPaywall from './ContentPaywall';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import { useSidebar } from '../context/SidebarContext';
+import { useViewLimit } from '../hooks/useViewLimit'; // Import view limit hook
 import supabase from '../utils/supabaseClient';
 
 const SingleExperiencePage = ({ experienceId }) => {
@@ -11,7 +13,15 @@ const SingleExperiencePage = ({ experienceId }) => {
   const [error, setError] = useState(null);
   const { user } = useUser(); // Use user from context here
   const { sidebarOpen } = useSidebar();
-
+  
+  // Use the view limit hook to check if this content can be viewed
+  const { 
+    canView, 
+    isLimitReached, 
+    remainingViews, 
+    isChecking, 
+    isPremium 
+  } = useViewLimit(experienceId, experience?.type);
 
   // Define the updateExperience function to update the experience state
   const updateExperience = (updatedData) => {
@@ -103,8 +113,8 @@ const SingleExperiencePage = ({ experienceId }) => {
     }
   }, [experienceId, user]); // Re-fetch when experienceId or user changes
 
-  if (loading) {
-    return <div>Loading...</div>;
+  if (loading || isChecking) {
+    return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
   return (
@@ -120,6 +130,15 @@ const SingleExperiencePage = ({ experienceId }) => {
         <div className="flex justify-center items-center h-screen text-lg text-gray-500">
           Experience not found ! 🤦‍♂️
         </div>
+      ) : !canView && isLimitReached ? (
+        <>
+          {/* Show preview of content when limit is reached */}
+          <div className="opacity-30 pointer-events-none">
+            <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
+          </div>
+          {/* Show paywall */}
+          <ContentPaywall remainingViews={remainingViews} />
+        </>
       ) : (
         <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
       )}
