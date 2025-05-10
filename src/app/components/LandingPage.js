@@ -34,8 +34,12 @@ const LandingPage = ({ setActiveMenu }) => {
     try {
       const response = await fetch(`/api/trending?page=${page}&limit=${limit}`);
       const data = await response.json();
-      if (data.length < limit) setHasMore(false);
-      setTrendingPosts((prev) => [...prev, ...data]);
+      
+      // Make sure data is an array before trying to spread it
+      const postsArray = Array.isArray(data) ? data : [];
+      
+      if (postsArray.length < limit) setHasMore(false);
+      setTrendingPosts((prev) => [...prev, ...postsArray]);
       setPage(page + 1);
     } catch (error) {
       console.error('Error fetching trending posts:', error);

@@ -4,24 +4,25 @@ import Experience from './Experience';
 import ContentPaywall from './ContentPaywall';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import { useSidebar } from '../context/SidebarContext';
-import { useViewLimit } from '../hooks/useViewLimit'; // Import view limit hook
+import { useViewLimitContext } from '../context/ViewLimitContext'; // Import view limit context directly
 import supabase from '../utils/supabaseClient';
 
 const SingleExperiencePage = ({ experienceId }) => {
   const [experience, setExperience] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPaywall, setShowPaywall] = useState(false);
+  
   const { user } = useUser(); // Use user from context here
   const { sidebarOpen } = useSidebar();
+  const { viewLimitData, fetchViewLimitData } = useViewLimitContext(); // Access view limit context and the function to update it
   
-  // Use the view limit hook to check if this content can be viewed
+  // Extract relevant view limit data from context
   const { 
-    canView, 
     isLimitReached, 
     remainingViews, 
-    isChecking, 
     isPremium 
-  } = useViewLimit(experienceId, experience?.type);
+  } = viewLimitData;
 
   // Define the updateExperience function to update the experience state
   const updateExperience = (updatedData) => {
@@ -39,7 +40,6 @@ const SingleExperiencePage = ({ experienceId }) => {
       };
     });
   };
-  
 
   useEffect(() => {
     const fetchExperience = async () => {
@@ -97,6 +97,10 @@ const SingleExperiencePage = ({ experienceId }) => {
           }
   
           setExperience(fetchedExperience); // Update the experience with comments
+          
+          // Refresh the view limit data after successfully fetching the experience
+          // This ensures the latest view count and limit status is reflected
+          fetchViewLimitData();
         } else {
           setError(data.error || 'Failed to fetch experience');
         }
@@ -112,8 +116,43 @@ const SingleExperiencePage = ({ experienceId }) => {
       fetchExperience();
     }
   }, [experienceId, user]); // Re-fetch when experienceId or user changes
+  
+  // We've removed the recordView call since the API now handles this for us
+  // The fetchExperience call is now responsible for recording views
+  
+  // Update showPaywall when viewLimitData or experience changes
+  useEffect(() => {
+    if (experience) {
+      // Check if user has reached the view limit and is not premium
+      // But make exception if it's the user's own post or already viewed
+      const isAlreadyViewed = experience.alreadyViewed || false;
+      
+      // Show paywall only when:
+      // 1. Limit is reached
+      // 2. User is not premium
+      // 3. It's not user's own post
+      // 4. User hasn't already viewed this post
+      const shouldShowPaywall = viewLimitData.isLimitReached && 
+                               !viewLimitData.isPremium && 
+                               !experience.posted_by_user && 
+                               !isAlreadyViewed;
+      
+      setShowPaywall(shouldShowPaywall);
+      
+      console.log("Show paywall:", shouldShowPaywall);
+      console.log("View limit data:", viewLimitData);
+      console.log("Experience ID:", experienceId);
+      console.log("Experience data:", experience);
+      console.log("User ID:", user?.user_id);
+      console.log("Is user's own post:", experience.posted_by_user);
+      console.log("Is limit reached:", viewLimitData.isLimitReached);
+      console.log("Is premium:", viewLimitData.isPremium);
+      console.log("Already viewed:", isAlreadyViewed);
+      console.log("Remaining views:", viewLimitData.remainingViews);
+    }
+  }, [experience, viewLimitData, user?.user_id, experienceId]);
 
-  if (loading || isChecking) {
+  if (loading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
 
@@ -130,15 +169,17 @@ const SingleExperiencePage = ({ experienceId }) => {
         <div className="flex justify-center items-center h-screen text-lg text-gray-500">
           Experience not found ! 🤦‍♂️
         </div>
-      ) : !canView && isLimitReached ? (
-        <>
+      ) : showPaywall ? (
+        <div className="relative">
           {/* Show preview of content when limit is reached */}
           <div className="opacity-30 pointer-events-none">
             <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
           </div>
-          {/* Show paywall */}
-          <ContentPaywall remainingViews={remainingViews} />
-        </>
+          {/* Show paywall - Fixed absolute positioning to ensure it's visible */}
+          <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
+            <ContentPaywall remainingViews={viewLimitData.remainingViews} />
+          </div>
+        </div>
       ) : (
         <Experience experience={experience} updateExperience={updateExperience} showOpenInNewTabButton={false} />
       )}

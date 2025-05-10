@@ -255,12 +255,79 @@ export default async function handler(req, res) {
             if (userLikeError) {
               return res.status(500).json({ error: userLikeError.message });
             }
-      
+            
+            // Check if user is premium
+            const { data: userData, error: userError } = await supabase
+              .from('user_tokens')
+              .select('premium_until')
+              .eq('user_id', userId)
+              .single();
+            
+            const isPremium = userData?.premium_until && new Date(userData.premium_until) > new Date();
+            const DAILY_VIEW_LIMIT = 2; // Match the limit in contentViews.js
+            
+            // Count and possibly update views for non-premium users
             const likedExperienceIds = new Set(userLikes.map(like => like.experience_id));
-      
+            let viewedExperienceIds = new Set();
+            let contentRestricted = false;
+            
+            if (!isPremium) {
+              const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+              
+              // Get all viewed experiences for today in one query
+              const { data: viewedExperiences, error: viewedError } = await supabase
+                .from('content_views')
+                .select('experience_id')
+                .eq('user_id', userId)
+                .eq('view_date', today);
+              
+              if (!viewedError && viewedExperiences) {
+                viewedExperienceIds = new Set(viewedExperiences.map(v => v.experience_id));
+                
+                // Count today's views
+                const viewCount = viewedExperiences.length;
+                
+                // Set content restriction flag based on view limits
+                contentRestricted = viewCount >= DAILY_VIEW_LIMIT;
+                
+                // Unified logic that works the same for both single and dashboard views
+                // Find an experience not created by the user that we could count
+                const experienceToCount = experiences.find(exp => exp.user_id !== userId);
+                
+                // Check if this specific post has been viewed already using the viewedExperienceIds set
+                if (experienceToCount && viewCount < DAILY_VIEW_LIMIT) {
+                  const alreadyViewedToday = viewedExperienceIds.has(experienceToCount.id);
+                  
+                  // Only record the view if not already viewed
+                  if (!alreadyViewedToday) {
+                    await supabase
+                      .from('content_views')
+                      .upsert([{
+                        user_id: userId,
+                        experience_id: experienceToCount.id,
+                        experience_type: 'general_post',
+                        view_date: today
+                      }], { 
+                        onConflict: 'user_id, experience_id, view_date'
+                      });
+                    
+                    // Update the viewedExperienceIds set to include this new view
+                    viewedExperienceIds.add(experienceToCount.id);
+                  }
+                }
+              }
+            }
+            
             experiences.forEach(exp => {
               exp.user_liked = likedExperienceIds.has(exp.id);
               exp.posted_by_user = exp.user_id === userId;
+              exp.alreadyViewed = viewedExperienceIds.has(exp.id);
+              
+              // If content should be restricted and this isn't the user's own post and hasn't been viewed today
+              if (contentRestricted && !exp.posted_by_user && !exp.alreadyViewed) {
+                exp.content_restricted = true;
+                exp.details = '<p>Content hidden due to daily view limit. Upgrade to premium or post content to earn more views.</p>';
+              }
             });
           } else {
             experiences.forEach(exp => {

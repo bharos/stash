@@ -3,10 +3,10 @@ import 'react-quill-new/dist/quill.snow.css';
 import { useUser } from '../context/UserContext';
 import Experience from './Experience';
 import TrendingPosts from './TrendingPosts';
-import ContentPaywall from './ContentPaywall'; // Import ContentPaywall component
+import ContentPaywall from './ContentPaywall';
 import supabase from '../utils/supabaseClient';
 import { useDarkMode } from '../context/DarkModeContext';
-import { useViewLimitStatus } from '../hooks/useViewLimit'; // Import view limit hook
+import { useViewLimitContext } from '../context/ViewLimitContext'; // Import view limit context directly
 
 const GeneralPosts = () => {
   const { user } = useUser();
@@ -18,11 +18,18 @@ const GeneralPosts = () => {
   const [sortBy, setSortBy] = useState('recent');
   const limit = 5;
   
-  // Get view limit status for displaying a warning
-  const viewLimitStatus = useViewLimitStatus();
+  // Access view limit data and functions directly from context
+  const { viewLimitData, fetchViewLimitData } = useViewLimitContext();
   
-  // Check if user has reached the view limit and is not premium
-  const showPaywall = user?.user_id && viewLimitStatus.isLimitReached && !viewLimitStatus.isPremium;
+  // State to track whether to show the paywall
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Update showPaywall when viewLimitData changes
+  useEffect(() => {
+    // Check if user has reached the view limit and is not premium
+    const shouldShowPaywall = user?.user_id && viewLimitData.isLimitReached && !viewLimitData.isPremium;
+    setShowPaywall(shouldShowPaywall);
+  }, [viewLimitData, user?.user_id]);
 
   const fetchGeneralPosts = useCallback(
     async (currentPage) => {
@@ -82,9 +89,15 @@ const GeneralPosts = () => {
         console.error('Error fetching posts:', error);
       } finally {
         setPostsLoading(false);
+        
+        // Fetch the view limit data to update the UI if needed
+        // Only necessary if viewing posts affects the limit count
+        if (user?.user_id) {
+          fetchViewLimitData(); // Use directly
+        }
       }
     },
-    [sortBy]
+    [sortBy, user?.user_id] // fetchViewLimitData intentionally omitted from dependencies
   );
 
   const hasMoreRef = useRef(true);
@@ -128,7 +141,7 @@ const GeneralPosts = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
           {/* View Limit Warning - Only show for warning (not when paywall is displayed) */}
-          {user?.user_id && !viewLimitStatus.isPremium && viewLimitStatus.remainingViews <= 1 && !viewLimitStatus.isLimitReached && (
+          {user?.user_id && !viewLimitData.isPremium && viewLimitData.remainingViews <= 1 && !viewLimitData.isLimitReached && (
             <div className={`p-4 mb-4 border ${darkMode ? 'bg-gray-800 border-yellow-600' : 'bg-yellow-50 border-yellow-200'} rounded-lg`}>
               <div className="flex items-start">
                 <div className="flex-shrink-0 mt-0.5">
@@ -139,10 +152,10 @@ const GeneralPosts = () => {
                     Almost at daily view limit
                   </h3>
                   <div className={`mt-1 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    {viewLimitStatus.remainingViews === 0 ? (
+                    {viewLimitData.remainingViews === 0 ? (
                       <p>You've reached your daily view limit. Post content to earn coins or upgrade to premium for unlimited access.</p>
                     ) : (
-                      <p>You have {viewLimitStatus.remainingViews} view left today. Consider posting content to earn coins or upgrading to premium.</p>
+                      <p>You have {viewLimitData.remainingViews} view left today. Consider posting content to earn coins or upgrading to premium.</p>
                     )}
                   </div>
                 </div>

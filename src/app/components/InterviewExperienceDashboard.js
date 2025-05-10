@@ -4,10 +4,10 @@ import Select from 'react-select';
 import debounce from 'lodash.debounce';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import { useDarkMode } from '../context/DarkModeContext';
-import { useViewLimitStatus } from '../hooks/useViewLimit'; // Import view limit hook
+import { useViewLimitContext } from '../context/ViewLimitContext'; // Import view limit context directly
 import Experience from './Experience';
 import TrendingPosts from './TrendingPosts';
-import ContentPaywall from './ContentPaywall'; // Import ContentPaywall component
+import ContentPaywall from './ContentPaywall';
 import supabase from '../utils/supabaseClient';
 
 const InterviewExperienceDashboard = () => {
@@ -24,11 +24,18 @@ const InterviewExperienceDashboard = () => {
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
   
-  // Get view limit status to show warning if needed
-  const viewLimitStatus = useViewLimitStatus();
+  // Access view limit data and functions directly from context
+  const { viewLimitData, fetchViewLimitData } = useViewLimitContext();
 
-  // Check if user has reached the view limit and is not premium
-  const showPaywall = user?.user_id && viewLimitStatus.isLimitReached && !viewLimitStatus.isPremium;
+  // State to track whether to show the paywall
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Update showPaywall when viewLimitData changes
+  useEffect(() => {
+    // Check if user has reached the view limit and is not premium
+    const shouldShowPaywall = user?.user_id && viewLimitData.isLimitReached && !viewLimitData.isPremium;
+    setShowPaywall(shouldShowPaywall);
+  }, [viewLimitData, user?.user_id]);
 
   const fetchData = useCallback(async () => {
     if (companyOptions.length > 0) return; // Only fetch if companyOptions is empty
@@ -128,6 +135,12 @@ const fetchExperiences = useCallback(
       console.error('Error fetching experiences:', error);
     } finally {
       setExperiencesLoading(false);
+      
+      // Fetch the latest view limit data to update the UI
+      // This ensures the UI stays in sync after dashboard views are counted
+      if (user?.user_id) {
+        fetchViewLimitData();
+      }
     }
   }, 500), // 500ms debounce delay
   [] // Empty dependency array ensures that 'fetchExperiences' doesn't get recreated on every render
@@ -205,7 +218,8 @@ const fetchTags = useCallback(async () => {
 useEffect(() => {
   fetchTrendingPosts();
   fetchTags();
-}, [fetchTrendingPosts, fetchTags]);
+    fetchViewLimitData();
+}, [fetchTrendingPosts, fetchTags, user?.user_id]); // fetchViewLimitData intentionally omitted
 
   return (
     <div className={`dashboard-container p-2 sm:p-6 space-y-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -219,7 +233,7 @@ useEffect(() => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-3">
           {/* View Limit Warning - Only show when close to limit but not when paywall is displayed */}
-          {user?.user_id && !viewLimitStatus.isPremium && viewLimitStatus.remainingViews <= 1 && !viewLimitStatus.isLimitReached && (
+          {user?.user_id && !viewLimitData.isPremium && viewLimitData.remainingViews <= 1 && !viewLimitData.isLimitReached && (
             <div className={`p-4 mb-4 border ${darkMode ? 'bg-gray-800 border-yellow-600' : 'bg-yellow-50 border-yellow-200'} rounded-lg`}>
               <div className="flex items-start">
                 <div className="flex-shrink-0 mt-0.5">
@@ -230,7 +244,7 @@ useEffect(() => {
                     Almost at daily view limit
                   </h3>
                   <div className={`mt-1 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                    <p>You have {viewLimitStatus.remainingViews} view left today. Consider posting content to earn coins or upgrading to premium.</p>
+                    <p>You have {viewLimitData.remainingViews} view left today. Consider posting content to earn coins or upgrading to premium.</p>
                   </div>
                 </div>
               </div>

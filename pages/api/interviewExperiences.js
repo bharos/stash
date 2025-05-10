@@ -1,5 +1,8 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
+// Constants
+const DAILY_VIEW_LIMIT = 2; // Match the limit in contentViews.js
+
 function isEmptyHtml(html) {
   const strippedHtml = html.replace(/<[^>]*>/g, "").trim(); // Strip HTML tags and check if it's empty
   return strippedHtml === "";
@@ -271,17 +274,79 @@ export default async function handler(req, res) {
           if (userLikeError) {
             return res.status(500).json({ error: userLikeError.message });
           }
+          
+          // Check if user is premium
+          const { data: userData, error: userError } = await supabase
+            .from('user_tokens')
+            .select('premium_until')
+            .eq('user_id', userId)
+            .single();
+          
+          const isPremium = userData?.premium_until && new Date(userData.premium_until) > new Date();
+          let contentRestricted = false;
+          let viewedExperienceIds = new Set();
+          
+          // Count and possibly update views for non-premium users
+          if (!isPremium) {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            // Get all viewed experiences for today in one query
+            const { data: viewedExperiences, error: viewedError } = await supabase
+              .from('content_views')
+              .select('experience_id')
+              .eq('user_id', userId)
+              .eq('view_date', today);
+              
+            if (!viewedError && viewedExperiences) {
+              viewedExperienceIds = new Set(viewedExperiences.map(v => v.experience_id));
+              // Count today's views
+              const viewCount = viewedExperiences.length;
+              console.log("Today's view count: ", viewCount);
+              // Set content restriction flag based on view limits
+              contentRestricted = viewCount >= DAILY_VIEW_LIMIT;
+              // Find the experience to count - either the single requested experience or first unviewed in dashboard
+              const experienceToCount = experiences.find(exp => exp.user_id !== userId && !viewedExperienceIds.has(exp.id)); // In dashboard mode, find first unviewed
+              if (experienceToCount && viewCount < DAILY_VIEW_LIMIT) {
+                console.log("Experience to count: ", experienceToCount);
+                // Only record the view if it's not posted by the user and not already viewed
+                  await supabase
+                    .from('content_views')
+                    .upsert([{
+                      user_id: userId,
+                      experience_id: experienceToCount.id,
+                      experience_type: 'interview_experience',
+                      view_date: today
+                    }], { 
+                      onConflict: 'user_id, experience_id, view_date'
+                    });
+                  
+                  // Update the viewedExperienceIds set to include this new view
+                  viewedExperienceIds.add(experienceToCount.id);
+              }
+            }
+          }
   
           // Convert userLikes array to a Set for faster lookup
           const likedExperienceIds = new Set(userLikes.map(like => like.experience_id));
-  
-          // Update each experience with the user_liked flag
+          // Make sure viewedExperienceIds is defined even for premium users
+          viewedExperienceIds = viewedExperienceIds || new Set();
+          
+          // Update each experience with the user_liked flag and handle content restriction
           experiences.forEach(exp => {
             exp.user_liked = likedExperienceIds.has(exp.id);
-          });
-          // Set posted_by_user to true if the experience belongs to the user
-          experiences.forEach(exp => {
             exp.posted_by_user = exp.user_id === userId;
+            exp.alreadyViewed = viewedExperienceIds.has(exp.id);
+            
+            // If content should be restricted, this isn't user's own post, and hasn't been viewed today
+            if (contentRestricted && !exp.posted_by_user && !exp.alreadyViewed) {
+              exp.content_restricted = true;
+              // Clear the content from all rounds except the title/type
+              exp.rounds = exp.rounds.map(round => ({
+                id: round.id,
+                round_type: round.round_type,
+                details: '<p>Content hidden due to daily view limit. Upgrade to premium or post content to earn more views.</p>'
+              }));
+            }
           });
         } else {
           // If no userId is provided, set user_liked and posted_by_user to false for all
