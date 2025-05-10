@@ -452,7 +452,19 @@ const Experience = ({ experience, updateExperience, showOpenInNewTabButton }) =>
 
      {/* Card content: interview Experience Details */}
 <div className="experience-details mt-4">
-  {experience.type === 'interview_experience' ? (
+  {experience.content_restricted ? (
+    // Show restricted content message when content is restricted due to view limits
+    <div className="round-container mb-4 relative bg-gray-200 dark:bg-gray-700 p-10 rounded-md">
+      <div className="absolute inset-0 bg-gray-500 bg-opacity-40 flex flex-col items-center justify-center text-white text-lg font-semibold">
+        <span className="material-icons text-4xl mb-2">lock</span>
+        <p className="text-center">
+          Daily view limit reached.<br/>
+          <span className="text-blue-300">Post content or upgrade to premium for unlimited access.</span>
+        </p>
+      </div>
+      <div className="w-full p-0 border-none rounded-md blur-sm min-h-[100px]"></div>
+    </div>
+  ) : experience.type === 'interview_experience' ? (
      <>
     {/* Display only one round for non-logged in users */}
     {experience.rounds.map((round, index) => (

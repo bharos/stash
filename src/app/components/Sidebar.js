@@ -1,15 +1,17 @@
 'use client';
 
 import React from 'react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { IconButton, List, ListItemButton, ListItemText, Collapse, Drawer } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useRouter } from 'next/navigation';
 import OAuthSignin from './OAuthSignin';
 import { useDarkMode } from '../context/DarkModeContext'; // DarkMode Context
 import { useUser } from '../context/UserContext'; // User Context
-import {  useSidebar } from '../context/SidebarContext';
+import { useSidebar } from '../context/SidebarContext';
+import PremiumBadge from './PremiumBadge';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Active Menu Context
+import { useViewLimitContext } from '../context/ViewLimitContext'; // Import view limit context directly
 import supabase from '../utils/supabaseClient';
 
 const Sidebar = () => {
@@ -19,9 +21,16 @@ const Sidebar = () => {
   const { darkMode, toggleDarkMode, resetToSystem } = useDarkMode();
   const { activeMenu, setActiveMenu } = useActiveMenu();
   const [exploreOpen, setExploreOpen] = useState(true);
+  const { viewLimitData, fetchViewLimitData } = useViewLimitContext(); // Use view limit context directly
 
   const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    
+    // Fetch updated view limit data when opening the sidebar
+    if (newState && user?.user_id) {
+      fetchViewLimitData();
+    }
   };
 
   const handleMenuChange = (menu) => {
@@ -110,17 +119,69 @@ const Sidebar = () => {
         }}
       >
         <span className="material-icons ml-2 mr-2 text-blue-600">home</span>
-        <ListItemText 
-          primary="Stash" 
-          primaryTypographyProps={{
-            style: { fontWeight: 600, fontSize: '1.2rem' }
-          }}
-        />
+        <div className="flex items-center gap-2">
+          <ListItemText 
+            primary="Stash" 
+            primaryTypographyProps={{
+              style: { fontWeight: 600, fontSize: '1.2rem' }
+            }}
+          />
+          {user.user_id && <PremiumBadge />}
+        </div>
       </ListItemButton>
     </List>
 
     {/* Menu Items */}
     <List sx={{ marginTop: '20px' }}>
+      {/* View Limit Indicator */}
+      {user.user_id && (
+        <div className={`mx-4 mb-2 p-3 rounded-lg ${
+          darkMode ? 'bg-gray-700' : 'bg-gray-100'
+        } ${
+          viewLimitData.isLimitReached && !viewLimitData.isPremium 
+            ? (darkMode ? 'border-red-500 border' : 'border-red-500 border') 
+            : ''
+        }`}>
+          <div className="flex items-center justify-between">
+            <span className={`text-sm font-medium ${
+              darkMode ? 'text-gray-300' : 'text-gray-700'
+            }`}>Daily Views</span>
+            {viewLimitData.isPremium ? (
+              <div className="flex items-center gap-1">
+                <span className="material-icons text-yellow-500 text-sm">stars</span>
+                <span className={`text-sm ${
+                  darkMode ? 'text-yellow-400' : 'text-yellow-600'
+                }`}>Unlimited</span>
+              </div>
+            ) : (
+              <div className={`text-sm font-medium ${
+                viewLimitData.isLimitReached 
+                  ? 'text-red-500' 
+                  : darkMode ? 'text-blue-400' : 'text-blue-600'
+              }`}>
+                {viewLimitData.remainingViews}/{2} left
+              </div>
+            )}
+          </div>
+          {!viewLimitData.isPremium && (
+            <div className="mt-1">
+              <div className="w-full bg-gray-300 rounded-full h-1.5 dark:bg-gray-600">
+                <div 
+                  className={`h-1.5 rounded-full ${
+                    viewLimitData.isLimitReached 
+                      ? 'bg-red-500' 
+                      : viewLimitData.remainingViews === 1
+                        ? 'bg-orange-500'
+                        : 'bg-green-500'
+                  }`}
+                  style={{ width: `${(viewLimitData.remainingViews / 2) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
       {/* Parent ListItemButton - "Explore" */}
       <ListItemButton 
         onClick={handleExploreToggle}

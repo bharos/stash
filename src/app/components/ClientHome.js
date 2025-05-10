@@ -104,6 +104,7 @@ const ClientHome = () => {
             </div>
           ) : null
         ) : (
+          // User is logged in but doesn't have a username yet
           <div className="max-w-7xl mx-auto">
             <UserProfile />
           </div>

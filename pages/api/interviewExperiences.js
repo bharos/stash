@@ -1,5 +1,8 @@
 import supabase from '../../src/app/utils/supabaseClient';
 
+// Constants
+const DAILY_VIEW_LIMIT = 2; // Match the limit in contentViews.js
+
 function isEmptyHtml(html) {
   const strippedHtml = html.replace(/<[^>]*>/g, "").trim(); // Strip HTML tags and check if it's empty
   return strippedHtml === "";
@@ -53,7 +56,7 @@ const handleExperienceUpsert = async (req, res) => {
       };
 
       const randomString = Math.random().toString(36).substring(2, 6); // Generate a random 4-character string
-      const slug = slugify(company_name+"-"+level+"-interview-experience-questions-post-by-"+username+"-"+randomString);
+      const slug = slugify(company_name+"-"+level+"-interview-experience-question-post-by-"+username+"-"+randomString);
       console.log("Generated Slug: ", slug);
 
       const { data, error } = await supabase
@@ -77,6 +80,53 @@ const handleExperienceUpsert = async (req, res) => {
 
       if (roundError) {
         return res.status(500).json({ error: roundError.message });
+      }
+      
+      // Award 100 coins to the user for posting a new interview experience
+      try {
+        // First, fetch current user tokens
+        const { data: userData, error: userError } = await supabase
+          .from('user_tokens')
+          .select('coins')
+          .eq('user_id', user.id)
+          .single();
+          
+        const currentCoins = userData?.coins || 0;
+        console.log("Current Coins: ", currentCoins);
+        // Update or insert user tokens
+        await supabase
+          .from('user_tokens')
+          .upsert([{
+            user_id: user.id,
+            coins: currentCoins + 100 // Add 100 coins for posting
+          }], { 
+            onConflict: 'user_id' // Specify the constraint to use for conflict detection
+          });
+        
+        // Record the transaction in the ledger
+        const { data: transactionData, error: transactionError } = await supabase
+          .from('token_transactions')
+          .insert([{
+            user_id: user.id,
+            amount: 100,
+            transaction_type: 'earn',
+            description: `Earned coins for posting interview experience: ${company_name}`,
+            source: 'interview_post',
+            reference_id: experience.id // Now using the actual experience ID
+          }])
+          .select();
+          
+        if (transactionError) {
+          console.error('Error recording transaction:', transactionError);
+          console.log('Transaction error details:', JSON.stringify(transactionError));
+        } else {
+          console.log("Successfully recorded transaction:", transactionData);
+        }
+
+        console.log("Successfully awarded 100 coins to user: ", user.id);
+      } catch (tokenError) {
+        console.error('Error awarding tokens:', tokenError);
+        // Don't fail the request if token awarding fails
       }
 
     } else if (req.method === 'PUT') {
@@ -224,17 +274,79 @@ export default async function handler(req, res) {
           if (userLikeError) {
             return res.status(500).json({ error: userLikeError.message });
           }
+          
+          // Check if user is premium
+          const { data: userData, error: userError } = await supabase
+            .from('user_tokens')
+            .select('premium_until')
+            .eq('user_id', userId)
+            .single();
+          
+          const isPremium = userData?.premium_until && new Date(userData.premium_until) > new Date();
+          let contentRestricted = false;
+          let viewedExperienceIds = new Set();
+          
+          // Count and possibly update views for non-premium users
+          if (!isPremium) {
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            // Get all viewed experiences for today in one query
+            const { data: viewedExperiences, error: viewedError } = await supabase
+              .from('content_views')
+              .select('experience_id')
+              .eq('user_id', userId)
+              .eq('view_date', today);
+              
+            if (!viewedError && viewedExperiences) {
+              viewedExperienceIds = new Set(viewedExperiences.map(v => v.experience_id));
+              // Count today's views
+              const viewCount = viewedExperiences.length;
+              console.log("Today's view count: ", viewCount);
+              // Set content restriction flag based on view limits
+              contentRestricted = viewCount >= DAILY_VIEW_LIMIT;
+              // Find the experience to count - either the single requested experience or first unviewed in dashboard
+              const experienceToCount = experiences.find(exp => exp.user_id !== userId && !viewedExperienceIds.has(exp.id)); // In dashboard mode, find first unviewed
+              if (experienceToCount && viewCount < DAILY_VIEW_LIMIT) {
+                console.log("Experience to count: ", experienceToCount);
+                // Only record the view if it's not posted by the user and not already viewed
+                  await supabase
+                    .from('content_views')
+                    .upsert([{
+                      user_id: userId,
+                      experience_id: experienceToCount.id,
+                      experience_type: 'interview_experience',
+                      view_date: today
+                    }], { 
+                      onConflict: 'user_id, experience_id, view_date'
+                    });
+                  
+                  // Update the viewedExperienceIds set to include this new view
+                  viewedExperienceIds.add(experienceToCount.id);
+              }
+            }
+          }
   
           // Convert userLikes array to a Set for faster lookup
           const likedExperienceIds = new Set(userLikes.map(like => like.experience_id));
-  
-          // Update each experience with the user_liked flag
+          // Make sure viewedExperienceIds is defined even for premium users
+          viewedExperienceIds = viewedExperienceIds || new Set();
+          
+          // Update each experience with the user_liked flag and handle content restriction
           experiences.forEach(exp => {
             exp.user_liked = likedExperienceIds.has(exp.id);
-          });
-          // Set posted_by_user to true if the experience belongs to the user
-          experiences.forEach(exp => {
             exp.posted_by_user = exp.user_id === userId;
+            exp.alreadyViewed = viewedExperienceIds.has(exp.id);
+            
+            // If content should be restricted, this isn't user's own post, and hasn't been viewed today
+            if (contentRestricted && !exp.posted_by_user && !exp.alreadyViewed) {
+              exp.content_restricted = true;
+              // Clear the content from all rounds except the title/type
+              exp.rounds = exp.rounds.map(round => ({
+                id: round.id,
+                round_type: round.round_type,
+                details: '<p>Content hidden due to daily view limit. Upgrade to premium or post content to earn more views.</p>'
+              }));
+            }
           });
         } else {
           // If no userId is provided, set user_liked and posted_by_user to false for all

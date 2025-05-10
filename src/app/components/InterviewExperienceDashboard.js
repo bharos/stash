@@ -4,8 +4,10 @@ import Select from 'react-select';
 import debounce from 'lodash.debounce';
 import { useUser } from '../context/UserContext'; // Use the custom hook to access user context
 import { useDarkMode } from '../context/DarkModeContext';
+import { useViewLimitContext } from '../context/ViewLimitContext'; // Import view limit context directly
 import Experience from './Experience';
 import TrendingPosts from './TrendingPosts';
+import ContentPaywall from './ContentPaywall';
 import supabase from '../utils/supabaseClient';
 
 const InterviewExperienceDashboard = () => {
@@ -21,6 +23,19 @@ const InterviewExperienceDashboard = () => {
   const [sortBy, setSortBy] = useState('recent'); // 'recent', 'popular', 'trending'
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+  
+  // Access view limit data and functions directly from context
+  const { viewLimitData, fetchViewLimitData } = useViewLimitContext();
+
+  // State to track whether to show the paywall
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  // Update showPaywall when viewLimitData changes
+  useEffect(() => {
+    // Check if user has reached the view limit and is not premium
+    const shouldShowPaywall = user?.user_id && viewLimitData.isLimitReached && !viewLimitData.isPremium;
+    setShowPaywall(shouldShowPaywall);
+  }, [viewLimitData, user?.user_id]);
 
   const fetchData = useCallback(async () => {
     if (companyOptions.length > 0) return; // Only fetch if companyOptions is empty
@@ -120,6 +135,12 @@ const fetchExperiences = useCallback(
       console.error('Error fetching experiences:', error);
     } finally {
       setExperiencesLoading(false);
+      
+      // Fetch the latest view limit data to update the UI
+      // This ensures the UI stays in sync after dashboard views are counted
+      if (user?.user_id) {
+        fetchViewLimitData();
+      }
     }
   }, 500), // 500ms debounce delay
   [] // Empty dependency array ensures that 'fetchExperiences' doesn't get recreated on every render
@@ -197,7 +218,8 @@ const fetchTags = useCallback(async () => {
 useEffect(() => {
   fetchTrendingPosts();
   fetchTags();
-}, [fetchTrendingPosts, fetchTags]);
+    fetchViewLimitData();
+}, [fetchTrendingPosts, fetchTags, user?.user_id]); // fetchViewLimitData intentionally omitted
 
   return (
     <div className={`dashboard-container p-2 sm:p-6 space-y-6 ${darkMode ? 'bg-gray-900' : 'bg-gray-50'}`}>
@@ -208,155 +230,175 @@ useEffect(() => {
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Content Area */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Filters Section */}
-          <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm p-4 space-y-4 border`}>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Select
-                value={companyName ? { label: companyName, value: companyName } : null}
-                onChange={(selectedOption) => setCompanyName(selectedOption?.value || '')}
-                options={companyOptions}
-                placeholder="Company Name"
-                className="w-full sm:w-1/2"
-                isClearable
-                isSearchable
-                theme={(theme) => ({
-                  ...theme,
-                  colors: {
-                    ...theme.colors,
-                    primary: '#3b82f6',
-                    primary75: '#60a5fa',
-                    primary50: '#93c5fd',
-                    primary25: '#bfdbfe',
-                    neutral0: darkMode ? '#1f2937' : '#ffffff',
-                    neutral5: darkMode ? '#374151' : '#f3f4f6',
-                    neutral10: darkMode ? '#4b5563' : '#e5e7eb',
-                    neutral20: darkMode ? '#6b7280' : '#d1d5db',
-                    neutral30: darkMode ? '#9ca3af' : '#9ca3af',
-                    neutral40: darkMode ? '#d1d5db' : '#6b7280',
-                    neutral50: darkMode ? '#e5e7eb' : '#4b5563',
-                    neutral60: darkMode ? '#f3f4f6' : '#374151',
-                    neutral70: darkMode ? '#f9fafb' : '#1f2937',
-                    neutral80: darkMode ? '#ffffff' : '#111827',
-                    neutral90: darkMode ? '#ffffff' : '#111827',
-                  },
-                })}
-              />
-              <input
-                type="text"
-                placeholder="Level search"
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                className={`w-full sm:w-1/2 p-2 border rounded-lg ${
-                  darkMode 
-                    ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                    : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                }`}
-              />
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="lg:col-span-3">
+          {/* View Limit Warning - Only show when close to limit but not when paywall is displayed */}
+          {user?.user_id && !viewLimitData.isPremium && viewLimitData.remainingViews <= 1 && !viewLimitData.isLimitReached && (
+            <div className={`p-4 mb-4 border ${darkMode ? 'bg-gray-800 border-yellow-600' : 'bg-yellow-50 border-yellow-200'} rounded-lg`}>
+              <div className="flex items-start">
+                <div className="flex-shrink-0 mt-0.5">
+                  <span className="material-icons text-yellow-500">warning</span>
+                </div>
+                <div className="ml-3">
+                  <h3 className={`text-sm font-medium ${darkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+                    Almost at daily view limit
+                  </h3>
+                  <div className={`mt-1 text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <p>You have {viewLimitData.remainingViews} view left today. Consider posting content to earn coins or upgrading to premium.</p>
+                  </div>
+                </div>
+              </div>
             </div>
-            
-            {/* Tags Filter */}
-            <div className="flex flex-wrap gap-2">
-              {availableTags.map((tag) => (
+          )}
+          
+          <div className="space-y-4">
+            {/* Search filters */}
+            <div className={`${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm p-4 space-y-4 border`}>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Select
+                  value={companyName ? { label: companyName, value: companyName } : null}
+                  onChange={(selectedOption) => setCompanyName(selectedOption?.value || '')}
+                  options={companyOptions}
+                  placeholder="Company Name"
+                  className="w-full sm:w-1/2"
+                  isClearable
+                  isSearchable
+                  theme={(theme) => ({
+                    ...theme,
+                    colors: {
+                      ...theme.colors,
+                      primary: '#3b82f6',
+                      primary75: '#60a5fa',
+                      primary50: '#93c5fd',
+                      primary25: '#bfdbfe',
+                      neutral0: darkMode ? '#1f2937' : '#ffffff',
+                      neutral5: darkMode ? '#374151' : '#f3f4f6',
+                      neutral10: darkMode ? '#4b5563' : '#e5e7eb',
+                      neutral20: darkMode ? '#6b7280' : '#d1d5db',
+                      neutral30: darkMode ? '#9ca3af' : '#9ca3af',
+                      neutral40: darkMode ? '#d1d5db' : '#6b7280',
+                      neutral50: darkMode ? '#e5e7eb' : '#4b5563',
+                      neutral60: darkMode ? '#f3f4f6' : '#374151',
+                      neutral70: darkMode ? '#f9fafb' : '#1f2937',
+                      neutral80: darkMode ? '#ffffff' : '#111827',
+                      neutral90: darkMode ? '#ffffff' : '#111827',
+                    },
+                  })}
+                />
+                <input
+                  type="text"
+                  placeholder="Level search"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  className={`w-full sm:w-1/2 p-2 border rounded-lg ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
+                />
+              </div>
+              
+              {/* Tags Filter */}
+              <div className="flex flex-wrap gap-2">
+                {availableTags.map((tag) => (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      setSelectedTags(prev => 
+                        prev.includes(tag) 
+                          ? prev.filter(t => t !== tag)
+                          : [...prev, tag]
+                      );
+                    }}
+                    className={`px-3 py-1 rounded-full text-sm ${
+                      selectedTags.includes(tag)
+                        ? 'bg-blue-600 text-white'
+                        : darkMode
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+
+              {/* Sort Options */}
+              <div className="flex gap-4">
                 <button
-                  key={tag}
-                  onClick={() => {
-                    setSelectedTags(prev => 
-                      prev.includes(tag) 
-                        ? prev.filter(t => t !== tag)
-                        : [...prev, tag]
-                    );
-                  }}
-                  className={`px-3 py-1 rounded-full text-sm ${
-                    selectedTags.includes(tag)
+                  onClick={() => setSortBy('recent')}
+                  className={`px-4 py-2 rounded-lg ${
+                    sortBy === 'recent'
                       ? 'bg-blue-600 text-white'
                       : darkMode
                         ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                   }`}
                 >
-                  {tag}
+                  Recent
                 </button>
-              ))}
+                <button
+                  onClick={() => setSortBy('popular')}
+                  className={`px-4 py-2 rounded-lg ${
+                    sortBy === 'popular'
+                      ? 'bg-blue-600 text-white'
+                      : darkMode
+                        ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  Popular
+                </button>
+              </div>
             </div>
 
-            {/* Sort Options */}
-            <div className="flex gap-4">
-              <button
-                onClick={() => setSortBy('recent')}
-                className={`px-4 py-2 rounded-lg ${
-                  sortBy === 'recent'
-                    ? 'bg-blue-600 text-white'
-                    : darkMode
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Recent
-              </button>
-              <button
-                onClick={() => setSortBy('popular')}
-                className={`px-4 py-2 rounded-lg ${
-                  sortBy === 'popular'
-                    ? 'bg-blue-600 text-white'
-                    : darkMode
-                      ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Popular
-              </button>
+            {/* Experiences List */}
+            <div className="experience-list space-y-6">
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className={`mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading company options...</p>
+                </div>
+              ) : experiencesLoading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className={`mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading experiences...</p>
+                </div>
+              ) : !companyName ? (
+                <>
+                  <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm border`}>
+                    <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Choose a company to view interview experiences 👀</h3>
+                  </div>
+                  {/* Show Trending Posts on mobile when no company is selected */}
+                  <div className="lg:hidden">
+                    <TrendingPosts />
+                  </div>
+                </>
+              ) : experiences.length > 0 ? (
+                <>
+                  {experiences.map((experience) => (
+                    <Experience
+                      key={experience.id}
+                      experience={experience}
+                      updateExperience={updateExperience}
+                      showOpenInNewTabButton={true}
+                    />
+                  ))}
+                  <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-4`}>🏁 You've reached the end 🔚</p>
+                </>
+              ) : (
+                <>
+                  <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm border`}>
+                    <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>No experiences available 🤐</h3>
+                    <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Try selecting a different company or level</p>
+                  </div>
+                  {/* Show Trending Posts on mobile when no experiences are found */}
+                  <div className="lg:hidden">
+                    <TrendingPosts />
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-
-          {/* Experiences List */}
-          <div className="experience-list space-y-6">
-            {loading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className={`mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading company options...</p>
-              </div>
-            ) : experiencesLoading ? (
-              <div className="text-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p className={`mt-4 ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Loading experiences...</p>
-              </div>
-            ) : !companyName ? (
-              <>
-                <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm border`}>
-                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Choose a company to view interview experiences 👀</h3>
-                </div>
-                {/* Show Trending Posts on mobile when no company is selected */}
-                <div className="lg:hidden">
-                  <TrendingPosts />
-                </div>
-              </>
-            ) : experiences.length > 0 ? (
-              <>
-                {experiences.map((experience) => (
-                  <Experience
-                    key={experience.id}
-                    experience={experience}
-                    updateExperience={updateExperience}
-                    showOpenInNewTabButton={true}
-                  />
-                ))}
-                <p className={`text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'} mt-4`}>🏁 You've reached the end 🔚</p>
-              </>
-            ) : (
-              <>
-                <div className={`text-center py-12 ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} rounded-lg shadow-sm border`}>
-                  <h3 className={`text-xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'} mb-2`}>No experiences available 🤐</h3>
-                  <p className={darkMode ? 'text-gray-400' : 'text-gray-600'}>Try selecting a different company or level</p>
-                </div>
-                {/* Show Trending Posts on mobile when no experiences are found */}
-                <div className="lg:hidden">
-                  <TrendingPosts />
-                </div>
-              </>
-            )}
           </div>
         </div>
 
@@ -365,6 +407,13 @@ useEffect(() => {
           <TrendingPosts />
         </div>
       </div>
+
+      {/* Content Paywall - Shown when view limit is reached */}
+      {showPaywall && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <ContentPaywall />
+        </div>
+      )}
     </div>
   );
 };

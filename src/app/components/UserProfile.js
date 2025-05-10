@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation';
 import { useDarkMode } from '../context/DarkModeContext';
 import supabase from '../utils/supabaseClient';
 import Link from 'next/link';
+import UserTokens from './UserTokens';
+import TokenHistory from './TokenHistory';
+import PremiumBadge from './PremiumBadge';
 
 const UserProfile = () => {
   const { user, setUser } = useUser();
@@ -24,6 +27,7 @@ const UserProfile = () => {
   const router = useRouter();
   const { darkMode } = useDarkMode();
   const [isUnsubscribed, setIsUnsubscribed] = useState(false);
+  const isNewUser = !user.username; // Check if username is not set
 
   const fetchUserActivityData = async () => {
     try {
@@ -158,9 +162,22 @@ const UserProfile = () => {
 
       const result = await response.json();
       if (response.ok) {
-        setSuccessMessage('Settings updated successfully!');
+        const isNewUserSetting = !user.username;
+        
+        // Update user context with new username
         setUser({ ...user, username: newUsername });
-        router.push('/'); // Redirect after update
+        
+        if (isNewUserSetting) {
+          // For new users, show different message and redirect to home
+          setSuccessMessage('Username set successfully! You can now use all features of Stash.');
+          // Allow the success message to be visible briefly before redirect
+          setTimeout(() => {
+            router.push('/');
+          }, 1500);
+        } else {
+          // For existing users updating settings
+          setSuccessMessage('Settings updated successfully!');
+        }
       } else {
         setError(result.error ? result.error : 'Something went wrong. Failed to update settings.');
       }
@@ -172,20 +189,32 @@ const UserProfile = () => {
 
   return (
     <div className={`min-h-screen flex flex-col items-center ${darkMode ? 'bg-gray-900' : 'bg-gray-100'} p-6`}>
+      {/* Welcome banner for new users */}
+      {isNewUser && (
+        <div className={`w-full max-w-4xl mb-6 p-6 ${darkMode ? 'bg-blue-900 text-white' : 'bg-blue-100 text-blue-800'} rounded-lg shadow-lg text-center border ${darkMode ? 'border-blue-800' : 'border-blue-200'}`}>
+          <h2 className="text-2xl font-bold mb-2">Welcome to Stash!</h2>
+          <p className="text-lg">Please set your username below to start using all features of Stash.</p>
+        </div>
+      )}
+      
+      {/* User Tokens Section */}
+      <UserTokens />
+      
       {/* Settings Section */}
-      <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border`}>
-        <h2 className={`text-2xl font-semibold text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-          Settings
+      <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border ${isNewUser ? 'ring-4 ring-blue-500 ring-opacity-50' : ''}`}>
+        <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          {isNewUser ? 'Set Your Username' : 'Settings'}
         </h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
         <form onSubmit={handleSubmit} className="space-y-1">
           <label 
             htmlFor="username" 
-            className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block text-sm font-medium`}
+            className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block text-sm font-medium ${isNewUser ? 'font-bold' : ''}`}
           >
-            {user.username ? 'Change Username' : 'Set Username'}
+            {isNewUser ? 'Username (required)' : (user.username ? 'Change Username' : 'Set Username')}
           </label>
+          {isNewUser && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>Choose a unique username to identify yourself in the community</p>}
           <input
             id="username"
             type="text"
@@ -196,7 +225,8 @@ const UserProfile = () => {
               darkMode 
                 ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
                 : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-            }`}
+            } ${isNewUser ? 'border-blue-500' : ''}`}
+            placeholder={isNewUser ? "Enter a username" : ""}
             required
           />
           <div className="flex items-center justify-between mt-4">
@@ -208,8 +238,8 @@ const UserProfile = () => {
               className="form-checkbox h-5 w-5 text-blue-600"
             />
           </div>
-          <button type="submit" className="w-full py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-            Save Changes
+          <button type="submit" className={`w-full py-2 ${isNewUser ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors mt-2`}>
+            {isNewUser ? 'Set Username & Continue' : 'Save Changes'}
           </button>
         </form>
       </div>
@@ -218,12 +248,12 @@ const UserProfile = () => {
         {/* Tab Navigation */}
         <div className="mb-6">
           <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Your Activity</h2>
-          <div className={`flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'}`}>
-            {["experiences", "general posts", "likes", "comments"].map((tab) => (
+          <div className={`flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'} overflow-x-auto`}>
+            {["experiences", "general posts", "likes", "comments", "transactions"].map((tab) => (
               <div
                 key={tab}
                 onClick={() => setActiveTab(tab)}
-                className={`cursor-pointer py-2 text-sm font-medium transition-colors ${
+                className={`cursor-pointer py-2 text-sm font-medium transition-colors whitespace-nowrap ${
                   activeTab === tab
                     ? `${darkMode ? 'text-blue-400 border-b-4 border-blue-400' : 'text-blue-600 border-b-4 border-blue-600'}`
                     : `${darkMode ? 'text-gray-400 hover:text-gray-300 border-b-2 border-transparent' : 'text-gray-600 hover:text-blue-600 border-b-2 border-transparent'}`
@@ -415,6 +445,12 @@ const UserProfile = () => {
                       Next
                     </button>
                   </div>
+                </div>
+              )}
+              
+              {activeTab === "transactions" && (
+                <div className="mt-4">
+                  <TokenHistory />
                 </div>
               )}
             </>
