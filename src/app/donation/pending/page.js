@@ -2,8 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { Suspense } from 'react';
 
-export default function PendingVerificationPage() {
+function PendingVerificationContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get('ref');
   
@@ -49,5 +50,20 @@ export default function PendingVerificationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PendingVerificationPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto py-10 px-4 text-center">
+        <div className="animate-pulse flex justify-center">
+          <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900"></div>
+        </div>
+        <p className="mt-4">Loading...</p>
+      </div>
+    }>
+      <PendingVerificationContent />
+    </Suspense>
   );
 }

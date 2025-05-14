@@ -1,12 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useViewLimitContext } from '../../context/ViewLimitContext';
 import { useDarkMode } from '../../context/DarkModeContext';
 import supabase from '../../utils/supabaseClient';
 
-export default function DonationSuccessPage() {
+function DonationSuccessContent() {
   const [status, setStatus] = useState('checking');
   const [donationData, setDonationData] = useState(null);
   const { fetchViewLimitData } = useViewLimitContext();
@@ -175,5 +175,25 @@ export default function DonationSuccessPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function DonationSuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-md w-full rounded-xl shadow-lg overflow-hidden bg-white dark:bg-gray-800 p-8 text-center">
+          <div className="flex justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+          </div>
+          <h1 className="text-xl font-bold mt-6">Loading donation details...</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
+            Please wait while we verify your donation.
+          </p>
+        </div>
+      </div>
+    }>
+      <DonationSuccessContent />
+    </Suspense>
   );
 }

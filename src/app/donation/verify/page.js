@@ -2,8 +2,9 @@
 
 import { useSearchParams } from 'next/navigation';
 import DonationVerification from '../../components/DonationVerification';
+import { Suspense } from 'react';
 
-export default function VerifyDonationPage() {
+function VerifyDonationContent() {
   const searchParams = useSearchParams();
   const reference = searchParams.get('ref');
   
@@ -38,5 +39,21 @@ export default function VerifyDonationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyDonationPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto py-10 px-4 text-center">
+        <h1 className="text-3xl font-bold mb-8">Verify Your Donation</h1>
+        <div className="animate-pulse flex justify-center">
+          <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900"></div>
+        </div>
+        <p className="mt-4">Loading verification form...</p>
+      </div>
+    }>
+      <VerifyDonationContent />
+    </Suspense>
   );
 }
