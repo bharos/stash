@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import { Inter } from 'next/font/google';
 import { DarkModeProvider, useDarkMode } from './context/DarkModeContext';
 import { ViewLimitProvider } from './context/ViewLimitContext';
+import { Suspense } from 'react';
 import Sidebar from './components/Sidebar';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -37,7 +38,14 @@ function RootLayoutContent({ children }) {
                 <ActiveMenuProvider>
                   <Sidebar />
                   {useClientHome ? (
-                    <ClientHome>{children}</ClientHome>
+                    <Suspense fallback={
+                      <div className="flex items-center justify-center h-screen">
+                        <div className="animate-pulse h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900"></div>
+                        <p className="ml-4">Loading...</p>
+                      </div>
+                    }>
+                      <ClientHome>{children}</ClientHome>
+                    </Suspense>
                   ) : (
                     children
                   )}

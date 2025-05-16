@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { useDarkMode } from '../context/DarkModeContext';
 import { useActiveMenu } from '../context/ActiveMenuContext';
 import { useRouter } from 'next/navigation';
+import DonationComponent from './DonationComponent';
 
 const ContentPaywall = ({ remainingViews, onClose }) => {
   const { darkMode } = useDarkMode();
   const router = useRouter();
   const { setActiveMenu } = useActiveMenu();
-  const [activeTab, setActiveTab] = useState('post'); // 'post' or 'premium'
+  const [activeTab, setActiveTab] = useState('post'); // 'post', 'premium', or 'donate'
   const isViewsLeft = remainingViews > 0;
 
   const handlePostContent = () => {
@@ -84,7 +85,7 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
               onClick={() => setActiveTab('post')}
             >
               <span className="material-icons text-sm">create</span>
-              <span className="font-medium">Post Content</span>
+              <span className="font-medium">Post</span>
             </button>
             <button
               className={`flex-1 py-2 rounded-full transition-all duration-200 flex items-center justify-center gap-2 ${
@@ -95,7 +96,18 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
               onClick={() => setActiveTab('premium')}
             >
               <span className="material-icons text-sm">stars</span>
-              <span className="font-medium">Go Premium</span>
+              <span className="font-medium">Premium</span>
+            </button>
+            <button
+              className={`flex-1 py-2 rounded-full transition-all duration-200 flex items-center justify-center gap-2 ${
+                activeTab === 'donate'
+                  ? `${darkMode ? 'bg-green-600 text-white shadow-md' : 'bg-green-500 text-white shadow-md'}`
+                  : `${darkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-200 text-gray-600'}`
+              }`}
+              onClick={() => setActiveTab('donate')}
+            >
+              <span className="material-icons text-sm">favorite</span>
+              <span className="font-medium">Donate</span>
             </button>
           </div>
         </div>
@@ -130,7 +142,7 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
                 Start Posting
               </button>
             </div>
-          ) : (
+          ) : activeTab === 'premium' ? (
             <div>
               <h3 className="text-lg font-medium mb-3">Premium Benefits</h3>
               <p className="mb-4 text-gray-500 dark:text-gray-400">
@@ -154,6 +166,9 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
                 Get Premium Access
               </button>
             </div>
+          ) : (
+            // Donation Tab
+            <DonationComponent />
           )}
         </div>
 
