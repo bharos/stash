@@ -26,33 +26,36 @@ const NotificationSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
+      // Get the session token for the API request
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       if (sessionError || !sessionData?.session) {
         console.error('Error getting user session:', sessionError);
         return;
       }
-
-      const { data, error } = await supabase
-        .from('notification_settings')
-        .select('*')
-        .eq('user_id', sessionData.session.user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 means no rows returned
-        console.error('Error fetching notification settings:', error);
+      
+      // Make the API request to get notification settings
+      const response = await fetch('/api/notificationSettings', {
+        headers: {
+          'Authorization': `Bearer ${sessionData.session.access_token}`
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        console.error('Error fetching notification settings:', data.error);
         return;
       }
-
-      if (data) {
-        setSettings({
-          email_new_comments: data.email_new_comments,
-          email_comment_replies: data.email_comment_replies,
-          email_post_likes: data.email_post_likes,
-          email_comment_likes: data.email_comment_likes,
-          email_frequency: data.email_frequency,
-        });
-      }
+      
+      // Update state with the fetched settings
+      setSettings({
+        email_new_comments: data.email_new_comments,
+        email_comment_replies: data.email_comment_replies,
+        email_post_likes: data.email_post_likes,
+        email_comment_likes: data.email_comment_likes,
+        email_frequency: data.email_frequency,
+      });
     } catch (err) {
       console.error('Unexpected error fetching settings:', err);
     } finally {
@@ -80,28 +83,29 @@ const NotificationSettings = () => {
       setError('');
       setSuccess(false);
 
+      // Get the session token for the API request
       const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !sessionData?.session) {
         setError('You must be logged in to update notification settings');
         return;
       }
-
-      const userId = sessionData.session.user.id;
-
-      const { error } = await supabase
-        .from('notification_settings')
-        .upsert({
-          user_id: userId,
-          ...settings,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-
-      if (error) {
+      
+      // Make the API request to save notification settings
+      const response = await fetch('/api/notificationSettings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${sessionData.session.access_token}`
+        },
+        body: JSON.stringify(settings)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
         setError('Failed to save notification settings');
-        console.error('Error saving notification settings:', error);
+        console.error('Error saving notification settings:', data.error);
         return;
       }
 
@@ -141,9 +145,11 @@ const NotificationSettings = () => {
               className="sr-only"
             />
             <div 
+              onClick={() => handleToggle('email_new_comments')}
               className={`block h-6 rounded-full ${settings.email_new_comments ? 'bg-blue-500' : darkMode ? 'bg-gray-700' : 'bg-gray-300'} cursor-pointer transition-colors duration-200`}
             ></div>
             <div 
+              onClick={() => handleToggle('email_new_comments')}
               className={`absolute left-0 top-0 h-6 w-6 transform rounded-full bg-white shadow transition-transform duration-200 ${settings.email_new_comments ? 'translate-x-6' : ''}`}
             ></div>
           </div>
@@ -165,9 +171,11 @@ const NotificationSettings = () => {
               className="sr-only"
             />
             <div 
+              onClick={() => handleToggle('email_comment_replies')}
               className={`block h-6 rounded-full ${settings.email_comment_replies ? 'bg-blue-500' : darkMode ? 'bg-gray-700' : 'bg-gray-300'} cursor-pointer transition-colors duration-200`}
             ></div>
             <div 
+              onClick={() => handleToggle('email_comment_replies')}
               className={`absolute left-0 top-0 h-6 w-6 transform rounded-full bg-white shadow transition-transform duration-200 ${settings.email_comment_replies ? 'translate-x-6' : ''}`}
             ></div>
           </div>
@@ -189,9 +197,11 @@ const NotificationSettings = () => {
               className="sr-only"
             />
             <div 
+              onClick={() => handleToggle('email_post_likes')}
               className={`block h-6 rounded-full ${settings.email_post_likes ? 'bg-blue-500' : darkMode ? 'bg-gray-700' : 'bg-gray-300'} cursor-pointer transition-colors duration-200`}
             ></div>
             <div 
+              onClick={() => handleToggle('email_post_likes')}
               className={`absolute left-0 top-0 h-6 w-6 transform rounded-full bg-white shadow transition-transform duration-200 ${settings.email_post_likes ? 'translate-x-6' : ''}`}
             ></div>
           </div>
@@ -213,9 +223,11 @@ const NotificationSettings = () => {
               className="sr-only"
             />
             <div 
+              onClick={() => handleToggle('email_comment_likes')}
               className={`block h-6 rounded-full ${settings.email_comment_likes ? 'bg-blue-500' : darkMode ? 'bg-gray-700' : 'bg-gray-300'} cursor-pointer transition-colors duration-200`}
             ></div>
             <div 
+              onClick={() => handleToggle('email_comment_likes')}
               className={`absolute left-0 top-0 h-6 w-6 transform rounded-full bg-white shadow transition-transform duration-200 ${settings.email_comment_likes ? 'translate-x-6' : ''}`}
             ></div>
           </div>

@@ -87,11 +87,9 @@ export default async function handler(req, res) {
           .single();
           
         if (!experienceError && experienceData) {
-          // Don't notify if commenting on own post
-          if (experienceData.user_id !== user.id) {
             // Determine notification type and recipient
             let notificationType, recipientId, postTitle;
-            
+            console.log('parent_comment_id:', parent_comment_id);
             // If this is a reply to another comment
             if (parent_comment_id) {
               // Get the parent comment's author
@@ -137,6 +135,7 @@ export default async function handler(req, res) {
                     emailed: false
                   };
                   
+                  console.log('Creating reply notification:', notification);
                   // Create notification and send email
                   await createNotificationAndEmail(
                     notification,
@@ -153,53 +152,57 @@ export default async function handler(req, res) {
                 }
               }
             } else {
-              // This is a comment on a post
-              notificationType = 'comment';
-              recipientId = experienceData.user_id;
-              
-              // Get the post title
-              if (experienceData.type === 'general_post') {
-                const { data: postData } = await supabase
-                  .from('general_posts')
-                  .select('title')
-                  .eq('experience_id', experience_id)
-                  .single();
-                  
-                postTitle = postData?.title || 'General Post';
+              // This is a comment on a post (not a reply)
+              // Don't notify if commenting on own post
+              if (experienceData.user_id === user.id) {
+                console.log('User commenting on their own post, skipping notification');
               } else {
-                postTitle = experienceData.company_name || 'Interview Experience';
+                notificationType = 'comment';
+                recipientId = experienceData.user_id;
+                
+                // Get the post title
+                if (experienceData.type === 'general_post') {
+                  const { data: postData } = await supabase
+                    .from('general_posts')
+                    .select('title')
+                    .eq('experience_id', experience_id)
+                    .single();
+                    
+                  postTitle = postData?.title || 'General Post';
+                } else {
+                  postTitle = experienceData.company_name || 'Interview Experience';
+                }
+                
+                // Generate post URL
+                const postUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/experience/${experience_id}/${experienceData.slug || ''}`;
+                
+                // Create notification object
+                const notification = {
+                  user_id: recipientId,
+                  type: 'comment',
+                  content_id: newComment.id.toString(), // Convert to string
+                  content_type: 'comment',
+                  actor_id: user.id,
+                  actor_username: username,
+                  seen: false,
+                  emailed: false
+                };
+                
+                // Create notification and send email
+                await createNotificationAndEmail(
+                  notification,
+                  {
+                    postTitle,
+                    commenterUsername: username,
+                    commentText: comment,
+                    postUrl
+                  },
+                  recipientId,
+                  'comment',
+                  token
+                );
               }
-              
-              // Generate post URL
-              const postUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/experience/${experience_id}/${experienceData.slug || ''}`;
-              
-              // Create notification object
-              const notification = {
-                user_id: recipientId,
-                type: 'comment',
-                content_id: newComment.id.toString(), // Convert to string
-                content_type: 'comment',
-                actor_id: user.id,
-                actor_username: username,
-                seen: false,
-                emailed: false
-              };
-              
-              // Create notification and send email
-              await createNotificationAndEmail(
-                notification,
-                {
-                  postTitle,
-                  commenterUsername: username,
-                  commentText: comment,
-                  postUrl
-                },
-                recipientId,
-                'comment',
-                token
-              );
             }
-          }
         }
       } catch (notificationError) {
         // Log but don't fail the request if notification fails

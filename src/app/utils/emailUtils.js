@@ -79,7 +79,7 @@ export function generateCommentNotificationEmail(data) {
       <p style="color: #718096; font-size: 0.9em; margin-top: 30px;">
         You're receiving this because you opted in to notifications for your posts on Stash.
         <br>
-        To unsubscribe, update your <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile">notification preferences</a>.
+        To unsubscribe, update your <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}">notification preferences</a>.
       </p>
     </div>
   `;
@@ -124,7 +124,7 @@ export function generateReplyNotificationEmail(data) {
       <p style="color: #718096; font-size: 0.9em; margin-top: 30px;">
         You're receiving this because you opted in to notifications for replies to your comments on Stash.
         <br>
-        To unsubscribe, update your <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile">notification preferences</a>.
+        To unsubscribe, update your <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}">notification preferences</a>.
       </p>
     </div>
   `;
@@ -173,7 +173,7 @@ export function generateLikeNotificationEmail(data) {
       <p style="color: #718096; font-size: 0.9em; margin-top: 30px;">
         You're receiving this because you opted in to notifications for likes on Stash.
         <br>
-        To unsubscribe, update your <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/profile">notification preferences</a>.
+        To unsubscribe, update your <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}">notification preferences</a>.
       </p>
     </div>
   `;

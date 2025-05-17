@@ -75,6 +75,7 @@ export async function createNotificationAndEmail(notification, emailData, recipi
     
     // Default to sending emails if no settings found
     let shouldSendEmail = true;
+    let emailFrequency = 'immediate'; // Default frequency
     
     if (!settingsError && settings) {
       // Check if user wants to receive this type of notification
@@ -94,11 +95,30 @@ export async function createNotificationAndEmail(notification, emailData, recipi
         default:
           shouldSendEmail = true;
       }
+      
+      // Get user's preferred email frequency
+      emailFrequency = settings.email_frequency || 'immediate';
     }
 
     // If user settings say not to send, stop here
     if (!shouldSendEmail) {
       console.log(`User ${recipientId} has opted out of ${notificationType} emails`);
+      return;
+    }
+    
+    // Mark notification as ready for emailing based on frequency preference
+    await supabase
+      .from('notifications')
+      .update({ 
+        email_frequency: emailFrequency,
+        // Only mark as emailed if we're sending immediately
+        emailed: emailFrequency === 'immediate' 
+      })
+      .eq('id', data[0].id);
+    
+    // If not immediate, store for later digest and don't send now
+    if (emailFrequency !== 'immediate') {
+      console.log(`Notification for user ${recipientId} will be sent in ${emailFrequency} digest`);
       return;
     }
     
