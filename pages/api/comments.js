@@ -1,4 +1,5 @@
 import supabase from '../../src/app/utils/supabaseClient';
+import { createNotificationAndEmail } from '../../src/app/utils/notificationUtils';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
@@ -71,10 +72,140 @@ export default async function handler(req, res) {
   
       const newComment = data[0]; // Get the newly inserted comment
   
-    // Add required fields like 'is_op' and 'replies'
-    newComment.is_op = isOp;
-    newComment.replies = []; // Initialize 'replies' as an empty array
-    newComment.posted_by_user = true;
+      // Add required fields like 'is_op' and 'replies'
+      newComment.is_op = isOp;
+      newComment.replies = []; // Initialize 'replies' as an empty array
+      newComment.posted_by_user = true;
+      
+      // Create notification if it's a new comment or reply
+      try {
+        // Get post/experience details for the notification
+        const { data: experienceData, error: experienceError } = await supabase
+          .from('experiences')
+          .select('user_id, company_name, slug, type')
+          .eq('id', experience_id)
+          .single();
+          
+        if (!experienceError && experienceData) {
+          // Don't notify if commenting on own post
+          if (experienceData.user_id !== user.id) {
+            // Determine notification type and recipient
+            let notificationType, recipientId, postTitle;
+            
+            // If this is a reply to another comment
+            if (parent_comment_id) {
+              // Get the parent comment's author
+              const { data: parentCommentData, error: parentCommentError } = await supabase
+                .from('comments')
+                .select('user_id, username')
+                .eq('id', parent_comment_id)
+                .single();
+                
+              if (!parentCommentError && parentCommentData) {
+                notificationType = 'reply';
+                recipientId = parentCommentData.user_id;
+                
+                // Don't notify if replying to own comment
+                if (recipientId === user.id) {
+                  console.log('User replying to their own comment, skipping notification');
+                } else {
+                  // Get the post title from either general_posts or experiences
+                  if (experienceData.type === 'general_post') {
+                    const { data: postData } = await supabase
+                      .from('general_posts')
+                      .select('title')
+                      .eq('experience_id', experience_id)
+                      .single();
+                      
+                    postTitle = postData?.title || 'General Post';
+                  } else {
+                    postTitle = experienceData.company_name || 'Interview Experience';
+                  }
+                  
+                  // Generate post URL
+                  const postUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/experience/${experience_id}/${experienceData.slug || ''}`;
+                  
+                  // Create notification object
+                  const notification = {
+                    user_id: recipientId,
+                    type: 'reply',
+                    content_id: newComment.id.toString(), // Convert to string
+                    content_type: 'comment',
+                    actor_id: user.id,
+                    actor_username: username,
+                    seen: false,
+                    emailed: false
+                  };
+                  
+                  // Create notification and send email
+                  await createNotificationAndEmail(
+                    notification,
+                    {
+                      postTitle,
+                      replierUsername: username,
+                      replyText: comment,
+                      postUrl
+                    },
+                    recipientId,
+                    'reply',
+                    token
+                  );
+                }
+              }
+            } else {
+              // This is a comment on a post
+              notificationType = 'comment';
+              recipientId = experienceData.user_id;
+              
+              // Get the post title
+              if (experienceData.type === 'general_post') {
+                const { data: postData } = await supabase
+                  .from('general_posts')
+                  .select('title')
+                  .eq('experience_id', experience_id)
+                  .single();
+                  
+                postTitle = postData?.title || 'General Post';
+              } else {
+                postTitle = experienceData.company_name || 'Interview Experience';
+              }
+              
+              // Generate post URL
+              const postUrl = `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/experience/${experience_id}/${experienceData.slug || ''}`;
+              
+              // Create notification object
+              const notification = {
+                user_id: recipientId,
+                type: 'comment',
+                content_id: newComment.id.toString(), // Convert to string
+                content_type: 'comment',
+                actor_id: user.id,
+                actor_username: username,
+                seen: false,
+                emailed: false
+              };
+              
+              // Create notification and send email
+              await createNotificationAndEmail(
+                notification,
+                {
+                  postTitle,
+                  commenterUsername: username,
+                  commentText: comment,
+                  postUrl
+                },
+                recipientId,
+                'comment',
+                token
+              );
+            }
+          }
+        }
+      } catch (notificationError) {
+        // Log but don't fail the request if notification fails
+        console.error('Error creating notification:', notificationError);
+      }
+      
       res.status(200).json({ message: 'Comment added successfully', comment: newComment });
   
     } catch (error) {
