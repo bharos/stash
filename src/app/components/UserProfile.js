@@ -7,6 +7,8 @@ import Link from 'next/link';
 import UserTokens from './UserTokens';
 import TokenHistory from './TokenHistory';
 import PremiumBadge from './PremiumBadge';
+import NotificationSettings from './NotificationSettings';
+import Notifications from './Notifications';
 
 const UserProfile = () => {
   const { user, setUser } = useUser();
@@ -249,7 +251,7 @@ const UserProfile = () => {
         <div className="mb-6">
           <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Your Activity</h2>
           <div className={`flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'} overflow-x-auto`}>
-            {["experiences", "general posts", "likes", "comments", "transactions"].map((tab) => (
+            {["experiences", "general posts", "likes", "comments", "transactions", "notifications", "settings"].map((tab) => (
               <div
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -451,6 +453,18 @@ const UserProfile = () => {
               {activeTab === "transactions" && (
                 <div className="mt-4">
                   <TokenHistory />
+                </div>
+              )}
+              
+              {activeTab === "notifications" && (
+                <div className="mt-4">
+                  <Notifications />
+                </div>
+              )}
+              
+              {activeTab === "settings" && (
+                <div className="mt-4">
+                  <NotificationSettings />
                 </div>
               )}
             </>
