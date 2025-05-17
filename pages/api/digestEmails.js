@@ -7,12 +7,12 @@ import { sendEmail } from '../../src/app/utils/emailUtils';
  * to send digest emails (daily or weekly) based on user preferences.
  * 
  * Security is implemented in multiple layers:
- * 1. Vercel cron jobs are authenticated by the 'authorization' header with CRON_SECRET
- * 2. Manual API calls require a valid API key in the x-api-key header
+ * 1. Vercel cron jobs are authenticated by the 'authorization' header with CRON_SECRET (uses GET method)
+ * 2. Manual API calls require a valid API key in the x-api-key header (can use POST method)
  */
 export default async function handler(req, res) {
-  // Only allow POST requests for security
-  if (req.method !== 'POST') {
+  // Allow both GET (for Vercel cron) and POST (for manual testing) requests
+  if (req.method !== 'GET' && req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
