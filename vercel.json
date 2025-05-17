@@ -1,28 +1,12 @@
 {
   "crons": [
     {
-      "path": "/api/digestEmails",
-      "schedule": "0 9 * * *",
-      "method": "POST",
-      "headers": {
-        "x-api-key": "d87a11b3-f13d-4982-9ab1-c4e93315aa21",
-        "Content-Type": "application/json"
-      },
-      "body": {
-        "digestType": "daily"
-      }
+      "path": "/api/digestEmails?digestType=daily",
+      "schedule": "0 9 * * *"
     },
     {
-      "path": "/api/digestEmails",
-      "schedule": "0 10 * * 1",
-      "method": "POST",
-      "headers": {
-        "x-api-key": "d87a11b3-f13d-4982-9ab1-c4e93315aa21",
-        "Content-Type": "application/json"
-      },
-      "body": {
-        "digestType": "weekly"
-      }
+      "path": "/api/digestEmails?digestType=weekly",
+      "schedule": "0 10 * * 1"
     }
   ]
 }

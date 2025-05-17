@@ -5,23 +5,37 @@ import { sendEmail } from '../../src/app/utils/emailUtils';
 /**
  * This API endpoint is intended to be called by a cron job
  * to send digest emails (daily or weekly) based on user preferences.
+ * 
+ * Security is implemented in multiple layers:
+ * 1. Vercel cron jobs are authenticated by the 'authorization' header with CRON_SECRET
+ * 2. Manual API calls require a valid API key in the x-api-key header
  */
 export default async function handler(req, res) {
-  // Only allow POST requests with proper API key for security
+  // Only allow POST requests for security
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // Validate API key (should be set in environment variables)
-  const apiKey = req.headers['x-api-key'];
-  const validApiKey = process.env.DIGEST_API_KEY; // Add this to your .env file
+  // Get authorization header for Vercel Cron authentication
+  const authHeader = req.headers['authorization'];
+  const cronSecret = process.env.CRON_SECRET;
   
-  if (!apiKey || apiKey !== validApiKey) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  // Check for valid cron secret in authorization header
+  const hasCronAuth = cronSecret && authHeader === `Bearer ${cronSecret}`;
+  
+  // If not authenticated via CRON_SECRET, check for API key
+  if (!hasCronAuth) {
+    const apiKey = req.headers['x-api-key'];
+    const validApiKey = process.env.DIGEST_API_KEY;
+    
+    if (!apiKey || apiKey.replace(/-/g, '') !== validApiKey?.replace(/-/g, '')) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
   }
 
   try {
-    const { digestType } = req.body;
+    // Get digest type from query parameter or body
+    const digestType = req.query.digestType || (req.body && req.body.digestType);
     
     // Validate digest type
     if (!digestType || !['daily', 'weekly'].includes(digestType)) {
@@ -66,7 +80,13 @@ export default async function handler(req, res) {
     // Create an admin Supabase client to access user emails
     const adminSupabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.SUPABASE_SERVICE_ROLE_KEY
+      process.env.SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
     );
 
     // Count of successfully sent digest emails
@@ -75,7 +95,7 @@ export default async function handler(req, res) {
 
     // Get user data and prepare email content for each user
     for (const userId of Object.keys(notificationsByUser)) {
-      // Get the user's email
+      // Get the user's email using admin API
       const { data: userData, error: userError } = await adminSupabase.auth.admin.getUserById(userId);
       
       if (userError || !userData?.user?.email) {
