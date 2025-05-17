@@ -127,7 +127,7 @@ export default async function handler(req, res) {
                   const notification = {
                     user_id: recipientId,
                     type: 'reply',
-                    content_id: newComment.id.toString(), // Convert to string
+                    content_id: experience_id.toString(), // Use experience_id instead of comment_id for URLs
                     content_type: 'comment',
                     actor_id: user.id,
                     actor_username: username,
@@ -180,7 +180,7 @@ export default async function handler(req, res) {
                 const notification = {
                   user_id: recipientId,
                   type: 'comment',
-                  content_id: newComment.id.toString(), // Convert to string
+                  content_id: experience_id.toString(), // Use experience_id instead of comment_id for URLs
                   content_type: 'comment',
                   actor_id: user.id,
                   actor_username: username,
