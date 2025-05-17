@@ -110,7 +110,7 @@ export default async function handler(req, res) {
             const notification = {
               user_id: commentData.user_id,
               type: 'comment_like',
-              content_id: commentId.toString(), // Convert to string for storing in the notification
+              content_id: commentData.experience_id.toString(), // Use experience_id instead of comment_id for URLs
               content_type: 'comment',
               actor_id: userId,
               actor_username: username,
