@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/digestEmails?digestType=daily",
+      "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/digestEmails?digestType=weekly",
+      "schedule": "0 10 * * 1"
+    }
+  ]
+}

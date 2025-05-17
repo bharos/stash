@@ -13,6 +13,7 @@ import PremiumBadge from './PremiumBadge';
 import { useActiveMenu } from '../context/ActiveMenuContext'; // Active Menu Context
 import { useViewLimitContext } from '../context/ViewLimitContext'; // Import view limit context directly
 import supabase from '../utils/supabaseClient';
+import NotificationBell from './NotificationBell';
 
 const Sidebar = () => {
   const router = useRouter();
@@ -275,7 +276,10 @@ const Sidebar = () => {
             }
           }}
         >
-          <span className="material-icons ml-2 mr-2 text-purple-600">account_circle</span>
+          <div className="flex items-center ml-2 mr-2">
+            <span className="material-icons text-purple-600 mr-2">account_circle</span>
+            {user.user_id && <NotificationBell />}
+          </div>
           <ListItemText 
             primary="View Profile"
             primaryTypographyProps={{
