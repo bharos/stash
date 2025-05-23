@@ -128,7 +128,9 @@ export default async function handler(req, res) {
             newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
           } else {
             // Otherwise give them premium starting today
-            newPremiumEnd = premiumEnd;
+            // Make sure we're giving them a date that includes the premium days
+            newPremiumEnd = new Date();
+            newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
           }
         }
       }

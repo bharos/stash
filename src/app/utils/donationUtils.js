@@ -270,6 +270,7 @@ export async function grantPremiumForDonation(userId, amount, reference, nonprof
       if (userData.premium_until && new Date(userData.premium_until) > new Date()) {
         // User already has premium, keep their current end date
         newPremiumEnd = new Date(userData.premium_until);
+        console.log('User already has premium until:', newPremiumEnd);
       }
     }
     
@@ -289,6 +290,7 @@ export async function grantPremiumForDonation(userId, amount, reference, nonprof
           newPremiumEnd = new Date();
           newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
         }
+        console.log('New premium end date:', newPremiumEnd);
       }
     }
     
