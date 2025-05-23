@@ -91,9 +91,13 @@ const handleExperienceUpsert = async (req, res) => {
           .eq('user_id', user.id)
           .single();
           
+        if (userError) {
+          console.error('Error fetching user tokens:', userError);
+        }
         const currentCoins = userData?.coins || 0;
         console.log("Current Coins: ", currentCoins);
         // Update or insert user tokens
+        const { data: upsertData, error: upsertError } =
         await supabase
           .from('user_tokens')
           .upsert([{
@@ -101,7 +105,16 @@ const handleExperienceUpsert = async (req, res) => {
             coins: currentCoins + 100 // Add 100 coins for posting
           }], { 
             onConflict: 'user_id' // Specify the constraint to use for conflict detection
-          });
+          })
+          .select();
+        if (upsertError) {
+            console.error('Error upserting user tokens:', upsertError);
+            console.log('Upsert error details:', JSON.stringify(upsertError));
+          } else {
+            console.log('Upsert succeeded with data:', upsertData);
+          }
+
+
         
         // Record the transaction in the ledger
         const { data: transactionData, error: transactionError } = await supabase
