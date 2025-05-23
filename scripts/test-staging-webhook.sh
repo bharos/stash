@@ -11,7 +11,7 @@ NC='\033[0m' # No Color
 TOKEN="c568380b7b28caa6bbb34fd6"
 
 # Default URLs - you can override these with command line arguments
-STAGING_URL="https://staging.stashdb.fyi/api/webhooks/staging-test"
+STAGING_URL="https://staging.stashdb.fyi/api/webhooks/every-org"
 LOCAL_URL="http://localhost:3000/api/webhooks/staging-test"
 
 # Default to staging unless --local is specified

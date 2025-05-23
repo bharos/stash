@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
   
   try {
-    // Log environment information for debugging
+    // Log environment information for debugging.
     console.log(`========== Staging Webhook Test ==========`);
     console.log(`Environment: ${process.env.NODE_ENV || 'unknown'}`);
     console.log(`Vercel Environment: ${process.env.VERCEL_ENV || 'not on Vercel'}`);

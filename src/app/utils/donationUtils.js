@@ -43,28 +43,83 @@ export function generateFundraiserUrl(nonprofitId, options = {}) {
   const fundraiserId = verifiedNonprofits[nonprofitId] || 'support-khan-academy';
   const defaultNonprofitId = verifiedNonprofits[nonprofitId] ? nonprofitId : 'khan-academy';
   
-  // Construct the URL with any suggested amount
-  // For staging environment in development mode
-  const domain = process.env.NODE_ENV === 'development' ? 'staging.every.org' : 'www.every.org';
+  // Determine if we should use staging environment
+  const useStaging = process.env.NODE_ENV === 'development' || 
+                     process.env.NEXT_PUBLIC_ENVIRONMENT === 'staging' ||
+                     process.env.USE_STAGING_SERVICES === 'true';
+  
+  // Use appropriate domain based on environment
+  const domain = useStaging ? 'staging.every.org' : 'www.every.org';
+  
+  // Log which environment we're using
+  console.log(`Using ${useStaging ? 'staging' : 'production'} environment for Every.org`);
   
   // The staging environment has a completely different URL structure than production
   let url;
   
-  // Fixed URL structure for development/staging
-  if (process.env.NODE_ENV === 'development') {
-    // Staging format with #/donate/card fragment - this is the format that works!
-    url = `https://staging.every.org/${defaultNonprofitId}#/donate/card`;
+  // Create the donation URL with the proper domain
+  url = `https://${domain}/${defaultNonprofitId}#/donate/card`;
+  
+  if (useStaging) {
     console.log('Using staging URL format:', url);
-  } else {
-    // Production format also uses #/donate/card fragment
-    url = `https://www.every.org/${defaultNonprofitId}#/donate/card`;
   }
     
   // For the #/donate/card format, pre-filled amounts work differently
   if (options.amount) {
     // In this fragment-based URL format, we need to add amount differently
     url += `?amount=${options.amount}&frequency=ONCE`;
+  } else {
+    // Add a question mark if no amount is specified
+    url += '?frequency=ONCE';
   }
+  
+  // Generate a reference if not provided
+  // Require reference to be provided
+if (!options.reference) {
+  console.error('Missing donation reference in generateFundraiserUrl');
+  throw new Error('Donation reference is required. Create a donation intent first.');
+}
+const reference = options.reference;
+  
+  // Add partner_donation_id for tracking this specific donation
+  url += `&partner_donation_id=${encodeURIComponent(reference)}`;
+  
+  // Add partner_id to identify your platform (stashdb)
+  const partnerId = process.env.NEXT_PUBLIC_EVERY_ORG_PARTNER_ID || 'stashdb';
+  url += `&partner_id=${encodeURIComponent(partnerId)}`;
+  
+  // Add metadata that will be sent back to you in the webhook
+  const metadata = {
+    userId: options.userId || 'anonymous',
+    source: 'stashdb',
+    nonprofitId,
+    amount: options.amount,
+    reference: reference,
+    isPremium: options.isPremium || false, // Include premium status in metadata
+    environment: useStaging ? 'staging' : 'production'
+  };
+  const encodedMetadata = Buffer.from(JSON.stringify(metadata)).toString('base64');
+  url += `&partner_metadata=${encodeURIComponent(encodedMetadata)}`;
+  
+  // Include webhook token if available - this tells Every.org to send webhook notifications
+  if (process.env.EVERY_ORG_WEBHOOK_TOKEN) {
+    url += `&webhook_token=${encodeURIComponent(process.env.EVERY_ORG_WEBHOOK_TOKEN)}`;
+    console.log('Added webhook token to URL');
+  } else {
+    console.log('No webhook token available in environment variables');
+  }
+  
+  // Request donor information (optional)
+  url += `&share_info=true&require_share_info=true`;
+  
+  // Add designation if provided
+  if (options.designation) {
+    url += `&designation=${encodeURIComponent(options.designation)}`;
+  }
+  
+  // Log the generated URL for debugging (hiding sensitive parts)
+  console.log(`Generated Every.org donation URL: ${url.split('?')[0]}?[params]`);
+  console.log(`URL includes: partner_id, partner_donation_id, partner_metadata, webhook_token: ${process.env.EVERY_ORG_WEBHOOK_TOKEN ? 'yes' : 'no'}`);
   
   return url;
 }
@@ -76,9 +131,10 @@ export function generateFundraiserUrl(nonprofitId, options = {}) {
  * @param {string} nonprofitId - The nonprofit organization ID
  * @param {string} nonprofitName - The nonprofit organization name (not stored in DB, but used for display)
  * @param {number} amount - The intended donation amount
+ * @param {boolean} isPremium - Whether the user already has premium status
  * @returns {Promise<object>} The created donation intent record
  */
-export async function createDonationIntent(userId, nonprofitId, nonprofitName, amount) {
+export async function createDonationIntent(userId, nonprofitId, nonprofitName, amount, isPremium = false) {
   try {
     // Generate a unique reference for the user to include in their donation
     // Add timestamp to ensure uniqueness for repeated donations by the same user
@@ -95,6 +151,7 @@ export async function createDonationIntent(userId, nonprofitId, nonprofitName, a
         amount,
         status: 'pending',
         donation_reference: reference,
+        is_premium_user: isPremium, // Store premium status
         created_at: new Date().toISOString()
       })
       .select()
@@ -170,20 +227,29 @@ export async function submitDonationProof(userId, donationId, reference, amount,
 }
 
 /**
- * Grant premium access based on verified donation
+ * Grant premium access and/or tokens based on verified donation
  * 
  * @param {string} userId - User ID
  * @param {number} amount - Donation amount in dollars
  * @param {string} reference - Donation reference
  * @param {string} nonprofitName - Name of nonprofit
- * @returns {Promise<object>} Premium access details
+ * @returns {Promise<object>} Premium access and tokens details
  */
 export async function grantPremiumForDonation(userId, amount, reference, nonprofitName) {
   try {
-    // Calculate premium days based on donation amount
-    const premiumDays = amount >= 10 ? 30 : 7;
-    const premiumEnd = new Date();
-    premiumEnd.setDate(premiumEnd.getDate() + premiumDays);
+    // First get the donation intent to check if user was already premium
+    const { data: donationIntent, error: intentError } = await supabase
+      .from('donation_intents')
+      .select('nonprofit_id, is_premium_user')
+      .eq('donation_reference', reference)
+      .single();
+    
+    if (intentError) {
+      console.error('Error retrieving donation intent:', intentError);
+    }
+    
+    const wasPremiumUser = donationIntent?.is_premium_user || false;
+    const nonprofitIdFromIntent = donationIntent?.nonprofit_id || 'unknown';
     
     // Get current user tokens data
     const { data: userData, error: userError } = await supabase
@@ -193,24 +259,57 @@ export async function grantPremiumForDonation(userId, amount, reference, nonprof
       .single();
 
     // Calculate the new premium end date
-    let newPremiumEnd = premiumEnd;
+    let newPremiumEnd = new Date();
     let currentTokens = 0;
+    let premiumDays = 0;
     
+    // Initialize current tokens and premium status
     if (!userError && userData) {
       currentTokens = userData.tokens || 0;
-      // If user already has premium, extend it
+      
       if (userData.premium_until && new Date(userData.premium_until) > new Date()) {
+        // User already has premium, keep their current end date
         newPremiumEnd = new Date(userData.premium_until);
-        newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
       }
     }
-
-    // Award 300 coins for $10 donation + 30 per additional dollar
-    let bonusTokens = 300; // Base 300 coins for a $10 donation
+    
+    // Calculate premium days ONLY for non-premium users
+    if (!wasPremiumUser && amount >= 10) {
+      // Only give premium days if they weren't already premium
+      premiumDays = amount >= 10 ? 30 : 7;
       
-    // Add 30 coins per dollar for any amount above $10
-    if (amount > 10) {
-      bonusTokens += Math.floor((amount - 10) * 30);
+      // Update premium end date for non-premium users
+      if (premiumDays > 0) {
+        if (!userError && userData && userData.premium_until && new Date(userData.premium_until) > new Date()) {
+          // If user already has premium, extend it
+          newPremiumEnd = new Date(userData.premium_until);
+          newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
+        } else {
+          // Otherwise set new premium end date from today
+          newPremiumEnd = new Date();
+          newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
+        }
+      }
+    }
+    
+    // Calculate bonus tokens based on premium status
+    let bonusTokens = 0;
+    
+    if (wasPremiumUser) {
+      // Premium users get 30 coins per dollar for entire donation amount
+      // Only award coins if minimum donation amount is met
+      if (amount >= 10) {
+        bonusTokens = Math.floor(amount * 30);
+      }
+    } else {
+      // Non-premium users get standard premium days for $10
+      // Plus 30 coins per dollar above $10
+      if (amount >= 10) {
+        // For amounts above 10, calculate bonus tokens
+        if (amount > 10) {
+          bonusTokens = Math.floor((amount - 10) * 30);
+        }
+      }
     }
     
     const newTokens = currentTokens + bonusTokens;
@@ -228,41 +327,36 @@ export async function grantPremiumForDonation(userId, amount, reference, nonprof
         ignoreDuplicates: false
       });
       
-    // Get the nonprofit ID from the donation intent
-    const { data: intentData, error: intentError } = await supabase
-      .from('donation_intents')
-      .select('nonprofit_id')
-      .eq('donation_reference', reference)
-      .single();
-      
-    const nonprofitId = intentData?.nonprofit_id || 'unknown';
-      
-    // Record the donation
+    // Record the donation with token amount
     await supabase
       .from('donation_records')
       .insert({
         user_id: userId,
         donation_id: reference, // Using reference as donation_id for manual verifications
         donation_reference: reference,
-        nonprofit_id: nonprofitId,
+        nonprofit_id: nonprofitIdFromIntent,
         nonprofit_name: nonprofitName || 'Unknown Nonprofit',
         amount,
         premium_days: premiumDays,
         premium_until: newPremiumEnd.toISOString(),
+        token_amount: bonusTokens,
+        is_premium_user: wasPremiumUser,
         created_at: new Date().toISOString()
       });
       
-    // Add token transaction record
-    await supabase
-      .from('token_transactions')
-      .insert({
-        user_id: userId,
-        amount: bonusTokens,
-        transaction_type: 'donation_bonus',
-        description: `Received ${bonusTokens} tokens for donating $${amount} to ${nonprofitName || 'a nonprofit'}`,
-        reference_type: 'donation',
-        reference_id: reference
-      });
+    // Add token transaction record if tokens were awarded
+    if (bonusTokens > 0) {
+      await supabase
+        .from('token_transactions')
+        .insert({
+          user_id: userId,
+          amount: bonusTokens,
+          transaction_type: 'donation_bonus',
+          description: `Received ${bonusTokens} tokens for donating $${amount} to ${nonprofitName || 'a nonprofit'}`,
+          reference_type: 'donation',
+          reference_id: reference
+        });
+    }
     
     return {
       success: true,

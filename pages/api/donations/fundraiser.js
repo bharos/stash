@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     }
 
     // Get donation details from request
-    let { nonprofitId, nonprofitName, amount } = req.body;
+    let { nonprofitId, nonprofitName, amount, isPremium = false } = req.body;
     
     if (!nonprofitId || !amount) {
       return res.status(400).json({ 
@@ -55,9 +55,10 @@ export default async function handler(req, res) {
     
     // Check if the provided nonprofit ID is in our verified list, use a default if not
     if (!verifiedNonprofits.includes(nonprofitId)) {
-      console.warn(`Unverified nonprofit ID: ${nonprofitId}, using khan-academy as fallback`);
-      finalNonprofitId = 'khan-academy';
-      finalNonprofitName = 'Khan Academy';
+      console.warn(`Unverified nonprofit ID: ${nonprofitId}`);
+      res.status(400).json({
+        error: 'Unverified nonprofit ID.'
+      });
     }
     
     // Create donation intent
@@ -65,22 +66,27 @@ export default async function handler(req, res) {
       user.id, 
       finalNonprofitId,
       finalNonprofitName,
-      amount
+      amount,
+      isPremium // Pass premium status
     );
     
     // Generate fundraiser URL
     const fundraiserUrl = generateFundraiserUrl(finalNonprofitId, {
-      amount: amount
+      amount: amount,
+      reference: intentResult.reference,
+      isPremium: isPremium // Include premium status in the URL metadata
     });
     
     // Return the redirect URL to the client
-    return res.status(200).json({ 
+    const response = { 
       success: true, 
       donationUrl: fundraiserUrl,
       reference: intentResult.reference,
       message: "Please complete your donation and then submit your donation ID for verification",
       verificationRequired: true
-    });
+    }
+    console.log('Response:', response);
+    return res.status(200).json(response);
     
   } catch (error) {
     console.error('Donation fundraiser error:', error);

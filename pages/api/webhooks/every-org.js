@@ -42,72 +42,33 @@ export default async function handler(req, res) {
     console.log('Webhook request headers:', JSON.stringify(req.headers, null, 2));
     console.log('Webhook request body:', JSON.stringify(req.body, null, 2));
     
-    // Verify webhook signature from Every.org if present
-    const signature = req.headers['x-every-signature'];
-    
-    // Check if we're in development mode or a preview deployment
-    const isDevelopment = process.env.NODE_ENV === 'development' || 
-                          process.env.VERCEL_ENV === 'preview';
-    
-    // If we have a webhook secret and a signature header is provided, validate it
-    if (process.env.EVERY_ORG_WEBHOOK_SECRET && signature) {
-      // Create HMAC using webhook secret
-      const hmac = crypto.createHmac('sha256', process.env.EVERY_ORG_WEBHOOK_SECRET);
-      hmac.update(JSON.stringify(req.body));
-      const calculatedSignature = hmac.digest('hex');
-      
-      console.log('Validating webhook signature...');
-      console.log('Provided signature:', signature);
-      console.log('Calculated signature (first 10 chars):', calculatedSignature.substring(0, 10) + '...');
-      
-      if (signature !== calculatedSignature) {
-        console.error('Invalid webhook signature');
-        if (!isDevelopment) {
-          // In production, reject invalid signatures
-          return res.status(401).json({ error: 'Invalid signature' });
-        } else {
-          // In development, log the error but continue (for testing)
-          console.warn('Invalid signature, but continuing because we are in development mode');
-        }
-      } else {
-        console.log('Webhook signature valid');
-      }
-    } else {
-      console.warn('No signature validation performed - either missing signature header or webhook secret');
-      // Allow webhooks without signatures in development/preview mode or for tests
-      if (!isDevelopment && !req.headers['x-webhook-test']) {
-        console.warn('Missing signature in production mode - this could be dangerous');
-      } else {
-        console.log('Skipping signature validation in development/preview mode or test request');
-      }
-    }
-    
     // Log webhook details for debugging
     console.log('Received webhook from Every.org:', {
-      event: req.body.event,
-      reference: req.body.data?.reference,
-      status: req.body.data?.status,
-      amount: req.body.data?.amount
+      chargeId: req.body.chargeId,
+      partnerDonationId: req.body.partnerDonationId,
+      amount: req.body.amount,
+      toNonprofit: req.body.toNonprofit
     });
     
-    // Process the webhook payload
+    // Extract the required fields from the webhook payload
     const {
-      event,
-      data: {
-        reference,
-        status,
-        amount,
-        nonprofitId,
-        nonprofitName
-      }
+      chargeId,
+      partnerDonationId,
+      amount,
+      netAmount,
+      toNonprofit,
+      partnerMetadata
     } = req.body;
     
-    // Only process completed donations
-    if (event === 'donation.completed' && status === 'SUCCEEDED') {
+    // Extract the reference from partnerDonationId or partnerMetadata
+    const reference = partnerDonationId || (partnerMetadata?.reference);
+    
+    // Only process donations with a reference
+    if (reference && toNonprofit) {
       // Find the donation intent in your database
       const { data: donationIntent, error } = await supabase
         .from('donation_intents')
-        .select('user_id, amount')
+        .select('user_id, amount, is_premium_user')
         .eq('donation_reference', reference)
         .single();
         
@@ -117,50 +78,83 @@ export default async function handler(req, res) {
       }
       
       const { user_id } = donationIntent;
+      const wasPremiumUser = donationIntent?.is_premium_user || false;
       
-      // Calculate donation amount in dollars
-      const donationAmountUSD = amount / 100; // Convert from cents
+      // Parse donation amount in dollars from the webhook payload
+      const donationAmountUSD = parseFloat(amount);
       
-      // Calculate premium duration based on donation amount
-      const premiumDays = calculatePremiumDays(donationAmountUSD);
+      // Extract nonprofit details from the webhook payload
+      const nonprofitId = toNonprofit.slug;
+      const nonprofitName = toNonprofit.name;
+      
+      // Calculate premium duration based on donation amount and premium status
+      let premiumDays = 0;
+      if (!wasPremiumUser && donationAmountUSD >= 10) {
+        // Only give premium days if they weren't already premium
+        premiumDays = calculatePremiumDays(donationAmountUSD);
+      }
+      
       const premiumEnd = new Date();
-      premiumEnd.setDate(premiumEnd.getDate() + premiumDays);
+      if (premiumDays > 0) {
+        premiumEnd.setDate(premiumEnd.getDate() + premiumDays);
+      }
       
       // Update user premium status in user_tokens
       const { data: userData, error: userError } = await supabase
         .from('user_tokens')
-        .select('premium_until, tokens')
+        .select('premium_until, coins')
         .eq('user_id', user_id)
         .single();
 
       // Calculate the new premium end date
-      let newPremiumEnd = premiumEnd;
-      let currentTokens = 0;
+      let newPremiumEnd = new Date();
+      let currentCoins = 0;
       
       if (!userError && userData) {
-        currentTokens = userData.tokens || 0;
-        // If user already has premium, extend it
-        if (userData.premium_until && new Date(userData.premium_until) > new Date()) {
-          newPremiumEnd = new Date(userData.premium_until);
-          newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
+        currentCoins = userData.coins || 0;
+        
+        if (wasPremiumUser) {
+          // If user was premium at donation time, don't modify their premium status
+          // Just keep whatever premium_until they currently have
+          if (userData.premium_until) {
+            newPremiumEnd = new Date(userData.premium_until);
+          }
+        } else if (premiumDays > 0) {
+          // For non-premium users who qualify for premium, give them premium days
+          // starting from today (or extend their current premium if they have it)
+          if (userData.premium_until && new Date(userData.premium_until) > new Date()) {
+            // If they somehow already have premium, extend it
+            newPremiumEnd = new Date(userData.premium_until);
+            newPremiumEnd.setDate(newPremiumEnd.getDate() + premiumDays);
+          } else {
+            // Otherwise give them premium starting today
+            newPremiumEnd = premiumEnd;
+          }
         }
       }
 
-      // Award 300 coins for $10 donation + 30 per additional dollar
-      let bonusTokens = 300; // Base 300 coins for a $10 donation
+      // Calculate bonus coins based on premium status
+      let bonusCoins = 0;
       
-      // Add 30 coins per dollar for any amount above $10
-      if (donationAmountUSD > 10) {
-        bonusTokens += Math.floor((donationAmountUSD - 10) * 30);
+      if (wasPremiumUser) {
+        // Premium users get 30 coins per dollar for entire donation amount
+        if (donationAmountUSD >= 10) {
+          bonusCoins = Math.floor(donationAmountUSD * 30);
+        }
+      } else {
+        // Non-premium users only get coins for amounts above $10
+        if (donationAmountUSD > 10) {
+          bonusCoins = Math.floor((donationAmountUSD - 10) * 30);
+        }
       }
       
-      const newTokens = currentTokens + bonusTokens;
+      const newCoins = currentCoins + bonusCoins;
 
       // Update or insert user_tokens record
       const tokenData = {
         user_id,
         premium_until: newPremiumEnd.toISOString(),
-        tokens: newTokens,
+        coins: newCoins,
         updated_at: new Date().toISOString()
       };
 
@@ -191,13 +185,15 @@ export default async function handler(req, res) {
         .from('donation_records')
         .insert({
           user_id,
-          donation_id: req.body.data.donationId || reference,
+          donation_id: chargeId || reference,
           nonprofit_id: nonprofitId,
           nonprofit_name: nonprofitName,
           amount: donationAmountUSD,
           donation_reference: reference,
           premium_days: premiumDays,
           premium_until: newPremiumEnd.toISOString(),
+          token_amount: bonusCoins,
+          is_premium_user: wasPremiumUser,
           created_at: new Date().toISOString()
         });
 
@@ -205,31 +201,52 @@ export default async function handler(req, res) {
         console.error('Error recording donation:', recordError);
       }
 
-      // Add to token transactions
-      const { error: txnError } = await supabase
-        .from('token_transactions')
-        .insert({
-          user_id,
-          amount: bonusTokens,
-          transaction_type: 'donation_bonus',
-          description: `Received ${bonusTokens} tokens for donating $${donationAmountUSD} to ${nonprofitName || 'a nonprofit'}`,
-          reference_type: 'donation',
-          reference_id: reference
-        });
-        
-      if (txnError) {
-        console.error('Error creating token transaction:', txnError);
+      // Add to token transactions for the bonus coins (if any)
+      if (bonusCoins > 0) {
+        const { error: txnError } = await supabase
+          .from('token_transactions')
+          .insert({
+            user_id,
+            amount: bonusCoins,
+            transaction_type: 'earn',
+            description: `Received ${bonusCoins} coins for donating $${donationAmountUSD} to ${nonprofitName || 'a nonprofit'}`,
+            source: 'donation_bonus',
+            reference_id: null
+          });
+          
+        if (txnError) {
+          console.error('Error creating token transaction:', txnError);
+        }
+      }
+      
+      // Add a transaction entry for premium status if premium days were granted
+      if (premiumDays > 0) {
+        const { error: premiumTxnError } = await supabase
+          .from('token_transactions')
+          .insert({
+            user_id,
+            amount: 0, // No coins exchanged for this transaction
+            transaction_type: 'earn',
+            description: `Received ${premiumDays} days of premium status for donating $${donationAmountUSD} to ${nonprofitName || 'a nonprofit'}`,
+            source: 'premium_status',
+            reference_id: null
+          });
+          
+        if (premiumTxnError) {
+          console.error('Error creating premium status transaction:', premiumTxnError);
+        }
       }
       
       // Log complete donation process for debugging
       console.log(`===== Donation Completed =====`);
       console.log(`- User: ${user_id}`);
+      console.log(`- Was Premium: ${wasPremiumUser ? 'Yes' : 'No'}`);
       console.log(`- Reference: ${reference}`);
       console.log(`- Amount: $${donationAmountUSD}`);
       console.log(`- Charity: ${nonprofitName} (${nonprofitId})`);
       console.log(`- Premium days: ${premiumDays}`);
       console.log(`- Premium until: ${newPremiumEnd.toISOString()}`);
-      console.log(`- Bonus tokens: ${bonusTokens}`);
+      console.log(`- Bonus coins: ${bonusCoins}`);
       console.log(`============================`);
       
       // Send success response with details
@@ -238,12 +255,12 @@ export default async function handler(req, res) {
         message: 'Donation processed successfully',
         premiumDays,
         premiumUntil: newPremiumEnd.toISOString(),
-        bonusTokens
+        bonusCoins
       });
     } else {
-      // For other event types, just acknowledge receipt
-      console.log(`Received Every.org webhook: ${event}, status: ${status}`);
-      return res.status(200).json({ received: true });
+      // If no reference found, just acknowledge receipt
+      console.log(`Received Every.org webhook without valid reference`);
+      return res.status(200).json({ received: true, message: 'No valid reference found' });
     }
   } catch (error) {
     console.error('Error processing donation webhook:', error);

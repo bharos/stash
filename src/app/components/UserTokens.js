@@ -4,6 +4,7 @@ import { useUser } from '../context/UserContext';
 import { useDarkMode } from '../context/DarkModeContext';
 import supabase from '../utils/supabaseClient';
 import PremiumBadge from './PremiumBadge';
+import DonationComponent from './DonationComponent';
 
 const UserTokens = () => {
   const { user } = useUser();
@@ -16,6 +17,7 @@ const UserTokens = () => {
   const [processingPurchase, setProcessingPurchase] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [pendingPurchase, setPendingPurchase] = useState(null);
+  const [activeTab, setActiveTab] = useState('coins'); // 'coins' or 'donate'
 
   const fetchUserTokens = async () => {
     if (!user?.user_id) return;
@@ -137,7 +139,7 @@ const UserTokens = () => {
   };
 
   return (
-    <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border relative`}>
+    <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-6 rounded-lg shadow-lg mb-6 border relative`}>
       {/* Confirmation Modal */}
       {showConfirmation && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -164,11 +166,43 @@ const UserTokens = () => {
         </div>
       )}
       
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-2">
         <h2 className={`text-2xl font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
           Your Coins
         </h2>
         <PremiumBadge />
+      </div>
+      
+      {/* Tab Navigation */}
+      <div className={`flex border-b mb-4 ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+        <button
+          onClick={() => setActiveTab('coins')}
+          className={`py-2 px-4 font-medium text-sm ${
+            activeTab === 'coins'
+              ? darkMode 
+                ? 'text-blue-400 border-b-2 border-blue-400' 
+                : 'text-blue-600 border-b-2 border-blue-600'
+              : darkMode
+                ? 'text-gray-400 hover:text-gray-200'
+                : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Coins & Premium
+        </button>
+        <button
+          onClick={() => setActiveTab('donate')}
+          className={`py-2 px-4 font-medium text-sm ${
+            activeTab === 'donate'
+              ? darkMode 
+                ? 'text-blue-400 border-b-2 border-blue-400' 
+                : 'text-blue-600 border-b-2 border-blue-600'
+              : darkMode
+                ? 'text-gray-400 hover:text-gray-200'
+                : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          Donate
+        </button>
       </div>
       
       {error && <p className="text-red-500 text-center mb-4">{error}</p>}
@@ -178,84 +212,95 @@ const UserTokens = () => {
         <p className={`text-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Loading...</p>
       ) : (
         <>
-          <div className="flex items-center justify-center mb-6">
-            <div className={`text-4xl font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>{coins}</div>
-            <span className={`ml-2 text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Coins</span>
-          </div>
-          
-          {isPremiumActive() ? (
-            <div className="mb-6">
-              <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Premium Membership</h3>
-              <div className={`p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700' : 'bg-green-50 border-green-200'}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className={`font-medium ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
-                    Active Status
-                  </span>
-                  <span className={`${darkMode ? 'text-green-400' : 'text-green-700'} font-semibold`}>
-                    Expires: {formatExpiryDate()}
-                  </span>
-                </div>
-                <div className="mt-2 text-center">
-                  <span className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
-                    You can purchase again after your current subscription expires
-                  </span>
-                </div>
-              </div>
-            </div>
-          ) : (
+          {activeTab === 'coins' && (
             <>
-              <div className="mb-6">
-                <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Premium Status</h3>
-                <div className={`p-2 rounded bg-gray-100 text-gray-800`}>
-                  Inactive
-                </div>
+              <div className="flex items-center justify-center mb-6">
+                <div className={`text-4xl font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>{coins}</div>
+                <span className={`ml-2 text-lg ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Coins</span>
               </div>
               
-              <div className="space-y-4">
-                <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Get Premium Access</h3>
-                
-                <div className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>1 Week Access</span>
-                    <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>100 Coins</span>
+              {isPremiumActive() ? (
+                <div className="mb-6">
+                  <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Premium Membership</h3>
+                  <div className={`p-4 rounded-lg border ${darkMode ? 'bg-green-900 border-green-700' : 'bg-green-50 border-green-200'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className={`font-medium ${darkMode ? 'text-green-300' : 'text-green-800'}`}>
+                        Active Status
+                      </span>
+                      <span className={`${darkMode ? 'text-green-400' : 'text-green-700'} font-semibold`}>
+                        Expires: {formatExpiryDate()}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className={`text-sm ${darkMode ? 'text-green-400' : 'text-green-600'}`}>
+                        You can purchase again after your current subscription expires
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    onClick={() => showPurchaseConfirmation(100)}
-                    disabled={processingPurchase || coins < 100}
-                    className={`w-full py-2 rounded ${
-                      coins >= 100 && !processingPurchase
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    } transition-colors`}
-                  >
-                    {processingPurchase ? 'Processing...' : 'Purchase'}
-                  </button>
                 </div>
-                
-                <div className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>30 Days Access</span>
-                    <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>300 Coins</span>
+              ) : (
+                <>
+                  <div className="mb-6">
+                    <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Premium Status</h3>
+                    <div className={`p-2 rounded bg-gray-100 text-gray-800`}>
+                      Inactive
+                    </div>
                   </div>
-                  <button
-                    onClick={() => showPurchaseConfirmation(300)}
-                    disabled={processingPurchase || coins < 300}
-                    className={`w-full py-2 rounded ${
-                      coins >= 300 && !processingPurchase
-                        ? 'bg-blue-600 text-white hover:bg-blue-700'
-                        : 'bg-gray-400 text-gray-200 cursor-not-allowed'
-                    } transition-colors`}
-                  >
-                    {processingPurchase ? 'Processing...' : 'Purchase'}
-                  </button>
-                </div>
-              </div>
+                  
+                  <div className="space-y-4">
+                    <h3 className={`text-lg font-semibold mb-2 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Get Premium Access</h3>
+                    
+                    <div className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>1 Week Access</span>
+                        <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>100 Coins</span>
+                      </div>
+                      <button
+                        onClick={() => showPurchaseConfirmation(100)}
+                        disabled={processingPurchase || coins < 100}
+                        className={`w-full py-2 rounded ${
+                          coins >= 100 && !processingPurchase
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        } transition-colors`}
+                      >
+                        {processingPurchase ? 'Processing...' : 'Purchase'}
+                      </button>
+                    </div>
+                    
+                    <div className={`p-4 rounded-lg border ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50 border-gray-200'}`}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className={`font-medium ${darkMode ? 'text-white' : 'text-gray-800'}`}>30 Days Access</span>
+                        <span className={`font-bold ${darkMode ? 'text-yellow-400' : 'text-yellow-500'}`}>300 Coins</span>
+                      </div>
+                      <button
+                        onClick={() => showPurchaseConfirmation(300)}
+                        disabled={processingPurchase || coins < 300}
+                        className={`w-full py-2 rounded ${
+                          coins >= 300 && !processingPurchase
+                            ? 'bg-blue-600 text-white hover:bg-blue-700'
+                            : 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        } transition-colors`}
+                      >
+                        {processingPurchase ? 'Processing...' : 'Purchase'}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+              
+              <p className={`mt-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                Earn 100 coins for each interview experience and 25 coins for each general post you create! Use your coins to get premium access to the entire website.
+              </p>
             </>
           )}
           
-          <p className={`mt-4 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            Earn 100 coins for each interview experience and 25 coins for each general post you create! Use your coins to get premium access to the entire website.
-          </p>
+          {activeTab === 'donate' && (
+            <DonationComponent 
+              isPremium={isPremiumActive()} 
+              onClose={() => {}} 
+            />
+          )}
         </>
       )}
     </div>

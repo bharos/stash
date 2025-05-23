@@ -10,13 +10,19 @@ const DonationComponent = ({ onClose, isPremium = false }) => {
   const { user } = useUser();
   const [selectedCharity, setSelectedCharity] = useState(null);
   const [donationAmount, setDonationAmount] = useState(10);
+  const [customInputActive, setCustomInputActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [charities, setCharities] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filteredCharities, setFilteredCharities] = useState([]);
   
   // Calculate premium days based on amount
-  const premiumDays = donationAmount >= 10 ? 30 : 7;
+  const premiumDays = isPremium ? 0 : donationAmount >= 10 ? 30 : donationAmount === '' ? 0 : 7;
+  
+  // Calculate coins based on amount and premium status
+  const coinsToReceive = isPremium 
+    ? (donationAmount >= 10 ? Math.floor(donationAmount * 30) : 0) // Premium users get more coins
+    : (donationAmount >= 10 && donationAmount > 10 ? Math.floor((donationAmount - 10) * 30) : 0); // Non-premium users get premium first
   
   // Fetch popular charities on component mount
   useEffect(() => {
@@ -78,7 +84,8 @@ const DonationComponent = ({ onClose, isPremium = false }) => {
         body: JSON.stringify({
           nonprofitId: selectedCharity.id,
           nonprofitName: selectedCharity.name,
-          amount: donationAmount
+          amount: donationAmount,
+          isPremium: isPremium // Pass premium status to the API
         })
       });
       
@@ -107,19 +114,29 @@ const DonationComponent = ({ onClose, isPremium = false }) => {
 
   return (
     <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}>
-      <h2 className="text-lg font-bold mb-2">Donate & Get Premium Access</h2>
+      <h2 className="text-lg font-bold mb-2">
+        {isPremium ? 'Donate & Earn Coins' : 'Donate & Get Premium Access'}
+      </h2>
       
       <div className={`p-3 rounded-lg mb-4 ${darkMode ? 'bg-blue-900' : 'bg-blue-50'}`}>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <p className={`text-sm font-medium ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
-            $10+ = 30 premium days + 300 coins
-          </p>
+          {isPremium ? (
+            <p className={`text-sm font-medium ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+              Get 30 coins for each $1 donated
+            </p>
+          ) : (
+            <p className={`text-sm font-medium ${darkMode ? 'text-blue-200' : 'text-blue-800'}`}>
+              $10+ = 30 premium days
+            </p>
+          )}
           <p className={`text-sm ${darkMode ? 'text-blue-100' : 'text-blue-700'}`}>
             100% to charity
           </p>
         </div>
         <p className={`text-xs mt-1 ${darkMode ? 'text-blue-200' : 'text-blue-700'}`}>
-          Premium access is automatic after donation — no verification needed!
+          {isPremium
+            ? 'Donate to worthy causes and earn coins to use on Stash!'
+            : 'Premium access is automatic after donation + bonus coins for donations over $10!'}
         </p>
       </div>
       
@@ -191,12 +208,15 @@ const DonationComponent = ({ onClose, isPremium = false }) => {
           Donation Amount
         </label>
         <div className="flex gap-1">
-          {[10, 15, 25, 50].map(amount => (
+          {[10, 15, 20, 25].map(amount => (
             <button 
               key={amount}
-              onClick={() => setDonationAmount(amount)}
+              onClick={() => {
+                setDonationAmount(amount);
+                setCustomInputActive(false);
+              }}
               className={`px-3 py-1.5 rounded-full transition text-sm ${
-                donationAmount === amount 
+                donationAmount === amount && !customInputActive
                   ? darkMode ? 'bg-green-700 text-white' : 'bg-green-500 text-white' 
                   : darkMode ? 'bg-gray-700 hover:bg-gray-600 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
               }`}
@@ -204,13 +224,22 @@ const DonationComponent = ({ onClose, isPremium = false }) => {
               ${amount}
             </button>
           ))}
-          <div className="relative flex-1">
+          <div className="relative flex-1 min-w-[90px]">
             <span className={`absolute left-2 top-1.5 text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>$</span>
             <input
               type="number"
               min="10"
-              value={![10, 15, 25, 50].includes(donationAmount) ? donationAmount : ''}
-              onChange={e => setDonationAmount(Math.max(10, parseInt(e.target.value) || 10))}
+              step="any"
+              value={customInputActive ? donationAmount : ''}
+              onChange={e => {
+                const inputValue = e.target.value;
+                // Allow any input, don't force minimum here
+                setDonationAmount(inputValue === '' ? '' : parseFloat(inputValue) || 0);
+                setCustomInputActive(true);
+              }}
+              onFocus={() => {
+                setCustomInputActive(true);
+              }}
               placeholder="Custom"
               className={`w-full pl-5 pr-2 py-1.5 text-sm border rounded-full ${
                 darkMode 
@@ -222,27 +251,40 @@ const DonationComponent = ({ onClose, isPremium = false }) => {
         </div>
         
         <div className="flex justify-between mt-2 text-xs">
-          <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-            <span className="material-icons text-xs mr-1">card_giftcard</span>
-            {premiumDays} premium days {isPremium && "(extends)"}
-          </div>
+          {!isPremium && (
+            <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              <span className="material-icons text-xs mr-1">card_giftcard</span>
+              {premiumDays} premium days
+            </div>
+          )}
           <div className={`flex items-center ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
             <span className="material-icons text-xs mr-1">workspace_premium</span>
-            +{donationAmount === 10 ? 300 : (300 + Math.floor((donationAmount - 10) * 30))} coins
+            +{isPremium 
+              ? (donationAmount >= 10 ? Math.floor(donationAmount * 30) : 0)
+              : (donationAmount >= 10 && donationAmount > 10 ? Math.floor((donationAmount - 10) * 30) : 0)
+            } coins
           </div>
         </div>
+        
+        {donationAmount !== '' && donationAmount < 10 && (
+          <div className="mt-1 text-xs text-red-500">
+            Minimum donation amount is $10
+          </div>
+        )}
       </div>
       
       <button
         onClick={handleDonation}
-        disabled={!selectedCharity || isLoading}
+        disabled={!selectedCharity || isLoading || donationAmount < 10}
         className={`w-full py-2.5 rounded-lg font-medium text-sm ${
-          !selectedCharity || isLoading
+          !selectedCharity || isLoading || donationAmount < 10
             ? darkMode ? 'bg-gray-600 cursor-not-allowed' : 'bg-gray-300 cursor-not-allowed'
             : darkMode ? 'bg-green-700 hover:bg-green-600 text-white' : 'bg-green-500 hover:bg-green-600 text-white'
         }`}
       >
-        {isLoading ? 'Processing...' : `Donate $${donationAmount} Now`}
+        {isLoading ? 'Processing...' : 
+          donationAmount < 10 ? `Minimum $10 Required` : 
+          `Donate $${typeof donationAmount === 'number' ? donationAmount.toFixed(2) : donationAmount} Now`}
       </button>
       
       <p className={`text-xs mt-2 text-center ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>

@@ -11,7 +11,7 @@ require('dotenv').config(); // Load environment variables
 
 // Determine the webhook URL based on environment
 const WEBHOOK_URL = process.env.STAGING_WEBHOOK_URL || 'https://staging.stashdb.fyi/api/webhooks/every-org';
-const TEST_URL = process.env.STAGING_TEST_URL || 'https://staging.stashdb.fyi/api/webhooks/staging-test';
+const TEST_URL = process.env.STAGING_TEST_URL || 'https://staging.stashdb.fyi/api/webhooks/every-org';
 const WEBHOOK_TOKEN = process.env.EVERY_ORG_WEBHOOK_TOKEN;
 
 if (!WEBHOOK_TOKEN) {
