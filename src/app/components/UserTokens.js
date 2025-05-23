@@ -187,7 +187,7 @@ const UserTokens = () => {
                 : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Coins & Premium
+          My Coins
         </button>
         <button
           onClick={() => setActiveTab('donate')}
@@ -201,7 +201,7 @@ const UserTokens = () => {
                 : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Donate
+          Support & Earn
         </button>
       </div>
       
