@@ -18,6 +18,7 @@ const InterviewExperienceDashboard = dynamic(() => import('./InterviewExperience
 
 const ClientHome = () => {
   const pathname = usePathname(); // Get the current URL path
+  const searchParams = useSearchParams(); // Get search params
   const { user } = useUser();
   const { sidebarOpen, setIsLoginModalOpen } = useSidebar();
   const { activeMenu, setActiveMenu } = useActiveMenu(); // Access activeMenu from context
@@ -56,7 +57,7 @@ const ClientHome = () => {
           marginLeft: sidebarOpen ? 270 : 0,
         }}
       >
-        {pathname === '/invite' || activeMenu === 'invitePage' ? (
+        {pathname === '/invite' || activeMenu === 'invitePage' || (pathname === '/' && searchParams.get('ref') === 'newUser') ? (
           <div className="max-w-7xl mx-auto">
             <InvitePage />
           </div>

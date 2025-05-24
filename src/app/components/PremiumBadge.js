@@ -12,22 +12,11 @@ const PremiumBadge = () => {
   
   return (
     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-      darkMode ? 'bg-yellow-800 text-yellow-300' : 'bg-yellow-100 text-yellow-800'
-    }`}>
-      <svg 
-        xmlns="http://www.w3.org/2000/svg" 
-        className="h-3 w-3 mr-1" 
-        fill="none" 
-        viewBox="0 0 24 24" 
-        stroke="currentColor"
-      >
-        <path 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          strokeWidth={2} 
-          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" 
-        />
-      </svg>
+      darkMode 
+        ? 'bg-gradient-to-r from-amber-700 to-yellow-700 text-yellow-200 border border-amber-600/50' 
+        : 'bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-800 border border-amber-200'
+    } shadow-sm`}>
+      <span className="material-icons text-xs mr-1">stars</span>
       Premium
     </div>
   );

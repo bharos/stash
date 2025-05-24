@@ -29,6 +29,7 @@ const UserProfile = () => {
   const router = useRouter();
   const { darkMode } = useDarkMode();
   const [isUnsubscribed, setIsUnsubscribed] = useState(false);
+  const [activeSettingTab, setActiveSettingTab] = useState("general");
   const isNewUser = !user.username; // Check if username is not set
 
   const fetchUserActivityData = async () => {
@@ -200,58 +201,114 @@ const UserProfile = () => {
       )}
       
       {/* User Tokens Section */}
-      <UserTokens />
-      
-      {/* Settings Section */}
+      <UserTokens />          {/* Settings Section */}
       <div className={`w-full max-w-sm ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-8 rounded-lg shadow-lg mb-6 border ${isNewUser ? 'ring-4 ring-blue-500 ring-opacity-50' : ''}`}>
         <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-          {isNewUser ? 'Set Your Username' : 'Settings'}
+          {isNewUser ? 'Set Your Username' : 'User Settings'}
         </h2>
         {error && <p className="text-red-500 text-center">{error}</p>}
         {successMessage && <p className="text-green-500 text-center">{successMessage}</p>}
-        <form onSubmit={handleSubmit} className="space-y-1">
-          <label 
-            htmlFor="username" 
-            className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block text-sm font-medium ${isNewUser ? 'font-bold' : ''}`}
-          >
-            {isNewUser ? 'Username (required)' : (user.username ? 'Change Username' : 'Set Username')}
-          </label>
-          {isNewUser && <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>Choose a unique username to identify yourself in the community</p>}
-          <input
-            id="username"
-            type="text"
-            value={newUsername}
-            maxLength={12}
-            onChange={(e) => setNewUsername(e.target.value)}
-            className={`w-full px-4 py-2 border rounded-lg ${
-              darkMode 
-                ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
-                : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-            } ${isNewUser ? 'border-blue-500' : ''}`}
-            placeholder={isNewUser ? "Enter a username" : ""}
-            required
-          />
-          <div className="flex items-center justify-between mt-4">
-            <label className={`${darkMode ? 'text-white' : 'text-gray-800'} block text-sm font-medium`}>Unsubscribe to Emails</label>
+        
+        {isNewUser ? (
+          <form onSubmit={handleSubmit} className="space-y-1">
+            <label 
+              htmlFor="username" 
+              className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block text-sm font-medium font-bold`}
+            >
+              Username (required)
+            </label>
+            <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'} mb-2`}>Choose a unique username to identify yourself in the community</p>
             <input
-              type="checkbox"
-              checked={isUnsubscribed}
-              onChange={() => setIsUnsubscribed(!isUnsubscribed)}
-              className="form-checkbox h-5 w-5 text-blue-600"
+              id="username"
+              type="text"
+              value={newUsername}
+              maxLength={12}
+              onChange={(e) => setNewUsername(e.target.value)}
+              className={`w-full px-4 py-2 border rounded-lg ${
+                darkMode 
+                  ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                  : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+              } border-blue-500`}
+              placeholder="Enter a username"
+              required
             />
-          </div>
-          <button type="submit" className={`w-full py-2 ${isNewUser ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-lg transition-colors mt-2`}>
-            {isNewUser ? 'Set Username & Continue' : 'Save Changes'}
-          </button>
-        </form>
+            <button type="submit" className="w-full py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors mt-2">
+              Set Username & Continue
+            </button>
+          </form>
+        ) : (
+          <>
+            {/* Settings Tabs Navigation */}
+            <div className={`flex border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'} mb-4`}>
+              <div
+                onClick={() => setActiveSettingTab("general")}
+                className={`cursor-pointer py-2 px-4 text-sm font-medium transition-colors ${
+                  activeSettingTab === "general"
+                    ? `${darkMode ? 'text-blue-400 border-b-2 border-blue-400' : 'text-blue-600 border-b-2 border-blue-600'}`
+                    : `${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-blue-600'}`
+                }`}
+              >
+                General
+              </div>
+              <div
+                onClick={() => setActiveSettingTab("notifications")}
+                className={`cursor-pointer py-2 px-4 text-sm font-medium transition-colors ${
+                  activeSettingTab === "notifications"
+                    ? `${darkMode ? 'text-blue-400 border-b-2 border-blue-400' : 'text-blue-600 border-b-2 border-blue-600'}`
+                    : `${darkMode ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-blue-600'}`
+                }`}
+              >
+                Notifications
+              </div>
+            </div>
+            
+            {/* Tab Content */}
+            {activeSettingTab === "general" && (
+              <form onSubmit={handleSubmit} className="space-y-1">
+                <label 
+                  htmlFor="username" 
+                  className={`${darkMode ? 'text-gray-300' : 'text-gray-700'} block text-sm font-medium`}
+                >
+                  {user.username ? 'Change Username' : 'Set Username'}
+                </label>
+                <input
+                  id="username"
+                  type="text"
+                  value={newUsername}
+                  maxLength={12}
+                  onChange={(e) => setNewUsername(e.target.value)}
+                  className={`w-full px-4 py-2 border rounded-lg ${
+                    darkMode 
+                      ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+                      : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
+                  }`}
+                  required
+                />
+                <div className="flex items-center justify-between mt-4">
+                  <label className={`${darkMode ? 'text-white' : 'text-gray-800'} block text-sm font-medium`}>Unsubscribe to Emails</label>
+                  <input
+                    type="checkbox"
+                    checked={isUnsubscribed}
+                    onChange={() => setIsUnsubscribed(!isUnsubscribed)}
+                    className="form-checkbox h-5 w-5 text-blue-600"
+                  />
+                </div>
+                <button type="submit" className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors mt-4">
+                  Save Changes
+                </button>
+              </form>
+            )}
+            
+            {activeSettingTab === "notifications" && <NotificationSettings />}
+          </>
+        )}
       </div>
 
       <div className={`w-full max-w-4xl ${darkMode ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-100'} p-6 rounded-lg shadow-lg border`}>
-        {/* Tab Navigation */}
-        <div className="mb-6">
+        {/* Tab Navigation */}          <div className="mb-6">
           <h2 className={`text-2xl font-semibold text-center mb-4 ${darkMode ? 'text-white' : 'text-gray-800'}`}>Your Activity</h2>
           <div className={`flex space-x-4 sm:space-x-6 md:space-x-10 border-b-2 ${darkMode ? 'border-gray-600' : 'border-gray-300'} overflow-x-auto`}>
-            {["experiences", "general posts", "likes", "comments", "transactions", "notifications", "settings"].map((tab) => (
+            {["experiences", "general posts", "likes", "comments", "transactions", "notifications"].map((tab) => (
               <div
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -459,12 +516,6 @@ const UserProfile = () => {
               {activeTab === "notifications" && (
                 <div className="mt-4">
                   <Notifications />
-                </div>
-              )}
-              
-              {activeTab === "settings" && (
-                <div className="mt-4">
-                  <NotificationSettings />
                 </div>
               )}
             </>
