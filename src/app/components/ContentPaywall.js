@@ -28,7 +28,7 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
   };
 
   return (
-    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-70 backdrop-blur-sm`}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-80 backdrop-blur-sm`}>
       <div 
         className={`w-full max-w-md ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} rounded-xl shadow-2xl overflow-hidden border ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}
         style={{ animation: "fadeInUp 0.3s ease-out" }}
@@ -47,10 +47,10 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
         `}</style>
         
         {/* Header */}
-        <div className={`p-5 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
+        <div className={`p-5 ${darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-900' : 'bg-gradient-to-r from-white to-gray-50'} rounded-t-xl border-b ${darkMode ? 'border-gray-700' : 'border-gray-200'}`}>
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
-              <span className={`material-icons ${isViewsLeft ? 'text-yellow-500' : 'text-red-500'}`}>
+              <span className={`material-icons text-lg ${isViewsLeft ? 'text-yellow-500' : 'text-red-500'}`}>
                 {isViewsLeft ? 'lock_clock' : 'lock'}
               </span>
               <h2 className="text-xl font-bold">
@@ -60,13 +60,14 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
             {onClose && (
               <button 
                 onClick={onClose} 
-                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
               >
                 <span className="material-icons">close</span>
               </button>
             )}
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400 ml-7">
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'} ml-7 flex items-center`}>
+            <span className="material-icons text-xs mr-1">{isViewsLeft ? 'visibility' : 'visibility_off'}</span>
             {isViewsLeft 
               ? `You have ${remainingViews} view${remainingViews === 1 ? '' : 's'} left today.`
               : "You've reached your daily limit of 2 free experiences."}
@@ -75,12 +76,12 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
 
         {/* Modern Pill Tabs */}
         <div className={`px-5 pt-2 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
-          <div className="flex p-1 rounded-full bg-gray-100 dark:bg-gray-700 mb-5 shadow-inner">
+          <div className="flex p-1 rounded-lg bg-gray-100 dark:bg-gray-700 mb-5 shadow-inner">
             <button
-              className={`flex-1 py-2 rounded-full transition-all duration-200 flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
                 activeTab === 'post'
-                  ? `${darkMode ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-500 text-white shadow-md'}`
-                  : `${darkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-200 text-gray-600'}`
+                  ? `${darkMode ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md' : 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'}`
+                  : `${darkMode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50'}`
               }`}
               onClick={() => setActiveTab('post')}
             >
@@ -88,10 +89,10 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
               <span className="font-medium">Post</span>
             </button>
             <button
-              className={`flex-1 py-2 rounded-full transition-all duration-200 flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 mx-1 ${
                 activeTab === 'premium'
-                  ? `${darkMode ? 'bg-yellow-600 text-white shadow-md' : 'bg-yellow-500 text-white shadow-md'}`
-                  : `${darkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-200 text-gray-600'}`
+                  ? `${darkMode ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-md' : 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-md'}`
+                  : `${darkMode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50'}`
               }`}
               onClick={() => setActiveTab('premium')}
             >
@@ -99,10 +100,10 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
               <span className="font-medium">Premium</span>
             </button>
             <button
-              className={`flex-1 py-2 rounded-full transition-all duration-200 flex items-center justify-center gap-2 ${
+              className={`flex-1 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 ${
                 activeTab === 'donate'
-                  ? `${darkMode ? 'bg-green-600 text-white shadow-md' : 'bg-green-500 text-white shadow-md'}`
-                  : `${darkMode ? 'hover:bg-gray-600 text-gray-400' : 'hover:bg-gray-200 text-gray-600'}`
+                  ? `${darkMode ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-md' : 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md'}`
+                  : `${darkMode ? 'bg-gray-800 text-gray-400 hover:bg-gray-700 hover:text-gray-300' : 'bg-white text-gray-600 hover:bg-gray-50'}`
               }`}
               onClick={() => setActiveTab('donate')}
             >
@@ -113,30 +114,33 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
         </div>
 
         {/* Tab Content */}
-        <div className="p-5">
+        <div className={`px-5 py-4 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
           {activeTab === 'post' ? (
             <div>
-              <h3 className="text-lg font-medium mb-3">Share Your Experience</h3>
-              <p className="mb-4 text-gray-500 dark:text-gray-400">
+              <h3 className="text-xl font-semibold mb-2 flex items-center">
+                <span className="material-icons text-blue-500 mr-2">create</span>
+                <span className={`${darkMode ? 'text-blue-100' : 'text-blue-800'}`}>Share Your Experience</span>
+              </h3>
+              <p className="mb-4 text-gray-500 dark:text-gray-400 ml-1 border-l-2 border-blue-400 dark:border-blue-600 pl-3">
                 Post your interview experiences or general posts to earn coins and get unlimited access.
               </p>
               <ul className="mb-5 space-y-3">
-                <li className="flex items-center">
+                <li className="flex items-center p-2 rounded-lg bg-gradient-to-r from-blue-50/50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-100 dark:border-blue-800/30">
                   <span className="material-icons text-blue-500 mr-2">check_circle</span>
-                  <span>Earn 100 coins for interview experiences</span>
+                  <span className={`${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>Earn 100 coins for interview experiences</span>
                 </li>
-                <li className="flex items-center">
+                <li className="flex items-center p-2 rounded-lg bg-gradient-to-r from-blue-50/50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-100 dark:border-blue-800/30">
                   <span className="material-icons text-blue-500 mr-2">check_circle</span>
-                  <span>Earn 25 coins for general posts</span>
+                  <span className={`${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>Earn 25 coins for general posts</span>
                 </li>
-                <li className="flex items-center">
+                <li className="flex items-center p-2 rounded-lg bg-gradient-to-r from-blue-50/50 to-blue-100/50 dark:from-blue-900/20 dark:to-blue-800/20 border border-blue-100 dark:border-blue-800/30">
                   <span className="material-icons text-blue-500 mr-2">check_circle</span>
-                  <span>Help the community with your insights</span>
+                  <span className={`${darkMode ? 'text-blue-300' : 'text-blue-700'}`}>Help the community with your insights</span>
                 </li>
               </ul>
               <button
                 onClick={handlePostContent}
-                className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 font-medium hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 font-medium hover:shadow-xl active:scale-[0.98]"
               >
                 <span className="material-icons text-sm">create</span>
                 Start Posting
@@ -144,23 +148,26 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
             </div>
           ) : activeTab === 'premium' ? (
             <div>
-              <h3 className="text-lg font-medium mb-3">Premium Benefits</h3>
-              <p className="mb-4 text-gray-500 dark:text-gray-400">
+              <h3 className="text-xl font-semibold mb-2 flex items-center">
+                <span className="material-icons text-amber-500 mr-2">stars</span>
+                <span className={`${darkMode ? 'text-amber-100' : 'text-amber-800'}`}>Premium Benefits</span>
+              </h3>
+              <p className="mb-4 text-gray-500 dark:text-gray-400 ml-1 border-l-2 border-amber-400 dark:border-amber-600 pl-3">
                 Upgrade for unlimited access to everything!
               </p>
               <ul className="mb-5 space-y-3">
-                <li className="flex items-center">
-                  <span className="material-icons text-yellow-500 mr-2">check_circle</span>
-                  <span>Unlimited access to all content</span>
+                <li className="flex items-center p-2 rounded-lg bg-gradient-to-r from-amber-50/50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/20 border border-amber-100 dark:border-amber-800/30">
+                  <span className="material-icons text-amber-500 mr-2">check_circle</span>
+                  <span className={`${darkMode ? 'text-amber-300' : 'text-amber-700'}`}>Unlimited access to all content</span>
                 </li>
-                <li className="flex items-center">
-                  <span className="material-icons text-yellow-500 mr-2">check_circle</span>
-                  <span>No daily limits</span>
+                <li className="flex items-center p-2 rounded-lg bg-gradient-to-r from-amber-50/50 to-amber-100/50 dark:from-amber-900/20 dark:to-amber-800/20 border border-amber-100 dark:border-amber-800/30">
+                  <span className="material-icons text-amber-500 mr-2">check_circle</span>
+                  <span className={`${darkMode ? 'text-amber-300' : 'text-amber-700'}`}>No daily limits</span>
                 </li>
               </ul>
               <button
                 onClick={handleGoPremium}
-                className="w-full py-3.5 bg-gradient-to-r from-yellow-500 to-yellow-600 text-white rounded-full hover:from-yellow-600 hover:to-yellow-700 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 font-medium hover:scale-[1.02] active:scale-[0.98]"
+                className="w-full py-3.5 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-200 shadow-lg flex items-center justify-center gap-2 font-medium hover:shadow-xl active:scale-[0.98]"
               >
                 <span className="material-icons text-sm">stars</span>
                 Get Premium Access
@@ -173,8 +180,8 @@ const ContentPaywall = ({ remainingViews, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-900 text-xs text-center text-gray-500 dark:text-gray-400 flex items-center justify-center gap-1">
-          <span className="material-icons text-xs">update</span>
+        <div className="p-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-xs text-center text-gray-500 dark:text-gray-400 flex items-center justify-center gap-2 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
+          <span className="material-icons text-xs text-blue-500 dark:text-blue-400">update</span>
           Your views will reset at midnight in your local time zone.
         </div>
       </div>
