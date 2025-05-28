@@ -1,20 +1,58 @@
+/* Enhanced Quill Editor Styling */
 .ql-container {
-  min-height: 100px;  /* Forces the content area to be at least 200px tall */
+  min-height: 120px;
+  border-radius: 0.5rem;
+  font-family: inherit;
 }
 
+.ql-editor {
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 1rem;
+}
+
+.ql-toolbar {
+  border-radius: 0.5rem 0.5rem 0 0;
+  border-color: #e5e7eb;
+}
+
+.ql-container {
+  border-radius: 0 0 0.5rem 0.5rem;
+  border-color: #e5e7eb;
+}
+
+/* Dark mode enhancements */
+.dark-mode .ql-toolbar {
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+.dark-mode .ql-container {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #ffffff;
+}
+
+.dark-mode .ql-editor {
+  color: #ffffff;
+}
+
+.dark-mode .ql-editor.ql-blank::before {
+  color: #9ca3af;
+}
 
 /* Change the fill color of SVG icons in the toolbar */
 .dark-mode .ql-toolbar svg {
-  fill: #ffffff; /* Set the fill color to white for visibility in dark mode */
+  fill: #ffffff;
 }
 
 /* Change the stroke color of SVG icons in the toolbar */
 .dark-mode .ql-toolbar .ql-stroke {
-  stroke: #ffffff; /* Set the stroke color to white for visibility in dark mode */
+  stroke: #ffffff;
 }
 
 .dark-mode .ql-toolbar .ql-fill {
-  stroke: #ffffff; /* Set the stroke color to white for visibility in dark mode */
+  fill: #ffffff;
 }
 
 .dark-mode .ql-picker {
@@ -23,8 +61,106 @@
 
 .dark-mode .ql-picker-options {
   background-color: #374151;
+  border-color: #4b5563;
 }
 
 .dark-mode .ql-picker-item {
   color: #ffffff;
+}
+
+.dark-mode .ql-picker-item:hover {
+  background-color: #4b5563;
+}
+
+/* Custom animations */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.3s ease-out;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.2s ease-out;
+}
+
+.animate-pulse-slow {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Form validation enhancements */
+.validation-error {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+.validation-success {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Improved focus states */
+.focus-ring:focus {
+  outline: none;
+  ring: 2px;
+  ring-color: #3b82f6;
+  ring-opacity: 0.5;
+}
+
+/* Loading spinner */
+.spinner {
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Smooth transitions for form elements */
+.form-transition {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced hover effects */
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dark-mode .hover-lift:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
