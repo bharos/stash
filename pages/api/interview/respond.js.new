@@ -1,0 +1,179 @@
+import { createClient } from '@supabase/supabase-js';
+const { AIInterviewService } = require('../../../src/app/utils/aiInterviewService');
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
+
+const aiService = new AIInterviewService();
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { sessionId, userResponse, userId } = req.body;
+
+    if (!sessionId || !userResponse || !userId) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    // Get session with template
+    const { data: session, error: sessionError } = await supabase
+      .from('interview_sessions')
+      .select(`
+        *,
+        interview_templates (*)
+      `)
+      .eq('id', sessionId)
+      .single();
+
+    if (sessionError || !session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    // Get current diagram state
+    const { data: diagramData } = await supabase
+      .from('diagram_boards')
+      .select('diagram_data')
+      .eq('session_id', sessionId)
+      .order('version', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Get conversation history
+    const { data: interactions } = await supabase
+      .from('interview_interactions')
+      .select('*')
+      .eq('session_id', sessionId)
+      .order('timestamp', { ascending: true });
+
+    // Log user response
+    await supabase
+      .from('interview_interactions')
+      .insert({
+        session_id: sessionId,
+        message_type: 'user_response',
+        content: userResponse,
+        metadata: {
+          diagram_elements_count: diagramData?.diagram_data?.elements?.length || 0,
+          timestamp: new Date().toISOString()
+        }
+      });
+
+    // Generate AI response using both text and diagram
+    const template = session.interview_templates;
+    const currentQuestionIndex = session.current_question_index;
+    const diagramElements = diagramData?.diagram_data?.elements || [];
+
+    const aiResponse = await aiService.generateQuestionBasedOnTemplate(
+      template,
+      currentQuestionIndex,
+      userResponse,
+      diagramElements,
+      interactions || []
+    );
+
+    // Check if there was an error in AI processing
+    if (aiResponse.isError) {
+      console.error('Error in AI processing:', aiResponse);
+      return res.status(500).json({ 
+        error: 'Error processing interview response',
+        aiResponse: "I'm sorry, but there was an error processing your response. Please try again."
+      });
+    }
+
+    // Update session if advancing to next question
+    if (aiResponse.shouldAdvance) {
+      await supabase
+        .from('interview_sessions')
+        .update({
+          current_question_index: currentQuestionIndex + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', sessionId);
+    }
+
+    // Check if interview is complete
+    const isComplete = (aiResponse.shouldAdvance && 
+                       (currentQuestionIndex + 1) >= template.questions.length) ||
+                      aiResponse.isComplete;
+
+    if (isComplete) {
+      // Generate final feedback with complete data including diagram
+      const finalFeedback = await aiService.generateFinalFeedback(
+        session, 
+        interactions, 
+        diagramElements
+      );
+      
+      console.log("Final feedback length:", finalFeedback.length);
+      
+      // Store feedback directly as an object instead of parsing a string
+      // This avoids issues with control characters and other special characters
+      const feedbackObject = {
+        finalFeedback: finalFeedback
+      };
+      
+      // Update session status and store feedback in session
+      await supabase
+        .from('interview_sessions')
+        .update({
+          status: 'completed',
+          end_time: new Date().toISOString(),
+          ai_feedback: feedbackObject
+        })
+        .eq('id', sessionId);
+
+      // Also store final feedback as an interaction for chat history
+      await supabase
+        .from('interview_interactions')
+        .insert({
+          session_id: sessionId,
+          message_type: 'ai_feedback',
+          content: finalFeedback,
+          metadata: {
+            isFinalFeedback: true,
+            question_index: currentQuestionIndex + 1,
+            diagram_elements_count: diagramElements.length
+          }
+        });
+
+      return res.status(200).json({
+        aiResponse: finalFeedback,
+        isComplete: true,
+        shouldAdvance: false,
+        hints: [],
+        currentQuestionIndex: currentQuestionIndex + 1
+      });
+    }
+
+    // Log AI response with metadata
+    await supabase
+      .from('interview_interactions')
+      .insert({
+        session_id: sessionId,
+        message_type: 'ai_question',
+        content: aiResponse.nextQuestion,
+        metadata: {
+          question_index: aiResponse.shouldAdvance ? currentQuestionIndex + 1 : currentQuestionIndex,
+          hints: aiResponse.hints,
+          diagram_analyzed: true
+        }
+      });
+
+    res.status(200).json({
+      aiResponse: aiResponse.nextQuestion,
+      shouldAdvance: aiResponse.shouldAdvance,
+      hints: aiResponse.hints,
+      currentQuestionIndex: aiResponse.shouldAdvance ? currentQuestionIndex + 1 : currentQuestionIndex,
+      isComplete: false
+    });
+
+  } catch (error) {
+    console.error('Error processing response:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

@@ -225,6 +225,17 @@ const Sidebar = () => {
             <span className="material-icons ml-2 mr-2 text-gray-600">forum</span>
             <ListItemText primary="General Posts" />
           </ListItemButton>
+          <ListItemButton 
+            onClick={() => router.push('/interview')}
+            sx={{
+              '&:hover': {
+                backgroundColor: 'rgba(59, 130, 246, 0.08)',
+              }
+            }}
+          >
+            <span className="material-icons ml-2 mr-2 text-purple-600">psychology</span>
+            <ListItemText primary="AI Interview Practice" />
+          </ListItemButton>
         </List>
       </Collapse>
 

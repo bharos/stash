@@ -159,6 +159,16 @@ input:focus, textarea:focus, button:focus {
   transition-duration: 150ms;
 }
 
+/* Ensure proper Excalidraw canvas behavior */
+.excalidraw .excalidraw-canvas {
+  touch-action: none;
+}
+
+/* Prevent body scroll when interacting with Excalidraw */
+.excalidraw-container {
+  overflow: hidden;
+}
+
 /* Ensure proper dark mode text colors */
 .dark {
   color-scheme: dark;
